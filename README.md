@@ -1,0 +1,6 @@
+## Ctgfs
+
+# build
+```
+./build.sh
+```
