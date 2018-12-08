@@ -1,0 +1,6 @@
+add_subdirectory(client)
+add_subdirectory(master)
+add_subdirectory(raft)
+add_subdirectory(kv)
+add_subdirectory(parser)
+add_subdirectory(fs)
