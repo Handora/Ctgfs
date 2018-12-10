@@ -10,6 +10,13 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+
+# Includes
+set(CTGFS_SRC_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/src/include)
+include_directories(${CTGFS_SRC_INCLUDE_DIR})
+include_directories(BEFORE src)
+
+# Subdirectory
 add_subdirectory(src)
 add_subdirectory(test)
 add_subdirectory(example)
