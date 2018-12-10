@@ -1,2 +1,4 @@
 *.pyc
 build
+*.pb.cc
+*.pb.h

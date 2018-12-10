@@ -1,3 +1,4 @@
+add_subdirectory(proto)
 add_subdirectory(client)
 add_subdirectory(master)
 add_subdirectory(raft)
