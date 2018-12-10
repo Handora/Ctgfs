@@ -1,3 +1,5 @@
+// Authors: Chen Qian(qcdsr970209@gmail.com)
+
 #include <string>
 
 namespace ctgfs {

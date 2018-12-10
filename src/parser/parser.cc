@@ -1,3 +1,5 @@
+// Authors: Chen Qian(qcdsr970209@gmail.com)
+
 #include <string>
 #include <sstream>
 #include <algorithm>
