@@ -1,7 +1,6 @@
-## Ctgfs
-## boss qian nb
+# Ctgfs
 
-# build
+## build
 ```
 ./build.sh
 ```
