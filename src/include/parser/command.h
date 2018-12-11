@@ -1,5 +1,6 @@
 // Authors: Chen Qian(qcdsr970209@gmail.com)
 
+#pragma once
 #include <string>
 
 namespace ctgfs {
