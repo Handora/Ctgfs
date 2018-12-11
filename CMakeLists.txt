@@ -11,13 +11,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(CMAKE_CXX_FLAGS "-O2 -ggdb3 -std=c++11 -pthread ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "-O2 -ggdb3 -std=c++11 -pthread ${CMAKE_CXX_FLAGS} -lprotobuf")
 set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS)
 set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS)
 
 include_directories(${PROJECT_SOURCE_DIR}/src/include
                     ${PROJECT_SOURCE_DIR}/src/proto)
 
+include_directories(${PROJECT_SOURCE_DIR}/third_party/gtest/googletest/include)
 enable_testing()
 
 add_subdirectory(src)

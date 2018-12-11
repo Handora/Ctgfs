@@ -1,7 +1,7 @@
-## Ctgfs
-## boss qian nb
+# Ctgfs
 
-# build
+## build
 ```
+git submodule update --init --recursive
 ./build.sh
 ```
