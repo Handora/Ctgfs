@@ -1,2 +1,3 @@
 add_library(parser parser.cc)
-target_link_libraries(parser proto)
+add_dependencies(parser third)
+target_link_libraries(parser proto glog)

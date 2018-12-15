@@ -2,3 +2,7 @@
 build
 *.pb.cc
 *.pb.h
+third_party/glog
+third_party/gflags
+third_party/protobuf
+third_party/gtest
