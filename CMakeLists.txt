@@ -19,6 +19,7 @@ include_directories(${PROJECT_SOURCE_DIR}/src/include
                     ${PROJECT_SOURCE_DIR}/src/proto)
 
 include_directories(${PROJECT_SOURCE_DIR}/third_party/gtest/googletest/include)
+link_directories(/usr/local/lib)
 enable_testing()
 
 add_subdirectory(src)

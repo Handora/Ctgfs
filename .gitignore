@@ -2,3 +2,5 @@
 build
 *.pb.cc
 *.pb.h
+third_party/braft
+third_party/brpc
