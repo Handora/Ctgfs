@@ -6,7 +6,7 @@ option cc_generic_services = true;
 
 package ctgfs;
 
-message ClientRequest {
+message ClientKVRequest {
     required uint64 id = 1;
     required string addr = 2;
 
@@ -23,4 +23,13 @@ message ClientRequest {
         optional string value = 4;
     }
     optional Command command = 3;
-}
+};
+
+message ClientKVResponse {
+	required uint64 id = 1;
+	required string addr = 2;
+};
+
+service MasterService{
+	rpc ClientAskForKV(ClientKVRequest) returns (ClientKVResponse);	
+};

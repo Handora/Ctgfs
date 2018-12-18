@@ -9,7 +9,7 @@ namespace parser {
 class Parser {
  public:
   bool ParseFromInput(const std::string& input, Command& command);
-  bool ConvertToProto(const Command& command, ctgfs::ClientRequest& request); // proto is coming
+  bool ConvertToProto(const Command& command, ctgfs::ClientKVRequest& request); // proto is coming
 };
 } // namespace parser
 } // namespace ctgfs
