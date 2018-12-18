@@ -53,7 +53,7 @@ bool Parser::ParseFromInput(const std::string& input, Command& command) {
   return true;
 }
 
-bool Parser::ConvertToProto(const Command& command, ctgfs::ClientRequest& request) {
+bool Parser::ConvertToProto(const Command& command, ctgfs::ClientKVRequest& request) {
   // TODO(handora): Generate id and ip
   request.set_id(1);
   request.set_addr("127.0.0.1");
