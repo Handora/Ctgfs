@@ -7,7 +7,7 @@ namespace ctgfs {
 namespace parser {
 class Parser {
  public:
-  bool ParseFromInput(const std::string& input, ClientRequest& request);
+  bool ParseFromInput(const std::string& input, ClientKVRequest& request);
 };
 } // namespace parser
 } // namespace ctgfs
