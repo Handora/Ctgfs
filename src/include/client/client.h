@@ -21,21 +21,21 @@ namespace client {
 		std::shared_ptr<ClientKVRequest> client_request_ptr_;
 		std::shared_ptr<ClientKVResponse> client_response_ptr_;
 		const std::string command_input_;
-		void InitChannel(const std::string& addr);
-		void InitChannel(const std::string& ip, const int port);
-		bool ParserInput();
-		bool ConnectToMaster();
-		bool AskKV();
+		void initChannel(const std::string& addr);
+		void initChannel(const std::string& ip, const int port);
+		bool parserInput();
+		bool connectToMaster();
+		bool askKV();
 		// wait to imporve
-		bool ConnectCallback();	
-		bool ConnectToKV();
-		bool DoCommand();
-		void DebugErrorParserInput(bool is_error,const char*);
-		void DebugErrorParserInput(bool is_error,const std::string& error_str = "");
-		void DebugErrorConnectToMaster(bool,const char*);
-		void DebugErrorConnectToMaster(bool,const std::string& error_str = "");
-		void DebugErrorAskKV(bool, const char*);
-		void DebugErrorAskKV(bool, const std::string&);
+		bool connectCallback();	
+		bool connectToKV();
+		bool doCommand();
+		void debugErrorParserInput(bool is_error,const char*);
+		void debugErrorParserInput(bool is_error,const std::string& error_str = "");
+		void debugErrorConnectToMaster(bool,const char*);
+		void debugErrorConnectToMaster(bool,const std::string& error_str = "");
+		void debugErrorAskKV(bool, const char*);
+		void debugErrorAskKV(bool, const std::string&);
 	};
 }
 }
