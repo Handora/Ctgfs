@@ -1,3 +1,8 @@
+/*
+* author: OneDay_(ltang970618@gmail.com)
+**/
+
+
 #include <client/client.h>
 #include <iostream>
 #include <parser/parser.h>
@@ -47,8 +52,8 @@ namespace client{
   bool Client::parserInput() {
     client_request_ptr_ = std::make_shared<ClientKVRequest>();
     parser::Parser parser;
-    if(!parser.ParseFromInput(command_input_,(*client_request_ptr_.get()))) {
-      debugErrorParserInput(true,"Parse Input Command Error!");
+    if(!parser.ParseFromInput(command_input_, (*client_request_ptr_.get()))) {
+      debugErrorParserInput(true, "Parse Input Command Error!");
       return false;
     }
     debugErrorParserInput(false,"Parse Successfully, Starting Connecting Master");
@@ -66,11 +71,11 @@ namespace client{
     stub.ClientAskForKV(&ctrl, client_request_ptr_.get(), 
         client_response_ptr_.get(), NULL);
     if(ctrl.Failed()) {
-      debugErrorAskKV(true,"Fail to get target address!");	
+      debugErrorAskKV(true, "Fail to get target address!");	
       return false;	
     }
     else {
-      debugErrorAskKV(false,"Successfully!Start connecting target!");
+      debugErrorAskKV(false, "Successfully!Start connecting target!");
       return connectToKV();
     }
   }
@@ -88,7 +93,7 @@ namespace client{
   }
 
   void Client::debugErrorParserInput(bool is_error,const char* str) {
-    debugErrorParserInput(is_error,std::string(str));
+    debugErrorParserInput(is_error, std::string(str));
   }
 
   void Client::debugErrorParserInput(bool is_error,const std::string& error_str) {
