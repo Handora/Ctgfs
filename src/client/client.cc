@@ -90,9 +90,9 @@ void Client::debugErrorParserInput(bool is_error, const char* str) {
 void Client::debugErrorParserInput(bool is_error,
                                    const std::string& error_str) {
   if (is_error) {
-    std::cout << error_str << std::endl;
+    // std::cout << error_str << std::endl;
   } else {
-    std::cout << error_str << std::endl;
+    // std::cout << error_str << std::endl;
   }
 }
 
@@ -103,9 +103,9 @@ void Client::debugErrorConnectToMaster(bool is_error, const char* str) {
 void Client::debugErrorConnectToMaster(bool is_error,
                                        const std::string& error_str) {
   if (is_error) {
-    std::cout << error_str << std::endl;
+    // std::cout << error_str << std::endl;
   } else {
-    std::cout << error_str << std::endl;
+    // std::cout << error_str << std::endl;
   }
 }
 
@@ -115,9 +115,9 @@ void Client::debugErrorAskKV(bool is_error, const char* str) {
 
 void Client::debugErrorAskKV(bool is_error, const std::string& error_str) {
   if (is_error) {
-    std::cout << error_str << std::endl;
+    // std::cout << error_str << std::endl;
   } else {
-    std::cout << error_str << std::endl;
+    // std::cout << error_str << std::endl;
   }
 }
 }
