@@ -2,12 +2,17 @@
 
 #pragma once
 #include <client.pb.h>
+#include <util/status.h>
 
 namespace ctgfs {
 namespace parser {
+
+using namespace util;   
+
 class Parser {
  public:
-  bool ParseFromInput(const std::string& input, ClientKVRequest& request);
+  Status ParseFromInput(const std::string& input, ClientKVRequest& request);
 };
+
 } // namespace parser
 } // namespace ctgfs

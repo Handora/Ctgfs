@@ -22,5 +22,5 @@ TEST(KVTest, Basic) {
   // EXPECT_EQ(value, res);
 }
 
-} // ctgfs
-} // parser
+}  // namespace kv
+}  // namespace ctgfs
