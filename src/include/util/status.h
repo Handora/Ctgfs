@@ -1,8 +1,23 @@
+/*
+ * Authors: Chen Qian(qcdsr970209@gmail.com)
+ */
+
 #pragma once
 
 namespace ctgfs {
 namespace util {
 
+// utility class that shows the return status of the
+// function, OK() indicate the success else you can use
+// status.ToString() to get the error message
+//
+// Example:
+// Status s = YourFunctions();
+// if (!s.IsOK()) {
+//   std::string err = s.ToString();
+//   // do for error
+// }
+// // do for success
 class Status {
   enum class Code;
 
