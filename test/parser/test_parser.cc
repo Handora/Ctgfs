@@ -8,10 +8,13 @@ namespace ctgfs {
 namespace parser {
 
 TEST(ParserTest, Basic) {
+  using namespace ctgfs::util;
+
   Parser parser;
   ctgfs::ClientKVRequest request;
-  parser.ParseFromInput("mkdir /a/b", request);
+  Status s = parser.ParseFromInput("mkdir /a/b", request);
 
+  EXPECT_EQ(true, s.IsOK());
   EXPECT_EQ("/a/b", request.command().path());
   EXPECT_EQ("", request.command().value());
   EXPECT_EQ(1, request.id());
@@ -19,5 +22,5 @@ TEST(ParserTest, Basic) {
   EXPECT_EQ(ClientKVRequest_Command_Type_kCreateDir, request.command().type());
 }
 
-} // ctgfs
-} // parser
+}  // namespace parser
+}  // namespace ctgfs
