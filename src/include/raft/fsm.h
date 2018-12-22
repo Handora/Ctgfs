@@ -6,16 +6,14 @@
 #include <braft/storage.h>
 #include <glog/logging.h>
 #include <util/status.h>
+#include <util/options.h>
+#include <util/waiter.h>
+#include <rocksdb/db.h>
 
 namespace ctgfs {
 namespace raft {
 
 using Status = util::Status;
-#define DEFAULT_PORT 51202
-#define DEFAULT_ELECTION_TIMEOUT_MS 3000
-#define DEFAULT_SNAPSHOT_INTERVAL_S 60 * 60 * 24
-#define DEFAULT_DISABLE_CLI true
-#define DEFAULT_EXAMPLE_GROUP "example"
 
 // The finite state machine powered by rocksdb and braft
 // Provides distributed fault torelant and KV storage
@@ -26,7 +24,7 @@ using Status = util::Status;
 class RocksFSM : public braft::StateMachine {
  public:
   
-  RocksFSM();
+  RocksFSM(const Options& options);
   ~RocksFSM();
 
   // disable copy constructor and assignment onstructor
@@ -40,13 +38,33 @@ class RocksFSM : public braft::StateMachine {
   // the function which communicate with each other 
   Status Start();
 
+  Status Put(const std::string& key, const std::string& value);
+
  protected:
+  void on_apply(braft::Iterator& iter) override;
+  void on_shutdown() override;
+
+ private:
+  Status put(const std::string& key, const std::string& value);
+
   // TODO(Handora): why volatile
   std::shared_ptr<braft::Node> node_;
   butil::atomic<int64_t> leader_term_;
+  Options options_;
+  rocksdb::DB* db_;
+};
 
-  void on_apply(braft::Iterator& iter) override;
-  void on_shutdown() override;
+// Implements Closure which encloses RPC stuff
+class RocksClosure : public braft::Closure {
+ public:
+  RocksClosure(std::shared_ptr<util::Waiter> waiter)
+    : waiter_(waiter)
+  ~RocksClosure() {}
+
+  void Run() override;
+
+private:
+  std::shared_ptr<util::Waiter> waiter_;
 };
 
 } // namespace kv
