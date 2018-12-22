@@ -72,7 +72,9 @@ bool Client::askKV() {
   }
 }
 
-bool Client::connectCallback() {}
+bool Client::connectCallback() {
+  return true;
+}
 
 bool Client::connectToKV() {
   // connect kv
