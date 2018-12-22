@@ -75,14 +75,18 @@ bool Client::askKV() {
   }
 }
 
-bool Client::connectCallback() {}
+bool Client::connectCallback() {
+  return true;
+}
 
 bool Client::connectToKV() {
   // connect kv
+  return true;
 }
 
 bool Client::doCommand() {
   // do command
+  return true;
 }
 
 void Client::debugErrorParserInput(bool is_error, const char* str) {
