@@ -1,8 +1,8 @@
 // Authors: Chen Qian(qcdsr970209@gmail.com)
 
 #pragma once
-#include <string>
 #include <kv/kv.h>
+#include <string>
 
 namespace ctgfs {
 namespace kv {
@@ -14,7 +14,7 @@ namespace kv {
 class RaftKV : public KV {
  public:
   // Given the key reference and value reference which you want to
-  // put into the kv store, it will return bool to indicate success 
+  // put into the kv store, it will return bool to indicate success
   // or not.
   //
   // The function is re-entrant, so you can use it directly within
@@ -23,7 +23,7 @@ class RaftKV : public KV {
 
   // Given the key reference which you want to search within the kv
   // store, it will return bool to indicate sucess or not. If success,
-  // the value will be the corresponding value. Otherwise, don't use 
+  // the value will be the corresponding value. Otherwise, don't use
   // it.
   //
   // The function is re-entrant, so you can use it directly within
@@ -34,6 +34,5 @@ class RaftKV : public KV {
   // TODO(Handora): Fill in private function and varaiable
 };
 
-} // namespace kv
-} // namespace ctgfs
-
+}  // namespace kv
+}  // namespace ctgfs

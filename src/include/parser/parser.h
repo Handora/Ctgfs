@@ -7,12 +7,12 @@
 namespace ctgfs {
 namespace parser {
 
-using namespace util;   
+using namespace util;
 
 class Parser {
  public:
   Status ParseFromInput(const std::string& input, ClientKVRequest& request);
 };
 
-} // namespace parser
-} // namespace ctgfs
+}  // namespace parser
+}  // namespace ctgfs

@@ -2,9 +2,9 @@
  * author: wfgu(peter.wfgu@gmail.com)
  * */
 
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 
 #include <fs/fs.h>
 
@@ -12,27 +12,29 @@ namespace ctgfs {
 namespace fs {
 
 bool FileSystem::CreateDir(const std::string& path) {
-  // todo 
+  // todo
   return true;
 }
 
-bool FileSystem::ReadDir(const std::string& path, std::vector<std::string>& children) const {
-  // todo    
+bool FileSystem::ReadDir(const std::string& path,
+                         std::vector<std::string>& children) const {
+  // todo
   return true;
 }
 
 bool FileSystem::RemoveDir(const std::string& path) {
-  // todo 
+  // todo
   return true;
 }
 
-bool FileSystem::WriteFile(const std::string& path, const std::string& content) {
-  // todo 
+bool FileSystem::WriteFile(const std::string& path,
+                           const std::string& content) {
+  // todo
   return true;
 }
 
 bool FileSystem::ReadFile(const std::string& path, std::string& content) const {
-  // todo 
+  // todo
   return true;
 }
 
@@ -42,9 +44,9 @@ bool FileSystem::RemoveFile(const std::string& path) {
 }
 
 bool FileSystem::ChangeDir(const std::string& path, std::string& key) const {
-  // todo  
+  // todo
   return true;
 }
 
-} // namespace fs
-} // namespace ctgfs
+}  // namespace fs
+}  // namespace ctgfs
