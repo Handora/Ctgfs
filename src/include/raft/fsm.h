@@ -3,6 +3,7 @@
 #pragma once
 #include <string>
 #include <braft/raft.h>
+#include <braft/util.h>
 #include <braft/storage.h>
 #include <glog/logging.h>
 #include <util/status.h>
@@ -23,8 +24,13 @@ using Status = util::Status;
 //
 class RocksFSM : public braft::StateMachine {
  public:
-  
-  RocksFSM(const Options& options);
+  enum ProposeType {
+    OP_UNKNOWN = 0,
+    OP_GET,
+    OP_PUT 
+  };
+
+  RocksFSM(const util::Options& options);
   ~RocksFSM();
 
   // disable copy constructor and assignment onstructor
@@ -36,9 +42,11 @@ class RocksFSM : public braft::StateMachine {
 
   // Start the RocksFSM, it create the node_ inside
   // the function which communicate with each other 
-  Status Start();
+  Status Open();
+  void Close();
 
-  Status Put(const std::string& key, const std::string& value);
+  Status Put(const std::string& key, const std::string& value,
+             std::shared_ptr<util::Waiter> waiter);
 
  protected:
   void on_apply(braft::Iterator& iter) override;
@@ -46,19 +54,21 @@ class RocksFSM : public braft::StateMachine {
 
  private:
   Status put(const std::string& key, const std::string& value);
+  Status propose(ProposeType type, const std::string& key, 
+          const std::string& value, std::shared_ptr<util::Waiter> waiter);
 
   // TODO(Handora): why volatile
   std::shared_ptr<braft::Node> node_;
   butil::atomic<int64_t> leader_term_;
-  Options options_;
+  util::Options options_;
   rocksdb::DB* db_;
 };
 
 // Implements Closure which encloses RPC stuff
 class RocksClosure : public braft::Closure {
  public:
-  RocksClosure(std::shared_ptr<util::Waiter> waiter)
-    : waiter_(waiter)
+  RocksClosure(std::shared_ptr<util::Waiter> waiter) 
+    : waiter_(waiter) {}
   ~RocksClosure() {}
 
   void Run() override;
