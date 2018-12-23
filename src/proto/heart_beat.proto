@@ -1,0 +1,28 @@
+// Author: OneDay_(ltang970618@gmail.com)
+
+syntax = "proto2";
+
+option cc_generic_services = true;
+
+package ctgfs;
+
+// send the pacage at regular time
+// shared the info from filesystem
+// you should give the info to master so that master can give choice
+
+message HeartBeatMessageRequest {
+  // ip:port
+  // Example : 
+  // 127.0.0.1:1234
+  required string addr = 1;
+  // should add more info later
+};
+
+message HeartBeatMessageResponse { 
+  // inform the file system the heart beat has been accecpted 
+  // it can add more info later
+};
+
+service HeartBeatService { 
+  rpc SendHeartBeat(HeartBeatMessageRequest) returns (HeartBeatMessageResponse);
+}

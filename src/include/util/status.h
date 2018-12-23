@@ -22,70 +22,58 @@ class Status {
   enum class Code;
 
  public:
-  Status(Code code, std::string msg="") : 
-      code_(code), error_text_(msg) {}   
+  Status(Code code, std::string msg = "") : code_(code), error_text_(msg) {}
 
-  std::string ToString() const {
-    return error_text_;
-  }
+  std::string ToString() const { return error_text_; }
 
-  std::string ErrorText() const {
-    return error_text_;
-  }
+  std::string ErrorText() const { return error_text_; }
 
   /*************************** General Part *******************************/
-  static Status OK() {
-    return Status(Code::kOk);
-  }
+  static Status OK() { return Status(Code::kOk); }
 
-  bool IsOK() const {
-    return (code_ == Code::kOk);
-  }
+  bool IsOK() const { return (code_ == Code::kOk); }
 
   static Status NotFound(const std::string& msg) {
     return Status(Code::kNotFound, msg);
   }
 
-  bool IsNotFound() const {
-    return (code_ == Code::kNotFound);
-  }
+  bool IsNotFound() const { return (code_ == Code::kNotFound); }
 
   static Status TimeOut(const std::string& msg) {
     return Status(Code::kTimeOut, msg);
   }
 
-  bool IsTimeOut() const {
-    return (code_ == Code::kTimeOut);
-  }
+  bool IsTimeOut() const { return (code_ == Code::kTimeOut); }
 
   static Status NotSupported(const std::string& msg) {
     return Status(Code::kNotSupported, msg);
   }
 
-  bool IsNotSupported() const {
-    return (code_ == Code::kNotSupported);
-  }
+  bool IsNotSupported() const { return (code_ == Code::kNotSupported); }
 
   static Status InvalidArgument(const std::string& msg) {
     return Status(Code::kInvalidArgument, msg);
   }
 
-  bool IsInvalidArgument() const {
-    return (code_ == Code::kInvalidArgument);
-  }
+  bool IsInvalidArgument() const { return (code_ == Code::kInvalidArgument); }
 
   /*************************** KV Part *******************************/
   static Status NotLeader(const std::string& msg) {
     return Status(Code::kNotLeader, msg);
   }
 
-  bool IsNotLeader() const {
-    return (code_ == Code::kNotLeader);
+  bool IsNotLeader() const { return (code_ == Code::kNotLeader); }
+
+  /*************************** HeartBeat Part *******************************/
+  static Status HeartBeatFail(const std::string& msg = "") {
+    return Status(Code::kHeartBeatFail, msg);
   }
+
+  bool IsHeartBeatSucc() const { return (code_ == Code::kHeartBeatFail); }
 
  private:
   enum class Code {
-    // General part 
+    // General part
     kOk,
     kNotFound,
     kTimeOut,
@@ -94,11 +82,14 @@ class Status {
 
     // KV part
     kNotLeader,
-  }; 
+
+    // HeartBeat part
+    kHeartBeatFail,
+  };
 
   Code code_;
   std::string error_text_;
 };
 
-} // namespace util
-} // namespace ctgfs
+}  // namespace util
+}  // namespace ctgfs
