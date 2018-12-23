@@ -64,6 +64,13 @@ class Status {
 
   bool IsNotLeader() const { return (code_ == Code::kNotLeader); }
 
+  /*************************** HeartBeat Part *******************************/
+  static Status HeartBeatFail(const std::string& msg = "") {
+    return Status(Code::kHeartBeatFail, msg);
+  }
+
+  bool IsHeartBeatSucc() const { return (code_ == Code::kHeartBeatFail); }
+
  private:
   enum class Code {
     // General part
@@ -75,6 +82,9 @@ class Status {
 
     // KV part
     kNotLeader,
+
+    // HeartBeat part
+    kHeartBeatFail,
   };
 
   Code code_;
