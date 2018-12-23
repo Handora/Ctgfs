@@ -11,16 +11,16 @@ namespace kv {
 class KV {
  public:
   // Given the key reference and value reference which you want to
-  // put into the kv store, it will return bool to indicate success 
+  // put into the kv store, it will return bool to indicate success
   // or not.
   virtual bool Put(const std::string& key, const std::string& value) = 0;
 
   // Given the key reference which you want to search within the kv
   // store, it will return bool to indicate sucess or not. If success,
-  // the value will be the corresponding value. Otherwise, don't use 
+  // the value will be the corresponding value. Otherwise, don't use
   // it.
   virtual bool Get(const std::string& key, std::string& value) = 0;
 };
 
-} // namespace kv
-} // namespace ctgfs
+}  // namespace kv
+}  // namespace ctgfs

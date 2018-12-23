@@ -44,7 +44,8 @@ void Client::initChannel(const std::string& ip, const int port) {
 bool Client::parserInput() {
   client_request_ptr_ = std::make_shared<ClientKVRequest>();
   parser::Parser parser;
-  util::Status s = parser.ParseFromInput(command_input_, (*client_request_ptr_.get()));
+  util::Status s =
+      parser.ParseFromInput(command_input_, (*client_request_ptr_.get()));
   if (!s.IsOK()) {
     debugErrorParserInput(true, "Parse Input Command Error!");
     return false;
