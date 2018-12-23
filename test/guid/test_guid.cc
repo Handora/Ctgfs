@@ -1,11 +1,11 @@
 /*
-* author: wfgu(peter.wfgu@gmail.com)
-* */
+ * author: wfgu(peter.wfgu@gmail.com)
+ * */
 
-#include <string>
-#include <memory>
 #include <functional>
+#include <memory>
 #include <set>
+#include <string>
 
 #include <gtest/gtest.h>
 #include <util/guid.h>
@@ -22,8 +22,8 @@ TEST(GUIDTest, Basic) {
     S.insert(hash_value);
   }
 
-  EXPECT_EQ(10000, (int)S.size()); 
+  EXPECT_EQ(10000, (int)S.size());
 }
 
-}  // namespace util 
+}  // namespace util
 }  // namespace ctgfs

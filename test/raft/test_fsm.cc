@@ -1,8 +1,8 @@
 // Authors: Chen Qian(qcdsr970209@gmail.com)
 
+#include <brpc/server.h>
 #include <gtest/gtest.h>
 #include <raft/fsm.h>
-#include <brpc/server.h>
 
 namespace ctgfs {
 namespace raft {
@@ -27,5 +27,5 @@ TEST(FSMTest, Basic) {
   EXPECT_EQ(true, s.IsOK());
 }
 
-}  // namespace parser
+}  // namespace raft
 }  // namespace ctgfs

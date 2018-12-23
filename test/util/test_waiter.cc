@@ -1,8 +1,8 @@
 // Authors: Chen Qian(qcdsr970209@gmail.com)
 
+#include <bthread/bthread.h>
 #include <gtest/gtest.h>
 #include <util/waiter.h>
-#include <bthread/bthread.h>
 
 namespace ctgfs {
 namespace util {
@@ -20,7 +20,7 @@ int example_var = 0;
 void* waitMain(void* args) {
   bthread_usleep(500 * 1000);
 
-  auto waiter = (Waiter*)(args); 
+  auto waiter = (Waiter*)(args);
   waiter->Signal();
   example_var = 10;
   return nullptr;
@@ -42,7 +42,7 @@ TEST(UtilTest, Concurrency) {
 void* waitMain2(void* args) {
   bthread_usleep(500 * 1000);
 
-  auto waiter = (Waiter*)(args); 
+  auto waiter = (Waiter*)(args);
   waiter->Signal();
   return nullptr;
 }
