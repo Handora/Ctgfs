@@ -1,0 +1,7 @@
+file(GLOB TEST_GUID_SRCS "test_*.cc")
+foreach(GUID_T ${TEST_GUID_SRCS})
+    get_filename_component(GUID_T_WE ${GUID_T} NAME_WE)
+    add_executable(${GUID_T_WE} ${GUID_T})
+    target_link_libraries("${GUID_T_WE}" uuid gtest_main)
+    add_test(NAME "${GUID_T_WE}" COMMAND "${GUID_T_WE}")
+endforeach()

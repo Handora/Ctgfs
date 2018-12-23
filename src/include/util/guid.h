@@ -18,7 +18,7 @@ namespace util {
   * The encapsulation of linux uuid.
   * Use util::NewGuid() to generator an unique id. Stringify the Guid type
   * to make things eaiser.
-  * Use std::hash<util::Guid>{}("xxx") to calcultae the hash value.
+  * Use std::hash<util::Guid>{}(guid_object) to calcultae the hash value.
   * */
 class Guid {
  public:
@@ -30,7 +30,7 @@ class Guid {
   operator std::string() const;
 
   // Use the stringification of the guid to get the hash value.
-  // std::hash<util::Guid>{}("the string you want to hash.");
+  // std::hash<util::Guid>{}(guid_object)
   std::size_t GetHash() const;
 
  private:
@@ -99,6 +99,8 @@ Guid NewGuid() {
 
 // Template specialization for util::Guid.
 namespace std {
+  using namespace ctgfs;
+
   template <>
   struct hash<util::Guid> {
     typedef util::Guid argument_type;
@@ -109,4 +111,3 @@ namespace std {
     }
   };
 } // namespace std
-
