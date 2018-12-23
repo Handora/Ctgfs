@@ -10,14 +10,13 @@ namespace ctgfs {
 namespace util {
 
 struct Options {
-
   /******************* Raft Part ********************/
 
   // A follower would become a candidate if it doesn't receive any message
   // from the leader in |election_timeout_ms| milliseconds
   //
   // Default: 1000 (1s)
-  int election_timeout_ms; //follower to candidate timeout
+  int election_timeout_ms;  // follower to candidate timeout
 
   // A snapshot saving would be triggered every |snapshot_interval_s| seconds
   // if this was reset as a positive number
@@ -65,16 +64,15 @@ struct Options {
 };
 
 inline Options::Options(std::string group, uint32_t port)
-  : election_timeout_ms(1000)
-  , snapshot_interval_s(3600)
-  , catchup_margin(1000)
-  , log_uri("local://./tmp/log")
-  , raft_meta_uri("local://./tmp/raft_meta")
-  , snapshot_uri("local://./tmp/snapshot")
-  , group_id(group)
-  , local_port(port)  
-  , rocksdb_path("/tmp/rocksdb")
-{}
+    : election_timeout_ms(1000),
+      snapshot_interval_s(3600),
+      catchup_margin(1000),
+      log_uri("local://./tmp/log"),
+      raft_meta_uri("local://./tmp/raft_meta"),
+      snapshot_uri("local://./tmp/snapshot"),
+      group_id(group),
+      local_port(port),
+      rocksdb_path("/tmp/rocksdb") {}
 
-} // namespace util
-} // namespace ctgfs
+}  // namespace util
+}  // namespace ctgfs

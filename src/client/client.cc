@@ -1,6 +1,6 @@
 /*
-* author: OneDay_(ltang970618@gmail.com)
-**/
+ * author: OneDay_(ltang970618@gmail.com)
+ **/
 
 #include <butil/logging.h>
 #include <client/client.h>
@@ -72,9 +72,7 @@ bool Client::askKV() {
   }
 }
 
-bool Client::connectCallback() {
-  return true;
-}
+bool Client::connectCallback() { return true; }
 
 bool Client::connectToKV() {
   // connect kv
@@ -129,5 +127,5 @@ void Client::debugErrorAskKV(bool is_error, const std::string& error_str) {
     // std::cout << error_str << std::endl;
   }
 }
-}
-}
+}  // namespace client
+}  // namespace ctgfs

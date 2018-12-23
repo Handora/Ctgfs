@@ -1,15 +1,15 @@
 // Authors: Chen Qian(qcdsr970209@gmail.com)
 
 #pragma once
-#include <string>
 #include <braft/raft.h>
-#include <braft/util.h>
 #include <braft/storage.h>
+#include <braft/util.h>
 #include <glog/logging.h>
-#include <util/status.h>
-#include <util/options.h>
-#include <util/waiter.h>
 #include <rocksdb/db.h>
+#include <util/options.h>
+#include <util/status.h>
+#include <util/waiter.h>
+#include <string>
 
 namespace ctgfs {
 namespace raft {
@@ -24,11 +24,7 @@ using Status = util::Status;
 //
 class RocksFSM : public braft::StateMachine {
  public:
-  enum ProposeType {
-    OP_UNKNOWN = 0,
-    OP_GET,
-    OP_PUT 
-  };
+  enum ProposeType { OP_UNKNOWN = 0, OP_GET, OP_PUT };
 
   RocksFSM(const util::Options& options);
   ~RocksFSM();
@@ -41,7 +37,7 @@ class RocksFSM : public braft::StateMachine {
   RocksFSM(const RocksFSM& fsm) = delete;
 
   // Start the RocksFSM, it create the node_ inside
-  // the function which communicate with each other 
+  // the function which communicate with each other
   Status Open();
   void Close();
 
@@ -54,8 +50,9 @@ class RocksFSM : public braft::StateMachine {
 
  private:
   Status put(const std::string& key, const std::string& value);
-  Status propose(ProposeType type, const std::string& key, 
-          const std::string& value, std::shared_ptr<util::Waiter> waiter);
+  Status propose(ProposeType type, const std::string& key,
+                 const std::string& value,
+                 std::shared_ptr<util::Waiter> waiter);
 
   // TODO(Handora): why volatile
   std::shared_ptr<braft::Node> node_;
@@ -67,15 +64,14 @@ class RocksFSM : public braft::StateMachine {
 // Implements Closure which encloses RPC stuff
 class RocksClosure : public braft::Closure {
  public:
-  RocksClosure(std::shared_ptr<util::Waiter> waiter) 
-    : waiter_(waiter) {}
+  RocksClosure(std::shared_ptr<util::Waiter> waiter) : waiter_(waiter) {}
   ~RocksClosure() {}
 
   void Run() override;
 
-private:
+ private:
   std::shared_ptr<util::Waiter> waiter_;
 };
 
-} // namespace kv
-} // namespace ctgfs
+}  // namespace raft
+}  // namespace ctgfs

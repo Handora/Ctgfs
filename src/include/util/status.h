@@ -61,9 +61,7 @@ class Status {
     return Status(Code::kCorruption, msg);
   }
 
-  bool IsCorruption() const {
-    return (code_ == Code::kCorruption);
-  }
+  bool IsCorruption() const { return (code_ == Code::kCorruption); }
 
   /*************************** KV Part *******************************/
   static Status NotLeader(const std::string& msg) {
