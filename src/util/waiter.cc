@@ -23,9 +23,7 @@ Status Waiter::Wait(uint64_t timeout_ms) {
     timeout = timeout_ms;
   } else {
     if (timeout_ != 0) {
-      if (timeout_ != 0) {
-        timeout = timeout_;
-      }
+      timeout = timeout_;
     }
   }
 

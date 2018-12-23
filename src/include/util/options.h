@@ -54,9 +54,17 @@ struct Options {
   /****************** General Part ******************/
   // Port of the local server
   uint32_t local_port;
+
+  /****************** Rocksdb Part ******************/
+  // rocksdb path
+  //
+  // Default: /tmp/rocksdb
+  std::string rocksdb_path;
+
+  Options(std::string group, uint32_t port);
 };
 
-inline NodeOptions::NodeOptions(std::string group, uint32_t port)
+inline Options::Options(std::string group, uint32_t port)
   : election_timeout_ms(1000)
   , snapshot_interval_s(3600)
   , catchup_margin(1000)
@@ -65,6 +73,7 @@ inline NodeOptions::NodeOptions(std::string group, uint32_t port)
   , snapshot_uri("local://./tmp/snapshot")
   , group_id(group)
   , local_port(port)  
+  , rocksdb_path("/tmp/rocksdb")
 {}
 
 } // namespace util
