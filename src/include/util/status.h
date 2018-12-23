@@ -69,7 +69,7 @@ class Status {
     return Status(Code::kHeartBeatFail, msg);
   }
 
-  bool IsHeartBeatSucc() const { return (code_ == Code::kHeartBeatFail); }
+  bool IsHeartBeatFail() const { return (code_ == Code::kHeartBeatFail); }
 
  private:
   enum class Code {
