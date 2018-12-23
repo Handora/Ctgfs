@@ -1,6 +1,6 @@
 /*
-* author: OneDay_(ltang970618@gmail.com)
-**/
+ * author: OneDay_(ltang970618@gmail.com)
+ **/
 #include <master/master.h>
 
 namespace ctgfs {

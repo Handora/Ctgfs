@@ -8,9 +8,7 @@ namespace ctgfs {
 namespace util {
 
 Waiter::Waiter(uint64_t timeout)
-  : timeout_(timeout)
-  , completed_(false)
-  , status_(Status::OK()) {}
+    : timeout_(timeout), completed_(false), status_(Status::OK()) {}
 
 Waiter::~Waiter() {}
 
@@ -31,7 +29,8 @@ Status Waiter::Wait(uint64_t timeout_ms) {
   if (timeout) {
     completed_ = !cond_.wait_for(lk, timeout * 1000);
     if (!completed_) {
-      return Status::TimeOut("Waiter timeout for " + std::to_string(timeout) + "ms");
+      return Status::TimeOut("Waiter timeout for " + std::to_string(timeout) +
+                             "ms");
     }
   } else {
     cond_.wait(lk);
@@ -46,5 +45,5 @@ void Waiter::Signal(Status status) {
   cond_.notify_one();
 }
 
-} // namespace util
-} // namespace ctgfs
+}  // namespace util
+}  // namespace ctgfs

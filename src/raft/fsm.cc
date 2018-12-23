@@ -9,11 +9,9 @@ namespace raft {
 using Status = util::Status;
 
 RocksFSM::RocksFSM(const util::Options& options)
-  : node_(nullptr), leader_term_(-1), options_(options) {}
+    : node_(nullptr), leader_term_(-1), options_(options) {}
 
-RocksFSM::~RocksFSM() {
-  Close();
-} 
+RocksFSM::~RocksFSM() { Close(); }
 
 Status RocksFSM::Open() {
   // TODO(Handora): use configurable options
@@ -27,7 +25,8 @@ Status RocksFSM::Open() {
   node_options.raft_meta_uri = options_.raft_meta_uri;
   node_options.snapshot_uri = options_.snapshot_uri;
   node_options.disable_cli = false;
-  std::shared_ptr<braft::Node> node = std::make_shared<braft::Node>(options_.group_id, braft::PeerId(addr));
+  std::shared_ptr<braft::Node> node =
+      std::make_shared<braft::Node>(options_.group_id, braft::PeerId(addr));
   if (node->init(node_options) != 0) {
     node_ = nullptr;
     return Status::Corruption("failed to init raft node");
@@ -36,7 +35,8 @@ Status RocksFSM::Open() {
 
   rocksdb::Options rocks_options;
   rocks_options.create_if_missing = true;
-  rocksdb::Status s = rocksdb::DB::Open(rocks_options, options_.rocksdb_path, &db_);
+  rocksdb::Status s =
+      rocksdb::DB::Open(rocks_options, options_.rocksdb_path, &db_);
   if (!s.ok()) {
     return Status::Corruption("Can't open rocksdb");
   }
@@ -53,30 +53,30 @@ void RocksFSM::Close() {
 
 // @braft::StateMachine
 void RocksFSM::on_apply(braft::Iterator& iter) {
-  // apply from iter one by one  
+  // apply from iter one by one
   for (; iter.valid(); iter.next()) {
     braft::AsyncClosureGuard closure_guard(iter.done());
-    
+
     butil::IOBuf data = iter.data();
     uint8_t type = OP_UNKNOWN;
     data.cutn(&type, sizeof(uint8_t));
 
-    switch(type) {
-    case OP_PUT: {
-      uint32_t size;
-      std::string key, value;
-      data.cutn(&size, sizeof(uint32_t));
-      data.cutn(&key, size);
+    switch (type) {
+      case OP_PUT: {
+        uint32_t size;
+        std::string key, value;
+        data.cutn(&size, sizeof(uint32_t));
+        data.cutn(&key, size);
 
-      data.cutn(&size, sizeof(uint32_t));
-      data.cutn(&value, size);
-      put(key, value);
-    }
-    default:
-      break;
+        data.cutn(&size, sizeof(uint32_t));
+        data.cutn(&value, size);
+        put(key, value);
+      }
+      default:
+        break;
     }
   }
-} 
+}
 
 // @braft::StateMachine
 void RocksFSM::on_shutdown() {
@@ -89,13 +89,14 @@ void RocksClosure::Run() {
   std::unique_ptr<RocksClosure> self_guard(this);
 
   if (status().ok()) {
-    waiter_->Signal(util::Status::Corruption(status().error_str())); 
+    waiter_->Signal(util::Status::Corruption(status().error_str()));
   } else {
     waiter_->Signal();
   }
 }
 
-util::Status RocksFSM::Put(const std::string& key, const std::string& value, std::shared_ptr<util::Waiter> waiter) {
+util::Status RocksFSM::Put(const std::string& key, const std::string& value,
+                           std::shared_ptr<util::Waiter> waiter) {
   return propose(OP_PUT, key, value, waiter);
 }
 
@@ -107,7 +108,9 @@ util::Status RocksFSM::put(const std::string& key, const std::string& value) {
   return Status::OK();
 }
 
-util::Status RocksFSM::propose(ProposeType type, const std::string& key, const std::string& value, std::shared_ptr<util::Waiter> waiter) {
+util::Status RocksFSM::propose(ProposeType type, const std::string& key,
+                               const std::string& value,
+                               std::shared_ptr<util::Waiter> waiter) {
   const int64_t term = leader_term_.load(butil::memory_order_relaxed);
   // if (term < 0) {
   //   return Status::NotLeader("propose to nonleader");
@@ -129,5 +132,5 @@ util::Status RocksFSM::propose(ProposeType type, const std::string& key, const s
   return util::Status::OK();
 }
 
-} // namespace raft
-} // namespace ctgfs
+}  // namespace raft
+}  // namespace ctgfs

@@ -12,13 +12,13 @@
 namespace ctgfs {
 namespace util {
 
-// waiter interface for synchronization or 
+// waiter interface for synchronization or
 // asynchronization programming
 //
 // Example:
 // std::shared_ptr<Waiter> waiter = std::make_shared<Waiter>();
 // doAsynProcessFunc(waiter);
-// 
+//
 // Status s = waiter->Wait(1000);
 // if (!s.ok()) {
 //   // do for error
@@ -45,5 +45,5 @@ class Waiter {
   bthread::Mutex mutex_;
 };
 
-} // namespace util
-} // namespace ctgfs
+}  // namespace util
+}  // namespace ctgfs
