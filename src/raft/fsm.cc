@@ -6,19 +6,18 @@
 namespace ctgfs {
 namespace raft {
 
-using Status = util::Status;
-
 RocksFSM::RocksFSM(const util::Options& options)
     : node_(nullptr), leader_term_(-1), options_(options) {}
 
 RocksFSM::~RocksFSM() { Close(); }
 
-Status RocksFSM::Open() {
+util::Status RocksFSM::Open() {
   // TODO(Handora): use configurable options
   butil::EndPoint addr(butil::my_ip(), options_.local_port);
   braft::NodeOptions node_options;
   node_options.election_timeout_ms = options_.election_timeout_ms;
   node_options.fsm = this;
+  node_options.initial_conf.parse_from(options_.initial_conf);
   node_options.node_owns_fsm = false;
   node_options.snapshot_interval_s = options_.snapshot_interval_s;
   node_options.log_uri = options_.log_uri;
@@ -29,7 +28,7 @@ Status RocksFSM::Open() {
       std::make_shared<braft::Node>(options_.group_id, braft::PeerId(addr));
   if (node->init(node_options) != 0) {
     node_ = nullptr;
-    return Status::Corruption("failed to init raft node");
+    return util::Status::Corruption("failed to init raft node");
   }
   node_ = node;
 
@@ -38,10 +37,10 @@ Status RocksFSM::Open() {
   rocksdb::Status s =
       rocksdb::DB::Open(rocks_options, options_.rocksdb_path, &db_);
   if (!s.ok()) {
-    return Status::Corruption("Can't open rocksdb");
+    return util::Status::Corruption("Can't open rocksdb");
   }
 
-  return Status::OK();
+  return util::Status::OK();
 }
 
 void RocksFSM::Close() {
@@ -89,9 +88,9 @@ void RocksClosure::Run() {
   std::unique_ptr<RocksClosure> self_guard(this);
 
   if (status().ok()) {
-    waiter_->Signal(util::Status::Corruption(status().error_str()));
-  } else {
     waiter_->Signal();
+  } else {
+    waiter_->Signal(util::Status::Corruption(status().error_str()));
   }
 }
 
@@ -100,27 +99,39 @@ util::Status RocksFSM::Put(const std::string& key, const std::string& value,
   return propose(OP_PUT, key, value, waiter);
 }
 
+util::Status RocksFSM::Get(const std::string& key, std::string& value,
+        std::shared_ptr<util::Waiter> waiter) {
+  // TODO(Handora) read is not linearzy consistent
+  rocksdb::Status s = db_->Get(rocksdb::ReadOptions(), key, &value);
+  if (!s.ok()) {
+    return util::Status::Corruption(s.ToString());
+  }
+  return util::Status::OK();
+}
+
 util::Status RocksFSM::put(const std::string& key, const std::string& value) {
   rocksdb::Status s = db_->Put(rocksdb::WriteOptions(), key, value);
   if (!s.ok()) {
-    return Status::Corruption(s.ToString());
+    return util::Status::Corruption(s.ToString());
   }
-  return Status::OK();
+  return util::Status::OK();
 }
 
 util::Status RocksFSM::propose(ProposeType type, const std::string& key,
                                const std::string& value,
                                std::shared_ptr<util::Waiter> waiter) {
-  const int64_t term = leader_term_.load(butil::memory_order_relaxed);
+  // const int64_t term = leader_term_.load(butil::memory_order_relaxed);
   // if (term < 0) {
-  //   return Status::NotLeader("propose to nonleader");
+  //   return util::Status::NotLeader("propose to nonleader");
   // }
 
   butil::IOBuf log;
   log.push_back((uint8_t)type);
-  log.push_back((uint32_t)(key.size()));
+  uint32_t size = (uint32_t)key.size();
+  log.append(&size, sizeof(uint32_t));
   log.append(key);
-  log.push_back((uint32_t)(value.size()));
+  size = static_cast<uint32_t>(value.size());
+  log.append(&size, sizeof(uint32_t));
   log.append(value);
 
   braft::Task task;
@@ -130,6 +141,26 @@ util::Status RocksFSM::propose(ProposeType type, const std::string& key,
   node_->apply(task);
 
   return util::Status::OK();
+}
+
+void RocksFSM::on_leader_start(int64_t term) {
+    leader_term_.store(term, butil::memory_order_release);
+}
+
+void RocksFSM::on_leader_stop(const butil::Status& status) {
+    leader_term_.store(-1, butil::memory_order_release);
+}
+
+void RocksFSM::on_error(const ::braft::Error& e) {
+}
+
+void RocksFSM::on_configuration_committed(const ::braft::Configuration& conf) {
+}
+
+void RocksFSM::on_stop_following(const ::braft::LeaderChangeContext& ctx) {
+}
+
+void RocksFSM::on_start_following(const ::braft::LeaderChangeContext& ctx) {
 }
 
 }  // namespace raft
