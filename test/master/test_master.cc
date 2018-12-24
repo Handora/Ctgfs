@@ -65,7 +65,7 @@ TEST(MasterTest, Connect) {
   heart_beat_info->addr = heart_beat_sender_addr;
   HeartBeatSender sender(detector_addr, heart_beat_info);
   auto send_status = sender.SendHeartBeat();
-  ASSERT_EQ(send_status.IsOK(), true) << "heart beat fail" << std::endl;
+  EXPECT_EQ(send_status.IsOK(), true) << "heart beat fail" << std::endl;
 
 
   auto client_func = [=]() {
@@ -77,8 +77,8 @@ TEST(MasterTest, Connect) {
   };
   std::thread t(client_func);
   t.join();
-  detector_server.RunUntilAskedToQuit();
-  server.RunUntilAskedToQuit();
+  //detector_server.RunUntilAskedToQuit();
+  //server.RunUntilAskedToQuit();
 }
 
 }  // namespace master

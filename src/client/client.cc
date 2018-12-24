@@ -11,7 +11,6 @@
 
 namespace ctgfs {
 namespace client {
-Client::Client() {}
 
 Client::Client(const std::string& input) { Client(input, DEFAULT_SERVER_ADDR); }
 

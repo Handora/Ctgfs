@@ -30,7 +30,7 @@ class Client {
 
  private:
   // should not use default constructor
-  Client();
+  Client()=delete;
   // should be init every time before connect
   brpc::Channel client_channel_;
   std::shared_ptr<ClientKVRequest> client_request_ptr_;
