@@ -18,6 +18,7 @@ void HeartBeatSender::SetHeartBeatInfo(
     const std::shared_ptr<HeartBeatInfo> heart_beat_info) {
   auto req_ptr = heart_beat_message_req_.get();
   auto info_ptr = heart_beat_info.get();
+  req_ptr->set_type(info_ptr->type);
   req_ptr->set_addr(info_ptr->addr);
 }
 
@@ -28,6 +29,7 @@ util::Status HeartBeatSender::SendHeartBeat() {
   stub.SendHeartBeat(&ctrl, heart_beat_message_req_.get(),
                      heart_beat_message_res_.get(), NULL);
   if (ctrl.Failed()) {
+    LOG(ERROR) << "Error Msg: " << ctrl.ErrorText() << std::endl;
     return util::Status::HeartBeatFail();
   }
 

@@ -2,6 +2,7 @@
 * author: OneDay_(ltang970618@gmail.com)
 **/
 
+#include <butil/logging.h>
 #include <client/client.h>
 #include <parser/parser.h>
 #include <algorithm>
@@ -27,12 +28,9 @@ Client::Client(const std::string& input, const std::string& addr)
 bool Client::StartClient() { return parserInput(); }
 
 void Client::initChannel(const std::string& addr) {
-  auto split_pos =
-      std::find_if(addr.begin(), addr.end(), [](char x) { return (x == ':'); });
-  std::string ip = std::string(addr.begin(), split_pos);
-  std::string port_str = std::string(split_pos + 1, addr.end());
-  int port = atoi(port_str.c_str());
-  initChannel(ip, port);
+  client_response_ptr_ = std::make_shared<ClientKVResponse>();
+  brpc::ChannelOptions options;
+  client_channel_.Init(addr.c_str(), &options);
 }
 
 void Client::initChannel(const std::string& ip, const int port) {
@@ -79,10 +77,12 @@ bool Client::connectCallback() {}
 
 bool Client::connectToKV() {
   // connect kv
+  return true;
 }
 
 bool Client::doCommand() {
   // do command
+  return true;
 }
 
 void Client::debugErrorParserInput(bool is_error, const char* str) {
@@ -92,8 +92,10 @@ void Client::debugErrorParserInput(bool is_error, const char* str) {
 void Client::debugErrorParserInput(bool is_error,
                                    const std::string& error_str) {
   if (is_error) {
+    LOG(ERROR) << error_str << std::endl;
     // std::cout << error_str << std::endl;
   } else {
+    LOG(INFO) << error_str << std::endl;
     // std::cout << error_str << std::endl;
   }
 }
@@ -105,8 +107,10 @@ void Client::debugErrorConnectToMaster(bool is_error, const char* str) {
 void Client::debugErrorConnectToMaster(bool is_error,
                                        const std::string& error_str) {
   if (is_error) {
+    LOG(ERROR) << error_str << std::endl;
     // std::cout << error_str << std::endl;
   } else {
+    LOG(INFO) << error_str << std::endl;
     // std::cout << error_str << std::endl;
   }
 }
@@ -117,8 +121,10 @@ void Client::debugErrorAskKV(bool is_error, const char* str) {
 
 void Client::debugErrorAskKV(bool is_error, const std::string& error_str) {
   if (is_error) {
+    LOG(ERROR) << error_str << std::endl;
     // std::cout << error_str << std::endl;
   } else {
+    LOG(INFO) << error_str << std::endl;
     // std::cout << error_str << std::endl;
   }
 }
