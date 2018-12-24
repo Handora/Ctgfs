@@ -68,7 +68,7 @@ bool Master::registerKV(const std::string& addr) {
     return false;
   }
   int nxt_id = getNewRegisterID();
-  LOG(INFO) << "ID : " << nxt_id << std::endl;
+  // LOG(INFO) << "ID : " << nxt_id << std::endl;
   if (nxt_id == -1) {
     debugRegisterKV(true, "Generate Registe ID Error\n");
     return false;
@@ -78,7 +78,7 @@ bool Master::registerKV(const std::string& addr) {
 }
 
 int Master::getNewRegisterID() {
-  LOG(INFO) << "generating regist ID" << std::endl;
+  // LOG(INFO) << "generating regist ID" << std::endl;
   if (!reused_queue_.empty()) {
     auto id = reused_queue_.front();
     reused_queue_.pop();

@@ -57,7 +57,6 @@ TEST(MasterTest, Connect) {
   ASSERT_EQ(0, start_status);
 
   // new a heart_beat_sender
-  LOG(INFO) << "start heart beat sender" << std::endl;
 
   std::string heart_beat_sender_addr = std::string("127.0.0.1:1235");
   auto heart_beat_info = std::make_shared<HeartBeatInfo>();
@@ -65,11 +64,9 @@ TEST(MasterTest, Connect) {
       HeartBeatMessageRequest_HeartBeatType_kRegist;  // kRgist
   heart_beat_info->addr = heart_beat_sender_addr;
   HeartBeatSender sender(detector_addr, heart_beat_info);
-  LOG(INFO) << "send heart beat" << std::endl;
   auto send_status = sender.SendHeartBeat();
   ASSERT_EQ(send_status.IsOK(), true) << "heart beat fail" << std::endl;
 
-  LOG(INFO) << "start client" << std::endl;
 
   auto client_func = [=]() {
     const std::string input = "mkdir /a/b";
