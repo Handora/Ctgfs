@@ -50,6 +50,11 @@ struct Options {
   // Group of the raft replication
   std::string group_id;
 
+  // inital peer conf
+  //
+  // Default: ""
+  std::string initial_conf;
+
   /****************** General Part ******************/
   // Port of the local server
   uint32_t local_port;
