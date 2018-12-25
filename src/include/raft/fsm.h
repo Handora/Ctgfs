@@ -42,15 +42,15 @@ class RocksFSM : public braft::StateMachine {
   // rocksdb inside it
   void Close();
 
-  // Put the key into the value, it will be replicated 
+  // Put the key into the value, it will be replicated
   // to majority of all nodes. you can use the waiter
   // to wait for put applied or asynchronously to let
   // it applied
   util::Status Put(const std::string& key, const std::string& value,
-             std::shared_ptr<util::Waiter> waiter);
+                   std::shared_ptr<util::Waiter> waiter);
 
   util::Status Get(const std::string& key, std::string& value,
-             std::shared_ptr<util::Waiter> waiter);
+                   std::shared_ptr<util::Waiter> waiter);
 
   bool IsLeader() const;
 
@@ -73,8 +73,8 @@ class RocksFSM : public braft::StateMachine {
 
   // propose the log and let raft to replicate and commit it
   util::Status propose(ProposeType type, const std::string& key,
-                 const std::string& value,
-                 std::shared_ptr<util::Waiter> waiter);
+                       const std::string& value,
+                       std::shared_ptr<util::Waiter> waiter);
 
   // TODO(Handora): should we use volatile
   std::shared_ptr<braft::Node> node_;
@@ -86,8 +86,7 @@ class RocksFSM : public braft::StateMachine {
 // Implements Closure which encloses RPC stuff
 class RocksClosure : public braft::Closure {
  public:
-  RocksClosure(std::shared_ptr<util::Waiter> waiter) 
-      : waiter_(waiter) {}
+  RocksClosure(std::shared_ptr<util::Waiter> waiter) : waiter_(waiter) {}
   ~RocksClosure() {}
 
   // notify the waiter, should we do some else?

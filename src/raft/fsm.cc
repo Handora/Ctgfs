@@ -8,8 +8,7 @@ namespace ctgfs {
 namespace raft {
 
 RocksFSM::RocksFSM(const util::Options& options)
-    : node_(nullptr), leader_term_(-1), 
-    options_(options), db_(nullptr) {}
+    : node_(nullptr), leader_term_(-1), options_(options), db_(nullptr) {}
 
 RocksFSM::~RocksFSM() { Close(); }
 
@@ -54,7 +53,7 @@ void RocksFSM::Close() {
     node_->shutdown(nullptr);
     // node_->join();
   }
-  
+
   db_ = nullptr;
   node_ = nullptr;
 }
@@ -117,7 +116,7 @@ util::Status RocksFSM::Put(const std::string& key, const std::string& value,
 }
 
 util::Status RocksFSM::Get(const std::string& key, std::string& value,
-        std::shared_ptr<util::Waiter> waiter) {
+                           std::shared_ptr<util::Waiter> waiter) {
   // TODO(Handora) read is not linearzy consistent
   rocksdb::Status s = db_->Get(rocksdb::ReadOptions(), key, &value);
   if (!s.ok()) {
@@ -161,24 +160,20 @@ util::Status RocksFSM::propose(ProposeType type, const std::string& key,
 }
 
 void RocksFSM::on_leader_start(int64_t term) {
-    leader_term_.store(term, butil::memory_order_release);
+  leader_term_.store(term, butil::memory_order_release);
 }
 
 void RocksFSM::on_leader_stop(const butil::Status& status) {
-    leader_term_.store(-1, butil::memory_order_release);
+  leader_term_.store(-1, butil::memory_order_release);
 }
 
-void RocksFSM::on_error(const ::braft::Error& e) {
-}
+void RocksFSM::on_error(const ::braft::Error& e) {}
 
-void RocksFSM::on_configuration_committed(const ::braft::Configuration& conf) {
-}
+void RocksFSM::on_configuration_committed(const ::braft::Configuration& conf) {}
 
-void RocksFSM::on_stop_following(const ::braft::LeaderChangeContext& ctx) {
-}
+void RocksFSM::on_stop_following(const ::braft::LeaderChangeContext& ctx) {}
 
-void RocksFSM::on_start_following(const ::braft::LeaderChangeContext& ctx) {
-}
+void RocksFSM::on_start_following(const ::braft::LeaderChangeContext& ctx) {}
 
 }  // namespace raft
 }  // namespace ctgfs
