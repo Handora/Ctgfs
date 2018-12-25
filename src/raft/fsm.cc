@@ -1,13 +1,15 @@
 /*
  * Authors: Chen Qian(qcdsr970209@gmail.com)
  */
+
 #include <raft/fsm.h>
 
 namespace ctgfs {
 namespace raft {
 
 RocksFSM::RocksFSM(const util::Options& options)
-    : node_(nullptr), leader_term_(-1), options_(options) {}
+    : node_(nullptr), leader_term_(-1), 
+    options_(options), db_(nullptr) {}
 
 RocksFSM::~RocksFSM() { Close(); }
 
@@ -37,7 +39,7 @@ util::Status RocksFSM::Open() {
   rocksdb::Status s =
       rocksdb::DB::Open(rocks_options, options_.rocksdb_path, &db_);
   if (!s.ok()) {
-    return util::Status::Corruption("Can't open rocksdb");
+    return util::Status::Corruption("Can't open rocksdb " + s.ToString());
   }
 
   return util::Status::OK();
@@ -47,7 +49,22 @@ void RocksFSM::Close() {
   if (db_ != nullptr) {
     delete db_;
   }
+
+  if (node_ != nullptr) {
+    node_->shutdown(nullptr);
+    // node_->join();
+  }
+  
   db_ = nullptr;
+  node_ = nullptr;
+}
+
+bool RocksFSM::IsLeader() const {
+  const int64_t term = leader_term_.load(butil::memory_order_relaxed);
+  if (term < 0) {
+    return false;
+  }
+  return true;
 }
 
 // @braft::StateMachine

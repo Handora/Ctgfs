@@ -51,6 +51,9 @@ class RocksFSM : public braft::StateMachine {
 
   util::Status Get(const std::string& key, std::string& value,
              std::shared_ptr<util::Waiter> waiter);
+
+  bool IsLeader() const;
+
  protected:
   // what to do when the value is applied to Rocksdb
   void on_apply(braft::Iterator& iter) override;
