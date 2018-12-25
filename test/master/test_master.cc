@@ -77,8 +77,10 @@ TEST(MasterTest, Connect) {
   };
   std::thread t(client_func);
   t.join();
-  //detector_server.RunUntilAskedToQuit();
-  //server.RunUntilAskedToQuit();
+  detector_server.Stop(0);
+  server.Stop(0);
+  detector_server.Join();
+  server.Join();
 }
 
 }  // namespace master
