@@ -5,6 +5,7 @@
 #include <brpc/channel.h>
 #include <butil/time.h>
 #include <client.pb.h>
+#include <master/heart_beat.h>
 #include <map>
 #include <memory>
 #include <queue>
@@ -23,15 +24,14 @@
 namespace ctgfs {
 namespace master {
 class Master : public MasterService {
- protected:
-  inline Master();
-
  public:
+  Master();
   ~Master();
   void ClientAskForKV(::google::protobuf::RpcController* controller,
                       const ::ctgfs::ClientKVRequest* request,
                       ::ctgfs::ClientKVResponse* response,
                       ::google::protobuf::Closure* done);
+  void UpdateKVInfo(const std::shared_ptr<ctgfs::heart_beat::HeartBeatInfo>);
 
  private:
   // char set need hash
@@ -45,6 +45,7 @@ class Master : public MasterService {
   std::map<int, std::string> register_id_to_addr_;
   // get register id by addr
   std::map<std::string, int> addr_to_register_id_;
+  std::vector<std::shared_ptr<heart_beat::HeartBeatInfo> > kv_info_;
   // every kv connect to master will get a distinct id
   int cur_register_kv_id_ = 0;
   // collect disconnect kv's id
@@ -58,7 +59,9 @@ class Master : public MasterService {
                                   ::ctgfs::ClientKVResponse* response);
   // register a new kv
   // if success return true else false
+  // addr : ip:port
   bool registerKV(const std::string& ip, const int& port);
+  bool registerKV(const std::string& addr);
   // get new kv
   // if register fail return -1
   // else return a distinc regist id

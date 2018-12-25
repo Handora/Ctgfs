@@ -1,6 +1,8 @@
 /*
 * author: OneDay_(ltang970618@gmail.com)
 **/
+#include <butil/logging.h>
+#include <master/heart_beat.h>
 #include <master/master.h>
 
 namespace ctgfs {
@@ -20,8 +22,27 @@ void Master::ClientAskForKV(::google::protobuf::RpcController* controller,
                             ::ctgfs::ClientKVResponse* response,
                             ::google::protobuf::Closure* done) {
   brpc::ClosureGuard done_guard(done);
+  if (cur_register_kv_id_ == 0) {
+    LOG(ERROR) << "NO FS CONNECT" << std::endl;
+    return;
+  }
   brpc::Controller* ctrl = static_cast<brpc::Controller*>(controller);
   setKVAddrByClientKVRequest(request, response);
+}
+
+void Master::UpdateKVInfo(
+    const std::shared_ptr<ctgfs::heart_beat::HeartBeatInfo> info) {
+  if (info->type == HeartBeatMessageRequest_HeartBeatType::
+                        HeartBeatMessageRequest_HeartBeatType_kRegist) {
+    if (!registerKV(info->addr)) return;
+  }
+  if (info->type == HeartBeatMessageRequest_HeartBeatType::
+                        HeartBeatMessageRequest_HeartBeatType_kInfoUpdate ||
+      info->type == HeartBeatMessageRequest_HeartBeatType::
+                        HeartBeatMessageRequest_HeartBeatType_kRegist) {
+    int id = addr_to_register_id_[info->addr];
+    kv_info_[id] = info;
+  }
 }
 
 void Master::setKVAddrByClientKVRequest(const ::ctgfs::ClientKVRequest* request,
@@ -38,11 +59,16 @@ bool Master::registerKV(const std::string& ip, const int& port) {
   std::string addr(ip.begin(), ip.end());
   std::string port_str = std::to_string(port);
   addr += std::string(":") + port_str;
+  registerKV(addr);
+}
+
+bool Master::registerKV(const std::string& addr) {
   if (addr_to_register_id_.find(addr) != addr_to_register_id_.end()) {
     debugRegisterKV(true, "Duplicated Regist KV\n");
     return false;
   }
   int nxt_id = getNewRegisterID();
+  // LOG(INFO) << "ID : " << nxt_id << std::endl;
   if (nxt_id == -1) {
     debugRegisterKV(true, "Generate Registe ID Error\n");
     return false;
@@ -52,11 +78,14 @@ bool Master::registerKV(const std::string& ip, const int& port) {
 }
 
 int Master::getNewRegisterID() {
+  // LOG(INFO) << "generating regist ID" << std::endl;
   if (!reused_queue_.empty()) {
     auto id = reused_queue_.front();
     reused_queue_.pop();
+    kv_info_[id] = std::make_shared<heart_beat::HeartBeatInfo>();
     return id;
   }
+  kv_info_.push_back(std::make_shared<heart_beat::HeartBeatInfo>());
   return cur_register_kv_id_++;
 }
 

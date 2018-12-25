@@ -16,7 +16,12 @@ namespace heart_beat {
 // and use this struct to construct heart_beat_sender
 // the info is as same as heart_beat_proto
 struct HeartBeatInfo {
+  HeartBeatMessageRequest_HeartBeatType type;
   std::string addr;
+  // assume deep copy to make data persistent
+  //  void operator=(const HeartBeatInfo& heart_beat_info) {
+  //    addr = heart_beat_info.addr;
+  //  }
 };
 // fs will get this struct
 // if he call the get method

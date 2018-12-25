@@ -15,7 +15,6 @@ namespace client {
 const std::string DEFAULT_SERVER_ADDR = "127.0.0.1:1234";
 class Client {
  public:
-  Client();
   // the string of command as input ip:prot as addr
   // Example:
   // Client clt = Client("rm /src");
@@ -30,6 +29,8 @@ class Client {
   bool StartClient();
 
  private:
+  // should not use default constructor
+  Client()=delete;
   // should be init every time before connect
   brpc::Channel client_channel_;
   std::shared_ptr<ClientKVRequest> client_request_ptr_;

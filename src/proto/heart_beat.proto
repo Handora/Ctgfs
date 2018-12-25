@@ -11,10 +11,16 @@ package ctgfs;
 // you should give the info to master so that master can give choice
 
 message HeartBeatMessageRequest {
+  enum HeartBeatType {
+    kRegist = 0;
+    kInfoUpdate = 1;
+    kUnregist = 2;
+  }
+  required HeartBeatType type = 1;
   // ip:port
   // Example : 
   // 127.0.0.1:1234
-  required string addr = 1;
+  required string addr = 2;
   // should add more info later
 };
 
