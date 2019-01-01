@@ -1,0 +1,7 @@
+file(GLOB TEST_JSON_SRCS "test_*.cc")
+foreach(JSON_T ${TEST_JSON_SRCS})
+    get_filename_component(JSON_T_WE ${JSON_T} NAME_WE)
+    add_executable(${JSON_T_WE} ${JSON_T})
+    target_link_libraries("${JSON_T_WE}" json gtest_main)
+    add_test(NAME "${JSON_T_WE}" COMMAND "${JSON_T_WE}")
+endforeach()

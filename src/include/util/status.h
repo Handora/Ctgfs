@@ -83,6 +83,15 @@ class Status {
     return (code_ == Code::kNotLeader);
   }
 
+  // --------------------------JSON Part------------------------------//
+  static Status ExpectValue() {
+    return Status(Code::kExpectValue);
+  }
+
+  bool isExpectValue() const {
+    return (code_ == Code::kExpectValue);
+  }
+
  private:
   enum class Code {
     // General part 
@@ -94,6 +103,9 @@ class Status {
 
     // KV part
     kNotLeader,
+
+    // JSON part
+    kExpectValue,
   }; 
 
   Code code_;
