@@ -2,6 +2,7 @@
 * author: wfgu(peter.wfgu@gmail.com)
 * */
 
+#include <cstring>
 #include <string>
 #include <functional>
 #include <gtest/gtest.h>
@@ -11,7 +12,7 @@
 namespace ctgfs {
 namespace util {
 
-TEST(JSONLITERALTest, Basic) {
+TEST(JSONliteralTest, Basic) {
   using namespace std;
   // test parse null
   JsonObject t0;
@@ -36,7 +37,7 @@ TEST(JSONLITERALTest, Basic) {
 }
 
 // test number
-TEST(JSONNUMBERTest, Basic) {
+TEST(JSONNumberTest, Basic) {
   using namespace std;
 
   function<void(double, const char*)> TEST_NUMBER = [&](double f, const char* str) {
@@ -76,6 +77,18 @@ TEST(JSONNUMBERTest, Basic) {
   TEST_NUMBER( 1.7976931348623157e+308, "1.7976931348623157e+308" );  /* Max double */
   TEST_NUMBER(-1.7976931348623157e+308, "-1.7976931348623157e+308");
 
+}
+
+TEST(JSONStringTest, Basic) {
+  using namespace std;
+  JsonObject j;
+  j.SetString("Hello", 5);
+  EXPECT_EQ(JsonType::kJsonString, j.GetType());
+  EXPECT_EQ("Hello", string(j.GetString()));
+
+  Status s = Json::Parse("\"Hello World!\"", j);
+  EXPECT_EQ(true, s.IsOK());
+  EXPECT_EQ("Hello World!", string(j.GetString()));
 }
 
 }  // namespace util 
