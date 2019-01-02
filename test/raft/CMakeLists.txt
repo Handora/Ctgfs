@@ -1,0 +1,7 @@
+file(GLOB TEST_RAFT_SRCS "test_*.cc")
+foreach(RAFT_T ${TEST_RAFT_SRCS})
+    get_filename_component(RAFT_T_WE ${RAFT_T} NAME_WE)
+    add_executable(${RAFT_T_WE} ${RAFT_T})
+    target_link_libraries("${RAFT_T_WE}" fsm gtest_main util protobuf tcmalloc)
+    add_test(NAME "${RAFT_T_WE}" COMMAND "${RAFT_T_WE}")
+endforeach()

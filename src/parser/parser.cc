@@ -64,5 +64,5 @@ Status Parser::ParseFromInput(const std::string& input,
 
   return Status::OK();
 }
-}
+}  // namespace parser
 }  // namespace ctgfs

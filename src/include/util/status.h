@@ -57,6 +57,12 @@ class Status {
 
   bool IsInvalidArgument() const { return (code_ == Code::kInvalidArgument); }
 
+  static Status Corruption(const std::string& msg) {
+    return Status(Code::kCorruption, msg);
+  }
+
+  bool IsCorruption() const { return (code_ == Code::kCorruption); }
+
   /*************************** KV Part *******************************/
   static Status NotLeader(const std::string& msg) {
     return Status(Code::kNotLeader, msg);
@@ -79,6 +85,7 @@ class Status {
     kTimeOut,
     kNotSupported,
     kInvalidArgument,
+    kCorruption,
 
     // KV part
     kNotLeader,
