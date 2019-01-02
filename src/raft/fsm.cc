@@ -77,18 +77,19 @@ void RocksFSM::on_apply(braft::Iterator& iter) {
     data.cutn(&type, sizeof(uint8_t));
 
     switch (type) {
-      case OP_PUT: {
-        uint32_t size;
-        std::string key, value;
-        data.cutn(&size, sizeof(uint32_t));
-        data.cutn(&key, size);
+    case OP_PUT: {
+      uint32_t size;
+      std::string key, value;
+      data.cutn(&size, sizeof(uint32_t));
+      data.cutn(&key, size);
 
-        data.cutn(&size, sizeof(uint32_t));
-        data.cutn(&value, size);
-        put(key, value);
-      }
-      default:
-        break;
+      data.cutn(&size, sizeof(uint32_t));
+      data.cutn(&value, size);
+      put(key, value);
+      break;
+    }
+    default:
+      break;
     }
   }
 }
@@ -115,14 +116,18 @@ util::Status RocksFSM::Put(const std::string& key, const std::string& value,
   return propose(OP_PUT, key, value, waiter);
 }
 
-util::Status RocksFSM::Get(const std::string& key, std::string& value,
-                           std::shared_ptr<util::Waiter> waiter) {
+util::Status RocksFSM::LocalGet(const std::string& key, std::string& value) {
   // TODO(Handora) read is not linearzy consistent
   rocksdb::Status s = db_->Get(rocksdb::ReadOptions(), key, &value);
   if (!s.ok()) {
     return util::Status::Corruption(s.ToString());
   }
   return util::Status::OK();
+}
+
+util::Status RocksFSM::Get(const std::string& key,
+                           std::shared_ptr<util::Waiter> waiter) {
+  return propose(OP_GET, key, "", waiter);
 }
 
 util::Status RocksFSM::put(const std::string& key, const std::string& value) {
@@ -146,9 +151,16 @@ util::Status RocksFSM::propose(ProposeType type, const std::string& key,
   uint32_t size = (uint32_t)key.size();
   log.append(&size, sizeof(uint32_t));
   log.append(key);
-  size = static_cast<uint32_t>(value.size());
-  log.append(&size, sizeof(uint32_t));
-  log.append(value);
+
+  switch (type) {
+  case OP_GET:
+    break;
+  case OP_PUT: {
+      size = static_cast<uint32_t>(value.size());
+      log.append(&size, sizeof(uint32_t));
+      log.append(value);
+    }
+  }
 
   braft::Task task;
   task.data = &log;
