@@ -21,8 +21,8 @@ void* waitMain(void* args) {
   bthread_usleep(500 * 1000);
 
   auto waiter = (Waiter*)(args);
-  waiter->Signal();
   example_var = 10;
+  waiter->Signal();
   return nullptr;
 }
 
