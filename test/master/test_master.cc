@@ -72,7 +72,7 @@ TEST(MasterTest, Connect) {
     const std::string input = "mkdir /a/b";
     Client client(input, addr);
     bool client_status = client.StartClient();
-    ASSERT_EQ(true, client.StartClient()) << "start client error!" << std::endl;
+    ASSERT_EQ(true, client_status) << "start client error!" << std::endl;
     ;
   };
   std::thread t(client_func);
