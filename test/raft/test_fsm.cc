@@ -8,7 +8,6 @@
 namespace ctgfs {
 namespace raft {
 
-/*
 TEST(FSMTest, Basic) {
 util::RemoveDirectoryRecursively("./tmp");
 brpc::Server server;
@@ -43,7 +42,6 @@ EXPECT_EQ("value", value);
 
 fsm->Close();
 }
-*/
 
 TEST(FSMTest, Multiple) {
   util::RemoveDirectoryRecursively("tmp");
