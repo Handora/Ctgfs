@@ -6,9 +6,9 @@
 #include <butil/time.h>
 #include <client.pb.h>
 #include <gflags/gflags.h>
+#include <util/status.h>
 #include <memory>
 #include <string>
-#include <util/status.h>
 
 namespace ctgfs {
 namespace client {
@@ -31,7 +31,7 @@ class Client {
 
  private:
   // should not use default constructor
-  Client()=delete;
+  Client() = delete;
   // should be init every time before connect
   brpc::Channel client_channel_;
   // store the file string
@@ -44,7 +44,8 @@ class Client {
   void initChannel(const std::string& addr);
   void initChannel(const std::string& ip, const int port);
   // return true when parse succ else return false
-  // this fuction will remove the value of command store in client if value exists
+  // this fuction will remove the value of command store in client if value
+  // exists
   // prevent transfering value when rpc
   util::Status parserInput();
   // return true when connect succ eles return false
@@ -56,8 +57,8 @@ class Client {
   util::Status connectToKV();
   // convenient to change to multithread
   util::Status doCommand();
-  // 
-  util::Status doCommandWithStream(); 
+  //
+  util::Status doCommandWithStream();
   // for debug and log
   // if error is_error = true else false to help decide the level of log
   void debugErrorParserInput(bool is_error, const char*);

@@ -64,25 +64,27 @@ class Status {
   bool IsCorruption() const { return (code_ == Code::kCorruption); }
 
   /*************************** Client Part ****************************/
-  static Status ConnectFailed(const std::string& msg="") {
-    return Status(Code::kConnectFailed,msg);
+  static Status ConnectFailed(const std::string& msg = "") {
+    return Status(Code::kConnectFailed, msg);
   }
 
   bool IsConnectFailed() const { return (code_ == Code::kConnectFailed); }
 
-  static Status StreamCreateFailed(const std::string& msg="") {
-    return Status(Code::kStreamCreateFailed,msg);
+  static Status StreamCreateFailed(const std::string& msg = "") {
+    return Status(Code::kStreamCreateFailed, msg);
   }
 
-  bool IsStreamCreateFailed() const { return (code_ == Code::kStreamCreateFailed); }
+  bool IsStreamCreateFailed() const {
+    return (code_ == Code::kStreamCreateFailed);
+  }
 
-  static Status StreamCrash(const std::string& msg="") {
+  static Status StreamCrash(const std::string& msg = "") {
     return Status(Code::kStreamCrash, msg);
   }
 
-  bool IsStreamCrash() const { return (code_==Code::kStreamCrash); }
+  bool IsStreamCrash() const { return (code_ == Code::kStreamCrash); }
 
-  static Status ParserInputError(const std::string& msg="") {
+  static Status ParserInputError(const std::string& msg = "") {
     return Status(Code::kParserInputError, msg);
   }
 
@@ -112,7 +114,7 @@ class Status {
     kInvalidArgument,
     kCorruption,
 
-    //Client part
+    // Client part
     kConnectFailed,
     kStreamCreateFailed,
     kStreamCrash,
