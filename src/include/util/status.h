@@ -63,6 +63,31 @@ class Status {
 
   bool IsCorruption() const { return (code_ == Code::kCorruption); }
 
+  /*************************** Client Part ****************************/
+  static Status ConnectFailed(const std::string& msg="") {
+    return Status(Code::kConnectFailed,msg);
+  }
+
+  bool IsConnectFailed() const { return (code_ == Code::kConnectFailed); }
+
+  static Status StreamCreateFailed(const std::string& msg="") {
+    return Status(Code::kStreamCreateFailed,msg);
+  }
+
+  bool IsStreamCreateFailed() const { return (code_ == Code::kStreamCreateFailed); }
+
+  static Status StreamCrash(const std::string& msg="") {
+    return Status(Code::kStreamCrash, msg);
+  }
+
+  bool IsStreamCrash() const { return (code_==Code::kStreamCrash); }
+
+  static Status ParserInputError(const std::string& msg="") {
+    return Status(Code::kParserInputError, msg);
+  }
+
+  bool IsParserInputError() const { return (code_ == Code::kParserInputError); }
+
   /*************************** KV Part *******************************/
   static Status NotLeader(const std::string& msg) {
     return Status(Code::kNotLeader, msg);
@@ -87,6 +112,11 @@ class Status {
     kInvalidArgument,
     kCorruption,
 
+    //Client part
+    kConnectFailed,
+    kStreamCreateFailed,
+    kStreamCrash,
+    kParserInputError,
     // KV part
     kNotLeader,
 
