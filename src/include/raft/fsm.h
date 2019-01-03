@@ -49,8 +49,9 @@ class RocksFSM : public braft::StateMachine {
   util::Status Put(const std::string& key, const std::string& value,
                    std::shared_ptr<util::Waiter> waiter);
 
-  util::Status Get(const std::string& key, std::string& value,
-                   std::shared_ptr<util::Waiter> waiter);
+  util::Status LocalGet(const std::string& key, std::string& value);
+
+  util::Status Get(const std::string& key, std::shared_ptr<util::Waiter> waiter);
 
   bool IsLeader() const;
 

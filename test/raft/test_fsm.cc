@@ -97,7 +97,9 @@ TEST(FSMTest, Multiple) {
       EXPECT_EQ(true, s.IsOK());
 
       std::string value;
-      s = fsm->Get("key", value, waiter);
+      s = fsm->Get("key", waiter);
+      EXPECT_EQ(true, s.IsOK());
+      s = fsm->LocalGet("key", value);
       EXPECT_EQ(true, s.IsOK());
       EXPECT_EQ("value", value);
     }
