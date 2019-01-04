@@ -11,6 +11,8 @@
 #include <util/json.h>
 #include <util/status.h>
 
+#define PUTCH(js, ch) do { *(char*)js.Push(sizeof(char)) = (ch); } while(0)
+
 namespace ctgfs {
 namespace util {
   
@@ -107,6 +109,7 @@ Status Json::parseString(JsonStream& jstream, JsonObject& result) {
   jstream.json_str++;
   size_t head = jstream.top, len;
   const char* ptr = jstream.json_str;
+  unsigned u, u2;
   while (true) {
     char ch = *ptr++; 
     switch (ch) {
@@ -117,19 +120,40 @@ Status Json::parseString(JsonStream& jstream, JsonObject& result) {
         return Status::OK();
       case '\\':
         switch(*ptr++) {
-          case '\"': *(char*)jstream.Push(sizeof(char)) = ('\"'); break;
-          case '\\': *(char*)jstream.Push(sizeof(char)) = ('\\'); break;
-          case '/': *(char*)jstream.Push(sizeof(char)) = ('/'); break;
-          case '\b': *(char*)jstream.Push(sizeof(char)) = ('\b'); break;
-          case '\f': *(char*)jstream.Push(sizeof(char)) = ('\f'); break;
-          case '\n': *(char*)jstream.Push(sizeof(char)) = ('\n'); break;
-          case '\r': *(char*)jstream.Push(sizeof(char)) = ('\r'); break;
-          case '\t': *(char*)jstream.Push(sizeof(char)) = ('\t'); break;
+          case '\"': PUTCH(jstream, '\"'); break;
+          case '\\': PUTCH(jstream, '\\'); break;
+          case '/': PUTCH(jstream, '/'); break;
+          case '\b': PUTCH(jstream, '\b'); break;
+          case '\f': PUTCH(jstream, '\f'); break;
+          case '\n': PUTCH(jstream, '\n'); break;
+          case '\r': PUTCH(jstream, '\r'); break;
+          case '\t': PUTCH(jstream, '\t'); break;
+          case 'u':  // Unicode
+            if (!(ptr = parseHex4(ptr, u))) {
+              jstream.top = head;
+              return Status::InvalidArgument("Parse Error. Invalid Unicode.");
+            }
+            if (u >= 0xD800 && u <= 0xDBFF) {
+              if (*ptr++ != '\\') 
+                jstream.top = head;
+                return Status::InvalidArgument("Parse Error. Invalid Unicode.");
+              if (*ptr++ != 'u') 
+                jstream.top = head;
+                return Status::InvalidArgument("Parse Error. Invalid Unicode.");
+              if (!(ptr = parseHex4(ptr, u2))) 
+                jstream.top = head;
+                return Status::InvalidArgument("Parse Error. Invalid Unicode.");
+              if (u2 < 0xDC00 || u2 > 0xDFFF)  
+                jstream.top = head;
+                return Status::InvalidArgument("Parse Error. Invalid Unicode.");
+
+              u = (((u - 0xD800) << 10) | (u2 - 0xDC00)) + 0x10000;
+            }
+            encodeUTF8(jstream, u); break;
           default:
             jstream.top = head;
             return Status::InvalidArgument("Parse Error. Invalid string.");
-        } 
-        break;
+        } break;
       case '\0':
         jstream.top = head;
         return Status::InvalidArgument("Parse Error. Invalid string.");
@@ -140,6 +164,38 @@ Status Json::parseString(JsonStream& jstream, JsonObject& result) {
         }
         *(char*)jstream.Push(sizeof(char)) = ch;
     }
+  }
+}
+
+const char* parseHex4(const char* p, unsigned& u) {
+  u = 0;
+  for (int i = 0; i < 4; ++i) {
+    char ch = *p++;
+    u <<= 4;
+    if (ch >= '0' && ch <= '9') u |= ch - '0';
+    if (ch >= 'A' && ch <= 'F') u |= ch - ('A' - 10);
+    if (ch >= 'a' && ch <= 'f') u |= ch - ('a' - 10);
+    else return nullptr;
+  }
+  return p;
+}
+
+void encodeUTF8(JsonStream& jstream, const unsigned& u) {
+  if (u <= 0x7F) {
+    PUTCH(jstream, u & 0xFF);
+  } else if (u <= 0x7FF) {
+    PUTCH(jstream, 0xC0 | ((u >> 6) & 0xFF));
+    PUTCH(jstream, 0x80 | (u & 0x3F));
+  } else if (u <= 0xFFFF) {
+    PUTCH(jstream, 0xE0 | ((u >> 12) & 0xFF));
+    PUTCH(jstream, 0x80 | ((u >> 6) & 0x3F));
+    PUTCH(jstream, 0x80 | (u & 0x3F));
+  } else {
+    assert(u <= 0x10FFFF);
+    PUTCH(jstream, 0xF0 | ((u >> 18) & 0xFF));
+    PUTCH(jstream, 0x80 | ((u >> 12) & 0x3F));
+    PUTCH(jstream, 0x80 | ((u >> 6) & 0x3F));
+    PUTCH(jstream, 0x80 | (u & 0x3F));
   }
 }
 

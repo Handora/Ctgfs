@@ -139,6 +139,8 @@ class Json {
   static Status parseLiteral(JsonStream& jstream, JsonObject& result, const char* literal, JsonType expect_type);
   static Status parseNumber(JsonStream& jstream, JsonObject& result);
   static Status parseString(JsonStream& jstream, JsonObject& result);
+  static const char* parseHex4(const char* p, unsigned& u);
+  static void encodeUTF8(JsonStream& jstream, const unsigned& u);
 };
 
 
