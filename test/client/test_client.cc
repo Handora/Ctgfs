@@ -17,6 +17,7 @@
 namespace ctgfs {
 namespace client{
 
+// test file transfer to fs with stream
 TEST(ClientTest, Connect) {
   using namespace fs;
   // service prepare

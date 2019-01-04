@@ -28,6 +28,9 @@ using namespace ctgfs::heart_beat;
 // server start, heart_beat_detector start
 // heart_beat_sender regist to the master
 // client req
+// TODO(Add fs service)
+// partly test master cann't use now
+// should wait for update
 TEST(MasterTest, Connect) {
   // add service
   std::shared_ptr<Master> master_ptr = std::make_shared<Master>();
