@@ -91,5 +91,38 @@ TEST(JSONStringTest, Basic) {
   EXPECT_EQ("Hello World!", string(j.GetString()));
 }
 
+TEST(JSONUnicodeTest, Basic) {
+  using namespace std;
+
+   
+  function<void(const char*)> TEST_ERROR = [&](const char* str) {
+    JsonObject j;
+    j.SetType(JsonType::kJsonNull);
+    Status s = Json::Parse(str, j); 
+    EXPECT_EQ(true, s.IsInvalidArgument()); 
+    EXPECT_EQ(JsonType::kJsonNull, j.GetType());
+  };
+
+  TEST_ERROR("\"\\u\"");
+  TEST_ERROR("\"\\u0\"");
+  TEST_ERROR("\"\\u01\"");
+  TEST_ERROR("\"\\u012\"");
+  TEST_ERROR("\"\\u/000\"");
+  TEST_ERROR("\"\\uG000\"");
+  TEST_ERROR("\"\\u0/00\"");
+  TEST_ERROR("\"\\u0G00\"");
+  TEST_ERROR("\"\\u00/0\"");
+  TEST_ERROR("\"\\u00G0\"");
+  TEST_ERROR("\"\\u000/\"");
+  TEST_ERROR("\"\\u000G\"");
+  TEST_ERROR("\"\\u 123\"");
+
+  TEST_ERROR("\"\\uD800\"");
+  TEST_ERROR("\"\\uDBFF\"");
+  TEST_ERROR("\"\\uD800\\\\\"");
+  TEST_ERROR("\"\\uD800\\uDBFF\"");
+  TEST_ERROR("\"\\uD800\\uE000\"");
+}
+
 }  // namespace util 
 }  // namespace ctgfs

@@ -167,7 +167,7 @@ Status Json::parseString(JsonStream& jstream, JsonObject& result) {
   }
 }
 
-const char* parseHex4(const char* p, unsigned& u) {
+const char* Json::parseHex4(const char* p, unsigned& u) {
   u = 0;
   for (int i = 0; i < 4; ++i) {
     char ch = *p++;
@@ -180,7 +180,7 @@ const char* parseHex4(const char* p, unsigned& u) {
   return p;
 }
 
-void encodeUTF8(JsonStream& jstream, const unsigned& u) {
+void Json::encodeUTF8(JsonStream& jstream, const unsigned& u) {
   if (u <= 0x7F) {
     PUTCH(jstream, u & 0xFF);
   } else if (u <= 0x7FF) {
