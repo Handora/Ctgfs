@@ -39,9 +39,7 @@ class FileStreamReceiver : public brpc::StreamInputHandler {
   }
   virtual void on_idle_timeout(brpc::StreamId id) {}
 
-  virtual void on_closed(brpc::StreamId id) {
-
-  }
+  virtual void on_closed(brpc::StreamId id) {}
 
  private:
   FileStreamReceiver() = delete;
@@ -63,12 +61,13 @@ class AbstractFSService : public FileSystemService {
     receiver_ptr_ =
         std::make_shared<FileStreamReceiver>(std::ref(os_), callback_);
   }
-  AbstractFSService(std::stringstream& os, std::function<void()> callback, std::shared_ptr<brpc::StreamInputHandler> receiver_ptr):receiver_ptr_(receiver_ptr), os_(os), callback_(callback), sd_(brpc::INVALID_STREAM_ID) {
-
-  }
-  virtual ~AbstractFSService() {
-    brpc::StreamClose(sd_);
-  }
+  AbstractFSService(std::stringstream& os, std::function<void()> callback,
+                    std::shared_ptr<brpc::StreamInputHandler> receiver_ptr)
+      : receiver_ptr_(receiver_ptr),
+        os_(os),
+        callback_(callback),
+        sd_(brpc::INVALID_STREAM_ID) {}
+  virtual ~AbstractFSService() { brpc::StreamClose(sd_); }
   void DoCommandOnFS(::google::protobuf::RpcController* controller,
                      const ::ctgfs::ClientKVRequest* request,
                      ::ctgfs::FileSystemResponse* response,
@@ -94,11 +93,12 @@ class AbstractFSService : public FileSystemService {
 };
 
 // test class and for example
-class TestFSService : public AbstractFSService{
+class TestFSService : public AbstractFSService {
  public:
-  TestFSService(std::stringstream& os, std::function<void()> callback): AbstractFSService(os, callback) { }
-  virtual ~TestFSService() { 
-  }
+  TestFSService(std::stringstream& os, std::function<void()> callback)
+      : AbstractFSService(os, callback) {}
+  virtual ~TestFSService() {}
+
  protected:
   virtual bool solveHeader(const ::ctgfs::ClientKVRequest* request) {
     return true;

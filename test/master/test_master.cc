@@ -70,7 +70,6 @@ TEST(MasterTest, Connect) {
   auto send_status = sender.SendHeartBeat();
   EXPECT_EQ(send_status.IsOK(), true) << "heart beat fail" << std::endl;
 
-
   auto client_func = [=]() {
     const std::string input = "mkdir /a/b";
     Client client(input, addr);
