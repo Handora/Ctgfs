@@ -16,19 +16,21 @@ namespace ctgfs {
 namespace fs {
 
 // handler of file stream
-// fs should pass a ostringstream and callback
+// fs should pass a stringstream and callback
 // when receive a file stream receiver will help write msg
-// to ostringstream and call callback
+// to stringstream and call callback
 // callback's type should be void();
+// maybe you should rewrite this class QWQ
 class FileStreamReceiver : public brpc::StreamInputHandler {
  public:
-  FileStreamReceiver(std::ostringstream& os, std::function<void()> callback)
+  FileStreamReceiver(std::stringstream& os, std::function<void()> callback)
       : os_(os), callback_(callback) {}
   ~FileStreamReceiver() = default;
   // ~FileStreamReceiver() {}
   virtual int on_received_messages(brpc::StreamId id,
                                    butil::IOBuf* const messages[],
                                    size_t size) {
+    os_.clear();
     for (size_t i = 0; i < size; i++) {
       os_ << *messages[i];
     }
@@ -37,26 +39,36 @@ class FileStreamReceiver : public brpc::StreamInputHandler {
   }
   virtual void on_idle_timeout(brpc::StreamId id) {}
 
-  virtual void on_closed(brpc::StreamId id) {}
+  virtual void on_closed(brpc::StreamId id) {
+
+  }
 
  private:
   FileStreamReceiver() = delete;
-  std::ostringstream& os_;
+  std::stringstream& os_;
   std::function<void(void)> callback_;
 };
 
-// should pass ostringstream and callback void()
+// should pass stringstream and callback void()
 // abstract class you should rewrite solveHeader
 // and you can rewrite solveFileStream and solveFileWithoutStream
 // so that you can solve more situation
+// you can also pass a your own brpc::StreamInputHandler
+// so that you can change the method when receive a stream
+// you must close stream in destructor
 class AbstractFSService : public FileSystemService {
  public:
-  AbstractFSService(std::ostringstream& os, std::function<void()> callback)
+  AbstractFSService(std::stringstream& os, std::function<void()> callback)
       : os_(os), callback_(callback), sd_(brpc::INVALID_STREAM_ID) {
     receiver_ptr_ =
         std::make_shared<FileStreamReceiver>(std::ref(os_), callback_);
   }
-  ~AbstractFSService() {}
+  AbstractFSService(std::stringstream& os, std::function<void()> callback, std::shared_ptr<brpc::StreamInputHandler> receiver_ptr):receiver_ptr_(receiver_ptr), os_(os), callback_(callback), sd_(brpc::INVALID_STREAM_ID) {
+
+  }
+  virtual ~AbstractFSService() {
+    brpc::StreamClose(sd_);
+  }
   void DoCommandOnFS(::google::protobuf::RpcController* controller,
                      const ::ctgfs::ClientKVRequest* request,
                      ::ctgfs::FileSystemResponse* response,
@@ -73,12 +85,24 @@ class AbstractFSService : public FileSystemService {
 
  private:
   AbstractFSService() = delete;
-  std::shared_ptr<FileStreamReceiver> receiver_ptr_;
-  std::ostringstream& os_;
+  std::shared_ptr<brpc::StreamInputHandler> receiver_ptr_;
+  std::stringstream& os_;
   std::function<void(void)> callback_;
   // set streamid=INVALID_STREAM_ID
   // because needn't write info
   brpc::StreamId sd_;
+};
+
+// test class and for example
+class TestFSService : public AbstractFSService{
+ public:
+  TestFSService(std::stringstream& os, std::function<void()> callback): AbstractFSService(os, callback) { }
+  virtual ~TestFSService() { 
+  }
+ protected:
+  virtual bool solveHeader(const ::ctgfs::ClientKVRequest* request) {
+    return true;
+  }
 };
 
 }  // fs

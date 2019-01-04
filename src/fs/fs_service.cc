@@ -37,7 +37,6 @@ void AbstractFSService::solveFileStream(brpc::Controller* cntl, ::ctgfs::FileSys
     cntl->SetFailed("Fail to accept stream");
     return;
   }
-
 }
 
 void AbstractFSService::solveFileWithoutStream(brpc::Controller* cntl, ::ctgfs::FileSystemResponse* resp) {

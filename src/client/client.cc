@@ -88,7 +88,7 @@ util::Status Client::connectCallback() { return util::Status::OK(); }
 
 util::Status Client::connectToKV() {
   // connect kv
-  const std::string& kv_addr = client_response_ptr_->addr();
+  const std::string kv_addr = client_response_ptr_->addr();
   initChannel(kv_addr);
   // TODO(multithread)
   return doCommand();
