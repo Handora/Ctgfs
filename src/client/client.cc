@@ -77,7 +77,7 @@ util::Status Client::askKV() {
   stub.ClientAskForKV(&ctrl, client_request_ptr_.get(),
                       client_response_ptr_.get(), NULL);
   if (ctrl.Failed()) {
-    LOG(ERROR) << "Fail to get target address" << std::endl;
+    LOG(ERROR) << ctrl.ErrorText() << std::endl;
     return util::Status::NotFound("Fail to get target address");
   } else {
     return connectToKV();
@@ -88,8 +88,8 @@ util::Status Client::connectCallback() { return util::Status::OK(); }
 
 util::Status Client::connectToKV() {
   // connect kv
-  const std::string kv_addr = client_response_ptr_->addr();
-  initChannel(kv_addr);
+  // const std::string kv_addr = client_response_ptr_->addr();
+  // initChannel(kv_addr);
   // TODO(multithread)
   return doCommand();
   // return true;
@@ -97,13 +97,16 @@ util::Status Client::connectToKV() {
 
 util::Status Client::doCommand() {
   // do command
-  const std::string& fs_addr = client_response_ptr_->addr();
-  initChannel(fs_addr);
+  // initChannel(fs_addr);
   if (!command_value_.empty()) {
     return doCommandWithStream();
   }
+  const std::string& fs_addr = client_response_ptr_->addr();
+  brpc::ChannelOptions options;
+  brpc::Channel channel;
+  channel.Init(fs_addr.c_str(), &options);
   brpc::Controller ctrl;
-  FileSystemService_Stub stub(&client_channel_);
+  FileSystemService_Stub stub(&channel);
   auto fs_res_ptr = std::make_shared<FileSystemResponse>();
   stub.DoCommandOnFS(&ctrl, client_request_ptr_.get(), fs_res_ptr.get(), NULL);
   if (ctrl.Failed()) {
@@ -121,7 +124,16 @@ util::Status Client::doCommandWithStream() {
     return util::Status::StreamCreateFailed();
   }
   brpc::ScopedStream stream_guard(stream);
-  int st = 0, ed = std::min((int)command_value_.size(), 1023);
+
+  const std::string& fs_addr = client_response_ptr_->addr();
+  brpc::ChannelOptions options;
+  brpc::Channel channel;
+  channel.Init(fs_addr.c_str(), &options);
+  FileSystemService_Stub stub(&channel);
+  auto fs_res_ptr = std::make_shared<FileSystemResponse>();
+  stub.DoCommandOnFS(&ctrl, client_request_ptr_.get(), fs_res_ptr.get(), NULL);
+
+  int st = 0, ed = std::min(static_cast<int>(command_value_.size()), 1023);
   do {
     std::string buf_str =
         std::string(command_value_.begin() + st, command_value_.begin() + ed);
@@ -146,10 +158,12 @@ util::Status Client::doCommandWithStream() {
         return util::Status::StreamCrash();
       }
     } else {
-      st = std::min(ed, (int)command_value_.size());
-      ed = std::min(ed + 1023, (int)command_value_.size());
+      if(ed == static_cast<int>(command_value_.size()))
+        break;
+      st = std::min(ed, static_cast<int>(command_value_.size()));
+      ed = std::min(ed + 1023, static_cast<int>(command_value_.size()));
     }
-  } while (ed < (int)command_value_.size());
+  } while (ed <= static_cast<int>(command_value_.size()));
   brpc::StreamClose(stream);
   return util::Status::OK();
 }

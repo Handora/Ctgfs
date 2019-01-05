@@ -1,4 +1,4 @@
-// Author: OneDay_(ltang970618@gmail.com)
+// Authors: Chen Qian(qcdsr970209@gmail.com)
 
 syntax = "proto2";
 
@@ -6,10 +6,34 @@ option cc_generic_services = true;
 
 package ctgfs;
 
+message ClientKVRequest {
+    required uint64 id = 1;
+    required string addr = 2;
+
+    message Command {
+        enum Type {
+            kCreateDir = 0;
+            kRemoveDir = 1;
+            kWriteFile = 2;
+            kRemoveFile = 3;
+            kReadFile = 4;
+        }
+        required Type type = 2;
+        required string path = 3;
+        optional string value = 4;
+    }
+    optional Command command = 3;
+};
+
+message ClientKVResponse {
+	required uint64 id = 1;
+	required string addr = 2;
+};
+
+
 // send the pacage at regular time
 // shared the info from filesystem
 // you should give the info to master so that master can give choice
-
 message HeartBeatMessageRequest {
   enum HeartBeatType {
     kRegist = 0;
@@ -29,6 +53,8 @@ message HeartBeatMessageResponse {
   // it can add more info later
 };
 
-service HeartBeatService { 
+// master service
+service MasterService{
+	rpc ClientAskForKV(ClientKVRequest) returns (ClientKVResponse);	
   rpc SendHeartBeat(HeartBeatMessageRequest) returns (HeartBeatMessageResponse);
-}
+};

@@ -4,7 +4,8 @@
 #pragma once
 #include <brpc/channel.h>
 #include <butil/time.h>
-#include <client.pb.h>
+#include <master.pb.h>
+#include <fs.pb.h>
 #include <gflags/gflags.h>
 #include <util/status.h>
 #include <memory>
@@ -57,7 +58,7 @@ class Client {
   util::Status connectToKV();
   // convenient to change to multithread
   util::Status doCommand();
-  //
+  // create a stream to transfer file
   util::Status doCommandWithStream();
   // for debug and log
   // if error is_error = true else false to help decide the level of log

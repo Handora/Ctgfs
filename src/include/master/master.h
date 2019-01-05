@@ -4,8 +4,9 @@
 #pragma once
 #include <brpc/channel.h>
 #include <butil/time.h>
-#include <client.pb.h>
-#include <master/heart_beat.h>
+#include <master.pb.h>
+#include <fs.pb.h>
+#include <fs/heart_beat_sender.h>
 #include <map>
 #include <memory>
 #include <queue>
@@ -23,6 +24,7 @@
 // (TODO) 6. add redis to help kv write file
 namespace ctgfs {
 namespace master {
+using namespace heart_beat;
 class Master : public MasterService {
  public:
   Master();
@@ -31,7 +33,10 @@ class Master : public MasterService {
                       const ::ctgfs::ClientKVRequest* request,
                       ::ctgfs::ClientKVResponse* response,
                       ::google::protobuf::Closure* done);
-  void UpdateKVInfo(const std::shared_ptr<ctgfs::heart_beat::HeartBeatInfo>);
+  void SendHeartBeat(::google::protobuf::RpcController* controller,
+                    const ::ctgfs::HeartBeatMessageRequest* request,
+                    ::ctgfs::HeartBeatMessageResponse* response,
+                    ::google::protobuf::Closure* done);
 
  private:
   // char set need hash
@@ -51,6 +56,8 @@ class Master : public MasterService {
   // collect disconnect kv's id
   // to make hash space closer
   std::queue<int> reused_queue_;
+  // called when kv info update
+  void updateKVInfo(const std::shared_ptr<ctgfs::heart_beat::HeartBeatInfo>);
   // fill the info of resp
   // PROBLEM: if a kv disconnect it's file will lose
   // should have a dynamic method to track a kv's connect and disconnect

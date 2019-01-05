@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 #include <parser/parser.h>
-#include <client.pb.cc>
+#include <master.pb.cc>
 
 namespace ctgfs {
 namespace parser {

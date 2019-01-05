@@ -3,7 +3,7 @@
 **/
 #include <brpc/server.h>
 #include <butil/logging.h>
-#include <client.pb.h>
+#include <master.pb.h>
 #include <fs/fs_service.h>
 #include <gflags/gflags.h>
 #include <memory>
