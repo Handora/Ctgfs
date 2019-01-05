@@ -30,6 +30,14 @@ message ClientKVResponse {
 	required string addr = 2;
 };
 
+message FileSystemResponse {
+
+};
+
 service MasterService{
 	rpc ClientAskForKV(ClientKVRequest) returns (ClientKVResponse);	
+};
+
+service FileSystemService {
+  rpc DoCommandOnFS(ClientKVRequest) returns (FileSystemResponse);
 };

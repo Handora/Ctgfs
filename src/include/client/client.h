@@ -6,6 +6,7 @@
 #include <butil/time.h>
 #include <client.pb.h>
 #include <gflags/gflags.h>
+#include <util/status.h>
 #include <memory>
 #include <string>
 
@@ -30,9 +31,11 @@ class Client {
 
  private:
   // should not use default constructor
-  Client()=delete;
+  Client() = delete;
   // should be init every time before connect
   brpc::Channel client_channel_;
+  // store the file string
+  std::string command_value_;
   std::shared_ptr<ClientKVRequest> client_request_ptr_;
   std::shared_ptr<ClientKVResponse> client_response_ptr_;
   const std::string command_input_;
@@ -41,18 +44,23 @@ class Client {
   void initChannel(const std::string& addr);
   void initChannel(const std::string& ip, const int port);
   // return true when parse succ else return false
-  bool parserInput();
+  // this fuction will remove the value of command store in client if value
+  // exists
+  // prevent transfering value when rpc
+  util::Status parserInput();
   // return true when connect succ eles return false
-  bool connectToMaster();
+  util::Status connectToMaster();
   // to get kv addr
-  bool askKV();
+  util::Status askKV();
   // wait to imporve
-  bool connectCallback();
-  bool connectToKV();
-  bool doCommand();
+  util::Status connectCallback();
+  util::Status connectToKV();
+  // convenient to change to multithread
+  util::Status doCommand();
+  //
+  util::Status doCommandWithStream();
   // for debug and log
   // if error is_error = true else false to help decide the level of log
-  // wait to implement with glog
   void debugErrorParserInput(bool is_error, const char*);
   void debugErrorParserInput(bool is_error, const std::string& error_str = "");
   void debugErrorConnectToMaster(bool, const char*);

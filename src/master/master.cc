@@ -26,7 +26,7 @@ void Master::ClientAskForKV(::google::protobuf::RpcController* controller,
     LOG(ERROR) << "NO FS CONNECT" << std::endl;
     return;
   }
-  brpc::Controller* ctrl = static_cast<brpc::Controller*>(controller);
+  // brpc::Controller* ctrl = static_cast<brpc::Controller*>(controller);
   setKVAddrByClientKVRequest(request, response);
 }
 
@@ -59,7 +59,7 @@ bool Master::registerKV(const std::string& ip, const int& port) {
   std::string addr(ip.begin(), ip.end());
   std::string port_str = std::to_string(port);
   addr += std::string(":") + port_str;
-  registerKV(addr);
+  return registerKV(addr);
 }
 
 bool Master::registerKV(const std::string& addr) {

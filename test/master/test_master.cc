@@ -28,6 +28,9 @@ using namespace ctgfs::heart_beat;
 // server start, heart_beat_detector start
 // heart_beat_sender regist to the master
 // client req
+// TODO(Add fs service)
+// partly test master cann't use now
+// should wait for update
 TEST(MasterTest, Connect) {
   // add service
   std::shared_ptr<Master> master_ptr = std::make_shared<Master>();
@@ -67,12 +70,11 @@ TEST(MasterTest, Connect) {
   auto send_status = sender.SendHeartBeat();
   EXPECT_EQ(send_status.IsOK(), true) << "heart beat fail" << std::endl;
 
-
   auto client_func = [=]() {
     const std::string input = "mkdir /a/b";
     Client client(input, addr);
     bool client_status = client.StartClient();
-    ASSERT_EQ(true, client.StartClient()) << "start client error!" << std::endl;
+    ASSERT_EQ(true, client_status) << "start client error!" << std::endl;
     ;
   };
   std::thread t(client_func);

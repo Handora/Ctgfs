@@ -12,35 +12,35 @@ namespace raft {
 TEST(FSMTest, Basic) {
   util::RemoveDirectoryRecursively("./tmp");
   brpc::Server server;
-  
+
   int port = 15122;
   util::Options options("basic", port);
   options.initial_conf = "127.0.0.1:" + std::to_string(port) + ":0,";
   std::cout << options.initial_conf << std::endl;
   auto fsm = std::make_shared<RocksFSM>(options);
-  
+
   int res = braft::add_service(&server, port);
   EXPECT_EQ(0, res);
-  
+
   res = server.Start(port, NULL);
   EXPECT_EQ(0, res);
-  
+
   util::Status s = fsm->Open();
   EXPECT_EQ(true, s.IsOK());
-  
+
   usleep(1000 * 1000);
   auto waiter = std::make_shared<util::Waiter>();
   s = fsm->Put("key", "value", waiter);
   EXPECT_EQ(true, s.IsOK());
-  
+
   s = waiter->Wait();
   EXPECT_EQ(true, s.IsOK());
-  
+
   std::string value;
   s = fsm->Get("key", value, waiter);
   EXPECT_EQ(true, s.IsOK());
   EXPECT_EQ("value", value);
-  
+
   fsm->Close();
 }
 */
