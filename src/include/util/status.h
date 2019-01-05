@@ -23,7 +23,7 @@ class Status {
 
  public:
   Status() : 
-    code_(code), error_text_(msg) {}
+    code_(Code::kNull), error_text_("null") {}
 
   Status(Code code, std::string msg="") : 
       code_(code), error_text_(msg) {}   

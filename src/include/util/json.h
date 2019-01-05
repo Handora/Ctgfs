@@ -24,9 +24,11 @@ enum JsonType {
   kJsonObect, 
 };
 
-struct JsonStream {
+class JsonStream {
+ public:
   const char* json_str;
 
+ public:
   char* stack;
   size_t size, top;
   void* Push(size_t len) {
@@ -51,20 +53,44 @@ struct JsonStream {
   }
 };
 
-struct JsonObject {
+class JsonObject {
+ public:
   JsonObject() : type(JsonType::kJsonNull) {}
   ~JsonObject() {
-    if (type == JsonType::kJsonString) {
-      if (s != nullptr) delete s;
-      s = nullptr;
+    switch (type) {
+      case JsonType::kJsonString: 
+        if (s != nullptr) delete s;
+        s = nullptr;
+        break;
+      case JsonType::kJsonArray:
+        for (int i = 0; i < size; ++i) {
+          arr[i].SetNull();
+        }
+        free(arr);
+        arr = nullptr;
+        break;
+      default: 
+        break;
     }
   }
 
   void SetNull() {
-    if (type == JsonType::kJsonString) {
-      if (s != nullptr) delete s;
-      s = nullptr;
+    switch (type) {
+      case JsonType::kJsonString: 
+        if (s != nullptr) delete s;
+        s = nullptr;
+        break;
+      case JsonType::kJsonArray:
+        for (int i = 0; i < size; ++i) {
+          arr[i].SetNull();
+        }
+        free(arr);
+        arr = nullptr;
+        break;
+      default: 
+        break;
     }
+
     type = JsonType::kJsonNull;
   }
 
@@ -77,15 +103,14 @@ struct JsonObject {
     return len;
   }
   void SetString(const char* str, size_t size) {
-    assert(str != nullptr || len == 0);
+    assert(str != nullptr || size == 0);
     SetNull();
-    s = new char[size + 1];
+    s = (char*)malloc(size + 1);
     memcpy(s, str, size);
     s[size] = '\0';
     len = size;
     type = JsonType::kJsonString;
   }
-
 
   void SetNumber(double num) {
     SetNull();
@@ -116,13 +141,22 @@ struct JsonObject {
     return type;
   }
 
-  union {
-    struct {
-      char *s;
-      size_t len;
-    };
+  size_t GetArraySize() const {
+    assert(type == JsonType::kJsonArray); 
+    return size;
+  }
 
-    double n;
+  JsonObject* GetArrayElement(size_t idx) {
+    assert(type == JsonType::kJsonArray && (arr != nullptr || (arr == nullptr && size == 0))); 
+    assert(idx < size);
+    return &arr[idx];
+  }
+
+ public:
+  union {
+    struct { JsonObject* arr; size_t size; };  // arary
+    struct { char *s; size_t len; }; // string
+    double n; // number;
   };
   JsonType type; 
 };
@@ -139,6 +173,7 @@ class Json {
   static Status parseLiteral(JsonStream& jstream, JsonObject& result, const char* literal, JsonType expect_type);
   static Status parseNumber(JsonStream& jstream, JsonObject& result);
   static Status parseString(JsonStream& jstream, JsonObject& result);
+  static Status parseArray(JsonStream& jstream, JsonObject& result);
   static const char* parseHex4(const char* p, unsigned& u);
   static void encodeUTF8(JsonStream& jstream, const unsigned& u);
 };

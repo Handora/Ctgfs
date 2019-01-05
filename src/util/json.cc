@@ -11,6 +11,7 @@
 #include <util/json.h>
 #include <util/status.h>
 
+#define EXPECTCH(js, ch) do { assert(*js.json_str == (ch)); js.json_str++; } while(0)
 #define PUTCH(js, ch) do { *(char*)js.Push(sizeof(char)) = (ch); } while(0)
 
 namespace ctgfs {
@@ -104,12 +105,16 @@ Status Json::parseNumber(JsonStream& jstream, JsonObject& result) {
   return Status::OK();
 }
 
+#define STRING_ERROR(msg) do { jstream.top = head; return Status::InvalidArgument(msg); } while(0)
+
 Status Json::parseString(JsonStream& jstream, JsonObject& result) {
-  assert(jstream.json_str[0] == '\"');
-  jstream.json_str++;
-  size_t head = jstream.top, len;
-  const char* ptr = jstream.json_str;
+  EXPECTCH(jstream, '\"');
+
+  const char* ptr;
+  size_t head = jstream.top, len = 0;
   unsigned u, u2;
+  ptr = jstream.json_str;
+
   while (true) {
     char ch = *ptr++; 
     switch (ch) {
@@ -123,46 +128,39 @@ Status Json::parseString(JsonStream& jstream, JsonObject& result) {
           case '\"': PUTCH(jstream, '\"'); break;
           case '\\': PUTCH(jstream, '\\'); break;
           case '/': PUTCH(jstream, '/'); break;
-          case '\b': PUTCH(jstream, '\b'); break;
-          case '\f': PUTCH(jstream, '\f'); break;
-          case '\n': PUTCH(jstream, '\n'); break;
-          case '\r': PUTCH(jstream, '\r'); break;
-          case '\t': PUTCH(jstream, '\t'); break;
+          case 'b': PUTCH(jstream, '\b'); break;
+          case 'f': PUTCH(jstream, '\f'); break;
+          case 'n': PUTCH(jstream, '\n'); break;
+          case 'r': PUTCH(jstream, '\r'); break;
+          case 't': PUTCH(jstream, '\t'); break;
           case 'u':  // Unicode
             if (!(ptr = parseHex4(ptr, u))) {
-              jstream.top = head;
-              return Status::InvalidArgument("Parse Error. Invalid Unicode.");
+              STRING_ERROR("Parse Error. Invalid Unicode.");
             }
             if (u >= 0xD800 && u <= 0xDBFF) {
               if (*ptr++ != '\\') 
-                jstream.top = head;
-                return Status::InvalidArgument("Parse Error. Invalid Unicode.");
+                STRING_ERROR("Parse Error. Invalid Unicode.");
               if (*ptr++ != 'u') 
-                jstream.top = head;
-                return Status::InvalidArgument("Parse Error. Invalid Unicode.");
+                STRING_ERROR("Parse Error. Invalid Unicode.");
               if (!(ptr = parseHex4(ptr, u2))) 
-                jstream.top = head;
-                return Status::InvalidArgument("Parse Error. Invalid Unicode.");
+                STRING_ERROR("Parse Error. Invalid Unicode.");
               if (u2 < 0xDC00 || u2 > 0xDFFF)  
-                jstream.top = head;
-                return Status::InvalidArgument("Parse Error. Invalid Unicode.");
+                STRING_ERROR("Parse Error. Invalid Unicode.");
 
               u = (((u - 0xD800) << 10) | (u2 - 0xDC00)) + 0x10000;
             }
-            encodeUTF8(jstream, u); break;
+            encodeUTF8(jstream, u); 
+            break;
           default:
-            jstream.top = head;
-            return Status::InvalidArgument("Parse Error. Invalid string.");
-        } break;
+            STRING_ERROR("Parse Error. Invalid string.");
+        } 
+        break;
       case '\0':
-        jstream.top = head;
-        return Status::InvalidArgument("Parse Error. Invalid string.");
+        STRING_ERROR("Parse Error. Invalid string.");
       default:
-        if ((unsigned char)ch < 0x20) {
-          jstream.top = head; 
-          return Status::InvalidArgument("Parse Error. Invalid string.");
-        }
-        *(char*)jstream.Push(sizeof(char)) = ch;
+        if ((unsigned char)ch < 0x20) 
+          STRING_ERROR("Parse Error. Invalid string.");
+        PUTCH(jstream, ch);
     }
   }
 }
@@ -199,13 +197,59 @@ void Json::encodeUTF8(JsonStream& jstream, const unsigned& u) {
   }
 }
 
+Status Json::parseArray(JsonStream& jstream, JsonObject& result) {
+  EXPECTCH(jstream, '[');
+  parseWhitespace(jstream); 
+  size_t size = 0;
+
+  if (*jstream.json_str == ']') { 
+    jstream.json_str++; 
+    result.SetType(JsonType::kJsonArray);
+    result.size = 0;
+    result.arr = nullptr;
+    return Status::OK();
+  }
+
+  Status s;
+  while (true) {
+    JsonObject obj; 
+    s = parseValue(jstream, obj);
+    if (!s.IsOK()) 
+      break;
+    memcpy(jstream.Push(sizeof(JsonObject)), &obj, sizeof(JsonObject));
+    size++;
+    parseWhitespace(jstream); 
+    if (*jstream.json_str == ',') {
+      jstream.json_str++;
+      parseWhitespace(jstream); 
+    } else if (*jstream.json_str == ']') {
+      jstream.json_str++; 
+      result.SetType(JsonType::kJsonArray);
+      result.size = size;
+      size *= sizeof(JsonObject);
+      memcpy(result.arr = (JsonObject*)malloc(size), jstream.Pop(size), size);
+      return Status::OK();
+    } else {
+      s = Status::InvalidArgument("Parse error. Invalid array.");
+      break;
+    }
+  }
+
+  for (int i = 0; i < size; ++i) {
+    ((JsonObject*)jstream.Pop(sizeof(JsonObject)))->SetNull();
+  }
+
+  return s;
+}
+
 Status Json::parseValue(JsonStream& jstream, JsonObject& result) {
   switch (*(jstream.json_str)) {
     case 't': return parseLiteral(jstream, result, "true", JsonType::kJsonTrue);
     case 'f': return parseLiteral(jstream, result, "false", JsonType::kJsonFalse);
     case 'n': return parseLiteral(jstream, result, "null", JsonType::kJsonNull);
     default: return parseNumber(jstream, result);
-    case '\"': return parseString(jstream, result);
+    case '"': return parseString(jstream, result);
+    case '[': return parseArray(jstream, result);
     case '\0': return Status::ExpectValue();
   }
 }
