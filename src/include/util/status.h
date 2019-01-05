@@ -22,8 +22,8 @@ class Status {
   enum class Code;
 
  public:
-  Status(Code code = Code::kNUll, std::string msg = "Null") :
-    code_(code), error_text_(msg){}
+  Status() : 
+    code_(code), error_text_(msg) {}
 
   Status(Code code, std::string msg="") : 
       code_(code), error_text_(msg) {}   
