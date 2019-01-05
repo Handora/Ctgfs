@@ -22,6 +22,9 @@ class Status {
   enum class Code;
 
  public:
+  Status(Code code = Code::kNUll, std::string msg = "Null") :
+    code_(code), error_text_(msg){}
+
   Status(Code code, std::string msg="") : 
       code_(code), error_text_(msg) {}   
 
@@ -34,6 +37,14 @@ class Status {
   }
 
   /*************************** General Part *******************************/
+  static Status Null() {
+    return Status(Code::kNull);
+  }
+
+  bool IsNull() const {
+    return (code_ == Code::kNull);
+  }
+
   static Status OK() {
     return Status(Code::kOk);
   }
@@ -95,6 +106,7 @@ class Status {
  private:
   enum class Code {
     // General part 
+    kNull,
     kOk,
     kNotFound,
     kTimeOut,
