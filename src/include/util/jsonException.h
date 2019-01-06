@@ -15,7 +15,7 @@ namespace json {
 class Exception final : public std::logic_error {
  public:
   Exception(const std::string& msg) : logic_error(msg) {  }
-}
+};
 
 } // namespace json
 

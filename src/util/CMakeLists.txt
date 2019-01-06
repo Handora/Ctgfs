@@ -1,1 +1,1 @@
-add_library(json json.cc)
+add_library(json json.cc jsonParser.cc jsonValue.cc)

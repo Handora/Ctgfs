@@ -95,12 +95,12 @@ class Status {
   }
 
   // --------------------------JSON Part------------------------------//
-  static Status ExpectValue() {
-    return Status(Code::kExpectValue);
+  static Status ParseFailed(const std::string& msg) {
+    return Status(Code::kParseFailed, msg);
   }
 
   bool isExpectValue() const {
-    return (code_ == Code::kExpectValue);
+    return (code_ == Code::kParseFailed);
   }
 
  private:
@@ -117,7 +117,7 @@ class Status {
     kNotLeader,
 
     // JSON part
-    kExpectValue,
+    kParseFailed,
   }; 
 
   Code code_;

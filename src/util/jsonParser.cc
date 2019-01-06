@@ -10,7 +10,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <util/jsonParse.h>
-#include <util/jsonExcetion.h>
+#include <util/jsonException.h>
 
 namespace ctgfs {
 namespace util {
@@ -36,9 +36,9 @@ namespace json {
 
   void Parser::parseValue() {
     switch (*cur_) {
-      case 'n': parseLiteral("null", type::kNull); break;
-      case 't': parseLiteral("true", type::kTrue); break;
-      case 'f': parseLiteral("false", type::kFlase); break;
+      case 'n': parseLiteral("null", json::type::kNull); break;
+      case 't': parseLiteral("true", json::type::kTrue); break;
+      case 'f': parseLiteral("false", json::type::kFalse); break;
       case '\"': parseString(); break;
       case '[': parseArray(); break;
       case '{': parseObject(); break;
@@ -49,43 +49,46 @@ namespace json {
 
   void Parser::parseWhitespace() noexcept {
     while (*cur_ == ' ' || *cur_ == '\t' || *cur_ == '\n' || *cur_ == '\r') {
-          ++cur_;
+      ++cur_;
     }
   }
 
-  void parseValue() {
+  void Parser::parseLiteral(const char* literal, type t) {
+    expect(cur_, literal[0]);  
+    size_t i;
+    for (i = 0; literal[i + 1]; ++i) {
+      if (cur_[i] != literal[i + 1]) 
+        throw(Exception("Parse invalid value."));
+    }
+    cur_ +=i ;
+    val_.SetType(t);
+  }
+
+  void Parser::parseNumber() {
 
   }
 
-  void parseLiteral(const char* literal, type t) {
+  void Parser::parseString() {
 
   }
 
-  void parseNumber() {
+  void Parser::parseStringRaw(std::string& tmp) {
 
   }
 
-  void parseString() {
+  void Parser::parseHex4(const char*& p, unsigned &u) {
 
   }
 
-  void parseStringRaw(std::string& tmp) {
+  void Parser::parseEncodeUTF8(std::string& s, unsigned u) {
 
   }
 
-  void parseHex4(const char*& p, unsigned &u) {
+  void Parser::parseArray() {
 
   }
 
-  void parseEncodeUTF8(std::string& s, unsigned u) {
-
-  }
-
-  void parseArray() {
-
-  }
-
-  void parseObject() {
+  void Parser::parseObject() {
 
   }
 

@@ -183,6 +183,10 @@ namespace json {
     obj_.clear();
   }
 
+  void Value::Parse(const std::string& content) {
+    Parser(*this, content);
+  }
+
   bool operator==(const Value& lhs, const Value& rhs) noexcept {
     if (lhs.type_ != rhs.type_) 
       return false;
