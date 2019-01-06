@@ -29,7 +29,7 @@ class Value;
 
 } // namespace json
 
-namespace jsonwarp {
+namespace jsontree {
 
 class Json final {
  public:
@@ -39,11 +39,11 @@ class Json final {
   Json& operator=(const Json& rhs) noexcept;
   Json(Json &&rhs) noexcept;
   Json& operator=(Json &&rhs) noexcept;
+  void Swap(Json &rhs) noexcept;
 
   Status Parse(const std::string& content) noexcept;
   void Stringify(std::string& content) const noexcept;
 
-  void swap(Json &rhs) noexcept;
 
   int GetType() const noexcept;
   void SetNull() noexcept;
@@ -52,7 +52,7 @@ class Json final {
   double GetNumber() const noexcept;
   void SetNumber(double d) noexcept;
 
-  const std::string& GetString() const noexcept;
+  const std::string GetString() const noexcept;
   void SetString(const std::string &str) noexcept;
 
   size_t GetArraySize() const noexcept;
@@ -65,10 +65,11 @@ class Json final {
   void ClearArray() noexcept;
 
   size_t GetObjectSize() const noexcept;
-  const std::string& GetObjectKey() const noexcept;
+  const std::string& GetObjectKey(size_t index) const noexcept;
   size_t GetObjectKeyLength(size_t index) const noexcept;
   Json GetObjectValue(size_t index) const noexcept;
   void SetObjectValue(const std::string &key, const Json& val) noexcept;
+  void SetObject() noexcept;
   long long FindObject(const std::string &key) const noexcept;
   void RemoveObject(size_t index) noexcept;
   void ClearObject() noexcept;
@@ -83,7 +84,7 @@ bool operator==(const Json& lhs, const Json& rhs) noexcept;
 bool operator!=(const Json& lhs, const Json& rhs) noexcept;
 void swap(Json& lhs, Json& rhs) noexcept;
 
-} // namespace jsonwarp
+} // namespace jsontree
 
 
 } // namespace ctgfs
