@@ -95,19 +95,85 @@ namespace json {
   }
 
   void Parser::parseString() {
-
+    std::string s;
+    parseStringRaw(s);
+    val_.SetString(s);
   }
 
-  void Parser::parseStringRaw(std::string& tmp) {
-
+  void Parser::parseStringRaw(std::string& result) {
+    expect(cur_, '\"');
+    const char* p = cur_;
+    unsigned u = 0, u2 = 0;
+    while (*p != '\"') {
+      if (*p == '\0') 
+      throw(Exception("parse miss quotation mark"));
+      if(*p == '\\' && ++p){
+        switch(*p++) {
+          case '\"': result += '\"'; break;
+          case '\\': result += '\\'; break;
+          case '/' : result += '/' ; break;
+          case 'b' : result += '\b'; break;
+          case 'f' : result += '\f'; break;
+          case 'n' : result += '\n'; break;
+          case 'r' : result += '\r'; break;
+          case 't' : result += '\t'; break;
+          case 'u' : 
+          parseHex4(p, u);
+          if (u >= 0xD800 && u <= 0xDBFF) {
+            if (*p++ != '\\')
+            throw(Exception("parse invalid unicode surrogate"));
+            if (*p++ != 'u')
+            throw(Exception("parse invalid unicode surrogate"));
+            parseHex4(p, u2);
+            if (u2 < 0xDC00 || u2 > 0xDFFF)
+            throw(Exception("parse invalid unicode surrogate"));
+            u = (((u - 0xD800) << 10) | (u2 - 0xDC00)) + 0x10000;
+          }
+          parseEncodeUTF8(result, u);
+          break;
+          default: throw (Exception("parse invalid string escape"));
+        }
+      } else if ((unsigned char) *p < 0x20) {
+        throw (Exception("parse invalid string char"));
+      } else {
+        result += *p++; 
+      }
+    }
+    cur_ = ++p;
   }
 
   void Parser::parseHex4(const char*& p, unsigned &u) {
-
+    u = 0;
+    for (int i = 0; i < 4; ++i) {
+      char ch = *p++;
+      u <<= 4;
+      if (isdigit(ch))
+        u |= ch - '0';
+      else if (ch >= 'A' && ch <= 'F')
+        u |= ch - ('A' - 10);
+      else if (ch >= 'a' && ch <= 'f')
+        u |= ch - ('a' - 10);
+      else throw(Exception("parse invalid unicode hex"));
+    }
   }
 
   void Parser::parseEncodeUTF8(std::string& s, unsigned u) {
-
+    if (u <= 0x7F) {
+      s += static_cast<char> (u & 0xFF);
+    } else if (u <= 0x7FF) {
+      s += static_cast<char> (0xC0 | ((u >> 6) & 0xFF));
+      s += static_cast<char> (0x80 | ( u   & 0x3F ));
+    } else if (u <= 0xFFFF) {
+      s += static_cast<char> (0xE0 | ((u >> 12) & 0xFF));
+      s += static_cast<char> (0x80 | ((u >>  6) & 0x3F));
+      s += static_cast<char> (0x80 | ( u        & 0x3F ));
+    } else {
+      assert(u <= 0x10FFFF);
+      s += static_cast<char> (0xF0 | ((u >> 18) & 0xFF));
+      s += static_cast<char> (0x80 | ((u >> 12) & 0x3F));
+      s += static_cast<char> (0x80 | ((u >>  6) & 0x3F));
+      s += static_cast<char> (0x80 | ( u        & 0x3F ));
+    }
   }
 
   void Parser::parseArray() {
