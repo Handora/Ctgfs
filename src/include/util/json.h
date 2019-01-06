@@ -40,14 +40,14 @@ class Json final {
   Json(Json &&rhs) noexcept;
   Json& operator=(Json &&rhs) noexcept;
 
-  void Parse(const std::string& content, std::string& status) noexcept;
-  void Parse(const std::string& content);
+  Status Parse(const std::string& content) noexcept;
   void Stringify(std::string& content) const noexcept;
 
   void swap(Json &rhs) noexcept;
 
   int GetType() const noexcept;
-  void SetType(type t) noexcept;
+  void SetNull() noexcept;
+  void SetBoolean(bool b) noexcept;
 
   double GetNumber() const noexcept;
   void SetNumber(double d) noexcept;
@@ -56,20 +56,19 @@ class Json final {
   void SetString(const std::string &str) noexcept;
 
   size_t GetArraySize() const noexcept;
-  const Value& GetArrayElement(size_t index) const noexcept;
-  void SetArray(const std::vector<Value> &arr) noexcept;
-  void PushBackArrayElement(const Value& val) noexcept;
+  Json GetArrayElement(size_t index) const noexcept;
+  void SetArray() noexcept;
+  void PushBackArrayElement(const Json& val) noexcept;
   void PopBackArrayElement() noexcept;
-  void InsertArrayElement(const Value &val, size_t index) noexcept;
+  void InsertArrayElement(const Json& val, size_t index) noexcept;
   void RemoveArrayElement(size_t index, size_t count) noexcept;
   void ClearArray() noexcept;
 
   size_t GetObjectSize() const noexcept;
-  const std::string& GetObjectKey(size_t index) const noexcept;
+  const std::string& GetObjectKey() const noexcept;
   size_t GetObjectKeyLength(size_t index) const noexcept;
-  const Value& GetObjectValue(size_t index) const noexcept;
-  void SetObjectValue(const std::string &key, const Value &val) noexcept;
-  void SetObject(const std::vector<std::pair<std::string, Value>> &obj) noexcept;
+  Json GetObjectValue(size_t index) const noexcept;
+  void SetObjectValue(const std::string &key, const Json& val) noexcept;
   long long FindObject(const std::string &key) const noexcept;
   void RemoveObject(size_t index) noexcept;
   void ClearObject() noexcept;

@@ -157,6 +157,15 @@ namespace json {
     else 
       obj_.push_back(make_pair(key, val));
   }
+  void Value::SetObject(const std::vector<std::pair<std::string, Value>>& obj) noexcept {
+    if (type_ == type::kObject) {
+      obj_ = obj;
+    } else {
+      free();
+      type_ == type::kObject;
+      new(&obj_) std::vector<std::pair<std::string, Value>>(obj);
+    }
+  }
   long long Value::FindObject(const std::string& key) const noexcept {
     assert(type_ == type::kObject);
     for (int i = 0; i < obj_.size(); ++i) {
