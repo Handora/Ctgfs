@@ -162,7 +162,7 @@ namespace json {
       obj_ = obj;
     } else {
       free();
-      type_ == type::kObject;
+      type_ = type::kObject;
       new(&obj_) std::vector<std::pair<std::string, Value>>(obj);
     }
   }

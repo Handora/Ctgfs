@@ -5,6 +5,8 @@
 #include <cstring>
 #include <string>
 #include <functional>
+#include <string>
+#include <iostream>
 #include <gtest/gtest.h>
 #include <util/json.h>
 
@@ -129,5 +131,70 @@ TEST(JSON_array_Test, Basic) {
   }
 }
 
-}  // namespace util 
-}  // namespace ctgfs
+TEST(JSON_object_Test, Basic) {
+  std::cerr << "Start object parse test" << std::endl;
+
+  jsontree::Json v;
+
+  v.Parse(" {  } ", status);
+  EXPECT_EQ("parse ok", status);
+  EXPECT_EQ(json::type::kObject, v.GetType());
+  EXPECT_EQ(0, v.GetObjectSize());
+
+  v.Parse(" { "
+          "\"n\" : null , "
+          "\"f\" : false , "
+          "\"t\" : true , "
+          "\"i\" : 123 , "
+          "\"s\" : \"abc\", "
+          "\"a\" : [ 1, 2, 3  ],"
+          "\"o\" : { \"1\" : 1, \"2\" : 2, \"3\" : 3  }"
+          " } ", status);
+
+  EXPECT_EQ("parse ok", status);
+  EXPECT_EQ(7, v.GetObjectSize());
+
+  EXPECT_EQ("n", v.GetObjectKey(0));
+  EXPECT_EQ(json::type::kNull, v.GetObjectValue(0).GetType());
+
+  EXPECT_EQ("f", v.GetObjectKey(1));
+  EXPECT_EQ(json::type::kFalse, v.GetObjectValue(1).GetType());
+
+  EXPECT_EQ("t", v.GetObjectKey(2));
+  EXPECT_EQ(json::type::kTrue, v.GetObjectValue(2).GetType());
+
+  EXPECT_EQ("i", v.GetObjectKey(3));
+  EXPECT_EQ(json::type::kNumber, v.GetObjectValue(3).GetType());
+  EXPECT_EQ(123.0, v.GetObjectValue(3).GetNumber());
+
+  EXPECT_EQ("s", v.GetObjectKey(4));
+  EXPECT_EQ(json::type::kString, v.GetObjectValue(4).GetType());
+  EXPECT_EQ("abc", v.GetObjectValue(4).GetString());
+
+  EXPECT_EQ("a", v.GetObjectKey(5));
+  EXPECT_EQ(json::type::kArray, v.GetObjectValue(5).GetType());
+  EXPECT_EQ(3, v.GetObjectValue(5).GetArraySize());
+  for (int i = 0; i < 3; ++i) {
+    jsontree::Json e = v.GetObjectValue(5).GetArrayElement(i);
+    EXPECT_EQ(json::type::kNumber, e.GetType());
+    EXPECT_EQ(i + 1.0, e.GetNumber());
+  }
+
+  EXPECT_EQ("o", v.GetObjectKey(6));
+  {
+    jsontree::Json o = v.GetObjectValue(6);
+    EXPECT_EQ(json::type::kObject, o.GetType());
+    for(int i = 0; i < 3; ++i) {
+      jsontree::Json ov = o.GetObjectValue(i);
+      EXPECT_EQ('1' + i, (o.GetObjectKey(i))[0]);
+      EXPECT_EQ(1, o.GetObjectKeyLength(i));
+      EXPECT_EQ(json::type::kNumber, ov.GetType());
+      EXPECT_EQ(i + 1.0, ov.GetNumber());
+    }
+  }
+
+  std::cerr << "End object parse test" << std::endl;
+}  
+
+} // namespace util 
+} // namespace ctgfs
