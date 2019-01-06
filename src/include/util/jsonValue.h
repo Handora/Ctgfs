@@ -7,44 +7,24 @@
 #pragma once
 
 #include <string>
-#include <memory>
-#include <util/status.h>
+#include <vector>
+#include <utility>
+#include <util/json.h>
 
 namespace ctgfs {
 namespace util {
 
 namespace json {
 
-enum type : int {
-  kNull,
-  kTrue,
-  kFalse,
-  kNumber,
-  kString,
-  kArray,
-  kObject, 
-};
-
-class Value;
-
-} // namespace json
-
-namespace jsonwarp {
-
-class Json final {
+class Value final {
  public:
-  Json() noexcept;
-  ~Json() noexcept;
-  Json(const Json& rhs) noexcept;
-  Json& operator=(const Json& rhs) noexcept;
-  Json(Json &&rhs) noexcept;
-  Json& operator=(Json &&rhs) noexcept;
+  Value() noexcept;
+  Value(const Value& rhs) noexcept;
+  Value& operator=(const Value& rhs) noexcept;
+  ~Value() noexcept;
 
-  void Parse(const std::string& content, std::string& status) noexcept;
   void Parse(const std::string& content);
   void Stringify(std::string& content) const noexcept;
-
-  void swap(Json &rhs) noexcept;
 
   int GetType() const noexcept;
   void SetType(type t) noexcept;
@@ -73,19 +53,25 @@ class Json final {
   long long FindObject(const std::string &key) const noexcept;
   void RemoveObject(size_t index) noexcept;
   void ClearObject() noexcept;
-  
+
  private:
-  std::unique_ptr<json::Value> v;
+  void init(const Value& rhs) noexcept;
+  void free() noexcept;
 
-  friend bool operator==(const Json& lhs, const Json& rhs) noexcept;
-  friend bool operator!=(const Json& lhs, const Json& rhs) noexcept;
+  json::type type_ = json::kNull;
+  union {
+    double num_;
+    std::string str_;
+    std::vector<Value> arr_;
+    std::vector<std::pair<std::string, Value>> obj_;
+  };
+
+  friend bool operator==(const Value& lhs, const Value& rhs) noexcept;
 }; 
-bool operator==(const Json& lhs, const Json& rhs) noexcept;
-bool operator!=(const Json& lhs, const Json& rhs) noexcept;
-void swap(Json& lhs, Json& rhs) noexcept;
+bool operator==(const Value& lhs, const Value& rhs) noexcept;
+bool operator!=(const Value& lhs, const Value& rhs) noexcept;
 
-} // namespace jsonwarp
-
+} // namespace json
 
 } // namespace ctgfs
 } // namespace util
