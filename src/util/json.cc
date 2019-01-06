@@ -6,7 +6,6 @@
 #include <util/json.h>
 #include <util/jsonValue.h>
 #include <util/jsonException.h>
-#include <util/status.h>
 
 namespace ctgfs {
 namespace util {
@@ -35,15 +34,19 @@ namespace jsontree {
     lhs.Swap(rhs);
   }
 
-  Status Json::Parse(const std::string& content) noexcept {
+  void Json::Parse(const std::string& content, std::string& status) noexcept {
     try {
-      v->Parse(content);
-      return Status::OK();
+      Parse(content);
+      status = "parse ok";
     } catch (const json::Exception& msg) {
-      return Status::ParseFailed(msg.what()); 
+      status = msg.what();
     } catch (...) {
 
     }
+  }
+
+  void Json::Parse(const std::string& content) const noexcept {
+    v->Parse(content);
   }
 
   int Json::GetType() const noexcept {

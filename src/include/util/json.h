@@ -8,7 +8,6 @@
 
 #include <string>
 #include <memory>
-#include <util/status.h>
 
 namespace ctgfs {
 namespace util {
@@ -41,7 +40,8 @@ class Json final {
   Json& operator=(Json &&rhs) noexcept;
   void Swap(Json &rhs) noexcept;
 
-  Status Parse(const std::string& content) noexcept;
+  void Parse(const std::string& content, std::string& status) noexcept;
+  void Parse(const std::string& content) const noexcept;
   void Stringify(std::string& content) const noexcept;
 
 

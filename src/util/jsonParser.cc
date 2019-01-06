@@ -65,7 +65,33 @@ namespace json {
   }
 
   void Parser::parseNumber() {
+    const char* p = cur_;
+    if (*p == '-') ++p;  
 
+    if (*p == '0') ++p;
+    else {
+      if (!isdigit(*p)) throw (Exception("parse invalid value."));
+      while (isdigit(*++p));
+    }
+
+    if(*p == '.') {
+      if (!isdigit(*++p)) throw (Exception("parse invalid value"));
+        while (isdigit(*++p));
+    }
+
+    if(*p == 'e' || *p == 'E') {
+      ++p;
+      if (*p == '+' || *p == '-') ++p;
+      if (!isdigit(*p)) throw (Exception("parse invalid value"));
+      while (isdigit(*++p)) ;
+    }
+
+    errno = 0;
+    double v = strtod(cur_, NULL);
+    if (errno == ERANGE && (v == HUGE_VAL || v == -HUGE_VAL))
+    throw (Exception("parse number too big"));
+    val_.SetNumber(v);
+    cur_ = p;
   }
 
   void Parser::parseString() {
