@@ -15,13 +15,6 @@ namespace util {
 
 static std::string status;
 
-void TEST_ERROR(const char* errmsg, const char* content) {
-  jsontree::Json j; 
-  j.SetBoolean(false);
-  j.Parse(content, status);
-  EXPECT_EQ(errmsg, status); 
-  EXPECT_EQ((json::type::kNull), j.GetType());
-}
 
 void TEST_LITERAL(json::type expect, const char* content) {
   jsontree::Json j; 
@@ -195,6 +188,16 @@ TEST(JSON_object_Test, Basic) {
 
   std::cerr << "End object parse test" << std::endl;
 }  
+
+/*
+void TEST_ERROR(const char* errmsg, const char* content) {
+  jsontree::Json j; 
+  j.SetBoolean(false);
+  j.Parse(content, status);
+  EXPECT_EQ(errmsg, status); 
+  EXPECT_EQ((json::type::kNull), j.GetType());
+}
+*/
 
 } // namespace util 
 } // namespace ctgfs

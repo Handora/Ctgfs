@@ -30,7 +30,7 @@ Parser::Parser(Value& val, const std::string& content) :
   parseWhitespace();
     if (*cur_ != '\0') {
       val_.SetType(type::kNull);
-      throw(Exception("More than one json file."));
+      throw(Exception("More than one json file"));
     }
 }
 
@@ -43,7 +43,7 @@ void Parser::parseValue() {
     case '[': parseArray(); break;
     case '{': parseObject(); break;
     default: parseNumber(); break;
-    case '\0': throw(Exception("Parse expect value."));
+    case '\0': throw(Exception("parse expect value"));
   }
 }
 
@@ -58,7 +58,7 @@ void Parser::parseLiteral(const char* literal, type t) {
   size_t i;
   for (i = 0; literal[i + 1]; ++i) {
     if (cur_[i] != literal[i + 1]) 
-      throw(Exception("Parse invalid value."));
+      throw(Exception("parse invalid value"));
   }
   cur_ +=i ;
   val_.SetType(t);
@@ -70,7 +70,7 @@ void Parser::parseNumber() {
 
   if (*p == '0') ++p;
   else {
-    if (!isdigit(*p)) throw (Exception("parse invalid value."));
+    if (!isdigit(*p)) throw (Exception("parse invalid value"));
     while (isdigit(*++p));
   }
 
@@ -252,7 +252,7 @@ void Parser::parseObject() {
       return;
     } else {
       val_.SetType(type::kNull);
-      throw(Exception("parse miss comma or bracket"));
+      throw(Exception("parse miss comma or curly bracket"));
     }
   }
 }
