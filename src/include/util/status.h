@@ -94,15 +94,6 @@ class Status {
     return (code_ == Code::kNotLeader);
   }
 
-  // --------------------------JSON Part------------------------------//
-  static Status ParseFailed(const std::string& msg) {
-    return Status(Code::kParseFailed, msg);
-  }
-
-  bool isExpectValue() const {
-    return (code_ == Code::kParseFailed);
-  }
-
  private:
   enum class Code {
     // General part 
@@ -115,9 +106,6 @@ class Status {
 
     // KV part
     kNotLeader,
-
-    // JSON part
-    kParseFailed,
   }; 
 
   Code code_;
