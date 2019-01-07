@@ -1,7 +1,7 @@
 /*
  * author: OneDay_(ltang970618@gmail.com)
  **/
-#include <master/heart_beat.h>
+#include <fs/heart_beat_sender.h>
 
 namespace ctgfs {
 namespace heart_beat {
@@ -24,7 +24,7 @@ void HeartBeatSender::SetHeartBeatInfo(
 
 util::Status HeartBeatSender::SendHeartBeat() {
   initChannel(addr_);
-  HeartBeatService_Stub stub(&heart_beat_channel_);
+  MasterService_Stub stub(&heart_beat_channel_);
   brpc::Controller ctrl;
   stub.SendHeartBeat(&ctrl, heart_beat_message_req_.get(),
                      heart_beat_message_res_.get(), NULL);

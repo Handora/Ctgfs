@@ -1,7 +1,7 @@
 // Authors: Chen Qian(qcdsr970209@gmail.com)
 
 #pragma once
-#include <client.pb.h>
+#include <master.pb.h>
 #include <util/status.h>
 
 namespace ctgfs {

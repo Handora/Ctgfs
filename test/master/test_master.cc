@@ -4,14 +4,15 @@
 
 #include <brpc/server.h>
 #include <butil/logging.h>
-#include <client.pb.h>
 #include <client/client.h>
+#include <fs/fs_service.h>
+#include <fs/heart_beat_sender.h>
 #include <gflags/gflags.h>
 #include <gtest/gtest.h>
-#include <master/heart_beat.h>
-#include <master/heart_beat_detector.h>
+#include <master.pb.h>
 #include <master/master.h>
 #include <functional>
+#include <iostream>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -22,15 +23,12 @@ namespace master {
 using namespace ctgfs::util;
 using namespace ctgfs::client;
 using namespace ctgfs::heart_beat;
+using namespace ctgfs::fs;
 
-// test [client] [master] [heart_beat_sender on kv] [heart_beat_detector on
-// master]
+// test [client] [master] [heart_beat_sender on kv] [file transfer]
 // server start, heart_beat_detector start
 // heart_beat_sender regist to the master
 // client req
-// TODO(Add fs service)
-// partly test master cann't use now
-// should wait for update
 TEST(MasterTest, Connect) {
   // add service
   std::shared_ptr<Master> master_ptr = std::make_shared<Master>();
@@ -47,42 +45,57 @@ TEST(MasterTest, Connect) {
   ASSERT_EQ(0, start_status) << "start error! status : " << start_status
                              << std::endl;
 
-  // add & start detector
-  brpc::Server detector_server;
-  HeartBeatDetector detector(master_ptr);
-  add_status =
-      detector_server.AddService(&detector, brpc::SERVER_DOESNT_OWN_SERVICE);
-  ASSERT_EQ(0, add_status);
-  brpc::ServerOptions detector_options;
-  std::string detector_addr = std::string("127.0.0.1:1236");
-  start_status =
-      detector_server.Start(detector_addr.c_str(), &detector_options);
-  ASSERT_EQ(0, start_status);
-
   // new a heart_beat_sender
-
-  std::string heart_beat_sender_addr = std::string("127.0.0.1:1235");
+  std::string fs_addr = std::string("127.0.0.1:1233");
   auto heart_beat_info = std::make_shared<HeartBeatInfo>();
   heart_beat_info->type = HeartBeatMessageRequest_HeartBeatType::
       HeartBeatMessageRequest_HeartBeatType_kRegist;  // kRgist
-  heart_beat_info->addr = heart_beat_sender_addr;
-  HeartBeatSender sender(detector_addr, heart_beat_info);
+  heart_beat_info->addr = fs_addr;
+  HeartBeatSender sender(addr, heart_beat_info);
   auto send_status = sender.SendHeartBeat();
   EXPECT_EQ(send_status.IsOK(), true) << "heart beat fail" << std::endl;
 
+  // add fs service
+  std::string res_str;
+  std::stringstream ss;
+  std::function<void()> callback = [&]() {
+    std::string cur_str;
+    while (ss >> cur_str) {
+      res_str += cur_str;
+    }
+  };
+  std::shared_ptr<TestFSService> fs_service_ptr =
+      std::make_shared<TestFSService>(ss, callback);
+  brpc::Server fs_server;
+  add_status =
+      fs_server.AddService(&(*fs_service_ptr), brpc::SERVER_DOESNT_OWN_SERVICE);
+  ASSERT_EQ(0, add_status) << "add fs server error! status : " << add_status
+                           << std::endl;
+
+  // start fs service
+  brpc::ServerOptions fs_server_options;
+  start_status = fs_server.Start(fs_addr.c_str(), &fs_server_options);
+  ASSERT_EQ(0, start_status) << "start service error! status : " << start_status
+                             << std::endl;
+  std::string test_str;
+  for (int i = 0; i < 1024; i++) {
+    test_str += "qcnb";
+  }
   auto client_func = [=]() {
-    const std::string input = "mkdir /a/b";
-    Client client(input, addr);
-    bool client_status = client.StartClient();
-    ASSERT_EQ(true, client_status) << "start client error!" << std::endl;
-    ;
+    std::string input = "write /a/b " + test_str;
+    Client client(addr);
+    auto status_1 = client.StartClient();
+    ASSERT_EQ(true, status_1.IsOK());
+    auto status_2 = client.AddTask(input);
+    EXPECT_EQ(true, status_2.IsOK());
   };
   std::thread t(client_func);
   t.join();
-  detector_server.Stop(0);
+  fs_server.Stop(0);
   server.Stop(0);
-  detector_server.Join();
+  fs_server.Join();
   server.Join();
+  EXPECT_STREQ(test_str.c_str(), res_str.c_str());
 }
 
 }  // namespace master

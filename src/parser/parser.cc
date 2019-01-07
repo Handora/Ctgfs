@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include <client.pb.h>
+#include <master.pb.h>
 #include <parser/parser.h>
 
 namespace ctgfs {
@@ -46,7 +46,7 @@ Status Parser::ParseFromInput(const std::string& input,
     }
     command->set_type(ctgfs::ClientKVRequest_Command_Type_kReadFile);
     command->set_path(tokens[1]);
-  } else if (tokens[1].compare("write") == 0) {
+  } else if (tokens[0].compare("write") == 0) {
     if (tokens.size() != 3) {
       return Status::InvalidArgument(
           "write command should be:\n\twrite <path> <content>");
@@ -54,7 +54,7 @@ Status Parser::ParseFromInput(const std::string& input,
     command->set_type(ctgfs::ClientKVRequest_Command_Type_kWriteFile);
     command->set_path(tokens[1]);
     command->set_value(tokens[2]);
-  } else if (tokens[1].compare("rm") == 0) {
+  } else if (tokens[0].compare("rm") == 0) {
     if (tokens.size() != 2) {
       return Status::InvalidArgument("rm command should be:\n\trm <path>");
     }

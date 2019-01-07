@@ -5,11 +5,11 @@
 #include <brpc/server.h>
 #include <brpc/stream.h>
 #include <butil/logging.h>
-#include <client.pb.h>
 #include <client/client.h>
 #include <fs/fs_service.h>
 #include <gflags/gflags.h>
 #include <gtest/gtest.h>
+#include <master.pb.h>
 #include <functional>
 #include <iostream>
 #include <thread>

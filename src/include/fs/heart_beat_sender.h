@@ -5,7 +5,7 @@
 #include <brpc/channel.h>
 #include <butil/time.h>
 #include <gflags/gflags.h>
-#include <heart_beat.pb.h>
+#include <master.pb.h>
 #include <util/status.h>
 #include <memory>
 #include <string>

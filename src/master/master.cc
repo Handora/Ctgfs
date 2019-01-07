@@ -2,11 +2,13 @@
 * author: OneDay_(ltang970618@gmail.com)
 **/
 #include <butil/logging.h>
-#include <master/heart_beat.h>
+#include <fs/heart_beat_sender.h>
 #include <master/master.h>
 
 namespace ctgfs {
 namespace master {
+
+using namespace heart_beat;
 
 Master::Master() {
   for (int i = 0; i < 26; i++) {
@@ -24,13 +26,28 @@ void Master::ClientAskForKV(::google::protobuf::RpcController* controller,
   brpc::ClosureGuard done_guard(done);
   if (cur_register_kv_id_ == 0) {
     LOG(ERROR) << "NO FS CONNECT" << std::endl;
+    controller->SetFailed("NO FS CONNECT");
     return;
   }
   // brpc::Controller* ctrl = static_cast<brpc::Controller*>(controller);
   setKVAddrByClientKVRequest(request, response);
 }
 
-void Master::UpdateKVInfo(
+void Master::SendHeartBeat(::google::protobuf::RpcController* controller,
+                           const ::ctgfs::HeartBeatMessageRequest* request,
+                           ::ctgfs::HeartBeatMessageResponse* response,
+                           ::google::protobuf::Closure* done) {
+  brpc::ClosureGuard done_guard(done);
+  // empty resp now so needn't fill
+  // use rq to generate struct HeartBeatInfo
+  // call the update method
+  std::shared_ptr<HeartBeatInfo> info_ptr = std::make_shared<HeartBeatInfo>();
+  info_ptr->addr = request->addr();
+  info_ptr->type = request->type();
+  updateKVInfo(info_ptr);
+}
+
+void Master::updateKVInfo(
     const std::shared_ptr<ctgfs::heart_beat::HeartBeatInfo> info) {
   if (info->type == HeartBeatMessageRequest_HeartBeatType::
                         HeartBeatMessageRequest_HeartBeatType_kRegist) {
