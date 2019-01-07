@@ -15,9 +15,7 @@
 namespace ctgfs {
 namespace client {
 
-Client::Client() {
-  Client(DEFAULT_SERVER_ADDR);
-}
+Client::Client() { Client(DEFAULT_SERVER_ADDR); }
 
 Client::~Client() {
   {
@@ -25,24 +23,24 @@ Client::~Client() {
     is_stop_ = true;
   }
   thread_condition_.notify_all();
-  for(auto& running_thread : thread_vec_)
-    running_thread.join();
+  for (auto& running_thread : thread_vec_) running_thread.join();
 }
 
 Client::Client(const std::string& ip, const int& port) {
   master_addr_ = ip + ":" + std::to_string(port);
 }
 
-Client::Client(const std::string& addr) : master_addr_(addr) { }
+Client::Client(const std::string& addr) : master_addr_(addr) {}
 
 util::Status Client::AddTask(const std::string& command_input) {
-  std::shared_ptr<ClientKVRequest> req_ptr = std::make_shared<ClientKVRequest>();
+  std::shared_ptr<ClientKVRequest> req_ptr =
+      std::make_shared<ClientKVRequest>();
   auto parser_status = parserInput(command_input, req_ptr);
-  if(parser_status.IsOK()) {
+  if (parser_status.IsOK()) {
     auto task_ptr = std::make_shared<ClientTask>(req_ptr);
     {
       std::unique_lock<std::mutex> lock_guard(task_queue_mutex_);
-      if(is_stop_) {
+      if (is_stop_) {
         return util::Status::ClientStop();
       }
       task_queue_.emplace(task_ptr);
@@ -53,32 +51,31 @@ util::Status Client::AddTask(const std::string& command_input) {
 
 util::Status Client::StartClient(int thread_num) {
   thread_num = std::max(1, thread_num);
-  for(int i = 0;i < thread_num; i ++) {
+  for (int i = 0; i < thread_num; i++) {
     thread_vec_.emplace_back([&]() {
-        while(true) {
-          std::shared_ptr<ClientTask> task_ptr = nullptr;
-          {
-            std::unique_lock<std::mutex> lock_guard(task_queue_mutex_);
-            while(!is_stop_ && task_queue_.empty()) {
-                thread_condition_.wait(lock_guard);
-            }
-            if (is_stop_ && task_queue_.empty()) {
-              return;
-            }
-            task_ptr = std::move(task_queue_.front());
-            task_queue_.pop();
+      while (true) {
+        std::shared_ptr<ClientTask> task_ptr = nullptr;
+        {
+          std::unique_lock<std::mutex> lock_guard(task_queue_mutex_);
+          while (!is_stop_ && task_queue_.empty()) {
+            thread_condition_.wait(lock_guard);
           }
-          if(task_ptr != nullptr)
-            connectToMaster(task_ptr);
+          if (is_stop_ && task_queue_.empty()) {
+            return;
+          }
+          task_ptr = std::move(task_queue_.front());
+          task_queue_.pop();
         }
+        if (task_ptr != nullptr) connectToMaster(task_ptr);
+      }
     });
   }
   return util::Status::OK();
 }
 
-util::Status Client::parserInput(const std::string& command_input, std::shared_ptr<ClientKVRequest> req_ptr) {
-  util::Status s =
-      parser_.ParseFromInput(command_input, (*req_ptr.get()));
+util::Status Client::parserInput(const std::string& command_input,
+                                 std::shared_ptr<ClientKVRequest> req_ptr) {
+  util::Status s = parser_.ParseFromInput(command_input, (*req_ptr.get()));
   if (!s.IsOK()) {
     debugErrorParserInput(true, "Parse Input Command Error!");
     return util::Status::ParserInputError();
@@ -130,7 +127,8 @@ util::Status Client::doCommand(std::shared_ptr<ClientTask> task_ptr) {
   brpc::Controller ctrl;
   FileSystemService_Stub stub(&channel);
   auto fs_res_ptr = std::make_shared<FileSystemResponse>();
-  stub.DoCommandOnFS(&ctrl, (task_ptr->client_request_ptr).get(), (fs_res_ptr).get(), NULL);
+  stub.DoCommandOnFS(&ctrl, (task_ptr->client_request_ptr).get(),
+                     (fs_res_ptr).get(), NULL);
   if (ctrl.Failed()) {
     LOG(ERROR) << "Connect Fail" << std::endl;
     return util::Status::ConnectFailed();
@@ -153,7 +151,8 @@ util::Status Client::doCommandWithStream(std::shared_ptr<ClientTask> task_ptr) {
   channel.Init(fs_addr.c_str(), &options);
   FileSystemService_Stub stub(&channel);
   auto fs_res_ptr = task_ptr->file_system_response_ptr;
-  stub.DoCommandOnFS(&ctrl, (task_ptr->client_request_ptr).get(), fs_res_ptr.get(), NULL);
+  stub.DoCommandOnFS(&ctrl, (task_ptr->client_request_ptr).get(),
+                     fs_res_ptr.get(), NULL);
   auto command_value = task_ptr->command_value;
   int st = 0, ed = std::min(static_cast<int>(command_value.size()), 1023);
   do {
@@ -180,8 +179,7 @@ util::Status Client::doCommandWithStream(std::shared_ptr<ClientTask> task_ptr) {
         return util::Status::StreamCrash();
       }
     } else {
-      if(ed == static_cast<int>(command_value.size()))
-        break;
+      if (ed == static_cast<int>(command_value.size())) break;
       st = std::min(ed, static_cast<int>(command_value.size()));
       ed = std::min(ed + 1023, static_cast<int>(command_value.size()));
     }

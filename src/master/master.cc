@@ -34,9 +34,9 @@ void Master::ClientAskForKV(::google::protobuf::RpcController* controller,
 }
 
 void Master::SendHeartBeat(::google::protobuf::RpcController* controller,
-                          const ::ctgfs::HeartBeatMessageRequest* request,
-                          ::ctgfs::HeartBeatMessageResponse* response,
-                          ::google::protobuf::Closure* done) {
+                           const ::ctgfs::HeartBeatMessageRequest* request,
+                           ::ctgfs::HeartBeatMessageResponse* response,
+                           ::google::protobuf::Closure* done) {
   brpc::ClosureGuard done_guard(done);
   // empty resp now so needn't fill
   // use rq to generate struct HeartBeatInfo

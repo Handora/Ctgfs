@@ -4,16 +4,16 @@
 #pragma once
 #include <brpc/channel.h>
 #include <butil/time.h>
-#include <master.pb.h>
 #include <fs.pb.h>
 #include <gflags/gflags.h>
-#include <util/status.h>
-#include <memory>
-#include <string>
-#include <mutex>
-#include <condition_variable>
-#include <queue>
+#include <master.pb.h>
 #include <parser/parser.h>
+#include <util/status.h>
+#include <condition_variable>
+#include <memory>
+#include <mutex>
+#include <queue>
+#include <string>
 #include <thread>
 #include <vector>
 
@@ -24,12 +24,13 @@ const std::string DEFAULT_SERVER_ADDR = "127.0.0.1:1234";
 // a client command is a task
 // this struct is to wrap the info of a client task
 struct ClientTask {
-  ClientTask(std::shared_ptr<ClientKVRequest> client_req_ptr) : client_request_ptr(client_req_ptr) {
+  ClientTask(std::shared_ptr<ClientKVRequest> client_req_ptr)
+      : client_request_ptr(client_req_ptr) {
     // prevent transfer file stream
     // store locally
-    if(client_request_ptr->has_command()) {
+    if (client_request_ptr->has_command()) {
       auto command = client_request_ptr->command();
-      if(command.has_value()) {
+      if (command.has_value()) {
         command_value = std::move(command.value());
         command.clear_value();
       }
@@ -44,17 +45,17 @@ struct ClientTask {
 };
 
 // every task manage own resource(req/resp channel controller ...)
-// this class just help choose task to do command and help find master's addr 
+// this class just help choose task to do command and help find master's addr
 // but not store info
 // you should use master's addr or ip:prot to construct a client
 class Client {
  public:
-  Client(); // use default addr
+  Client();  // use default addr
   Client(const std::string& ip, const int& port);
   // addr(ip:port)
-  // Example: 
+  // Example:
   // 127.0.0.1:1234
-  Client(const std::string& addr); 
+  Client(const std::string& addr);
   // should join all thread
   ~Client();
   // construct a client you should call AddTask to start a command
@@ -87,7 +88,8 @@ class Client {
   // store thread
   std::vector<std::thread> thread_vec_;
   // this is to fill a ClientKVRequest by input info
-  util::Status parserInput(const std::string& command_input, std::shared_ptr<ClientKVRequest> req);
+  util::Status parserInput(const std::string& command_input,
+                           std::shared_ptr<ClientKVRequest> req);
   // return true when connect succ eles return false
   util::Status connectToMaster(std::shared_ptr<ClientTask> task_ptr);
   // to get kv addr

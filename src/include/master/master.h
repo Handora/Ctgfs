@@ -4,9 +4,9 @@
 #pragma once
 #include <brpc/channel.h>
 #include <butil/time.h>
-#include <master.pb.h>
 #include <fs.pb.h>
 #include <fs/heart_beat_sender.h>
+#include <master.pb.h>
 #include <map>
 #include <memory>
 #include <queue>
@@ -34,9 +34,9 @@ class Master : public MasterService {
                       ::ctgfs::ClientKVResponse* response,
                       ::google::protobuf::Closure* done);
   void SendHeartBeat(::google::protobuf::RpcController* controller,
-                    const ::ctgfs::HeartBeatMessageRequest* request,
-                    ::ctgfs::HeartBeatMessageResponse* response,
-                    ::google::protobuf::Closure* done);
+                     const ::ctgfs::HeartBeatMessageRequest* request,
+                     ::ctgfs::HeartBeatMessageResponse* response,
+                     ::google::protobuf::Closure* done);
 
  private:
   // char set need hash

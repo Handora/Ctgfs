@@ -77,19 +77,19 @@ void RocksFSM::on_apply(braft::Iterator& iter) {
     data.cutn(&type, sizeof(uint8_t));
 
     switch (type) {
-    case OP_PUT: {
-      uint32_t size;
-      std::string key, value;
-      data.cutn(&size, sizeof(uint32_t));
-      data.cutn(&key, size);
+      case OP_PUT: {
+        uint32_t size;
+        std::string key, value;
+        data.cutn(&size, sizeof(uint32_t));
+        data.cutn(&key, size);
 
-      data.cutn(&size, sizeof(uint32_t));
-      data.cutn(&value, size);
-      put(key, value);
-      break;
-    }
-    default:
-      break;
+        data.cutn(&size, sizeof(uint32_t));
+        data.cutn(&value, size);
+        put(key, value);
+        break;
+      }
+      default:
+        break;
     }
   }
 }
@@ -153,9 +153,9 @@ util::Status RocksFSM::propose(ProposeType type, const std::string& key,
   log.append(key);
 
   switch (type) {
-  case OP_GET:
-    break;
-  case OP_PUT: {
+    case OP_GET:
+      break;
+    case OP_PUT: {
       size = static_cast<uint32_t>(value.size());
       log.append(&size, sizeof(uint32_t));
       log.append(value);

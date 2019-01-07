@@ -3,9 +3,9 @@
 **/
 #include <brpc/server.h>
 #include <butil/logging.h>
-#include <master.pb.h>
 #include <fs/fs_service.h>
 #include <gflags/gflags.h>
+#include <master.pb.h>
 #include <memory>
 
 namespace ctgfs {

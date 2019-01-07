@@ -7,8 +7,8 @@
 #include <butil/logging.h>
 #include <butil/time.h>
 #include <fs.pb.h>
-#include <master.pb.h>
 #include <gflags/gflags.h>
+#include <master.pb.h>
 #include <functional>
 #include <iostream>
 #include <memory>
