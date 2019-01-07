@@ -90,6 +90,10 @@ class Status {
 
   bool IsParserInputError() const { return (code_ == Code::kParserInputError); }
 
+  static Status ClientStop(const std::string& msg = "") {
+    return Status(Code::kClientStop, msg);
+  }
+
   /*************************** KV Part *******************************/
   static Status NotLeader(const std::string& msg) {
     return Status(Code::kNotLeader, msg);
@@ -119,6 +123,7 @@ class Status {
     kStreamCreateFailed,
     kStreamCrash,
     kParserInputError,
+    kClientStop,
     // KV part
     kNotLeader,
 

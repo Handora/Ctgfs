@@ -80,10 +80,11 @@ TEST(MasterTest, Connect) {
   }
   auto client_func = [=]() {
     std::string input = "write /a/b " + test_str;
-    Client client(input, addr);
-    bool client_status = client.StartClient();
-    ASSERT_EQ(true, client_status) << "start client error!" << std::endl;
-    ;
+    Client client(addr);
+    auto status_1 = client.StartClient();
+    ASSERT_EQ(true, status_1.IsOK());
+    auto status_2 = client.AddTask(input);
+    EXPECT_EQ(true, status_2.IsOK());
   };
   std::thread t(client_func);
   t.join();

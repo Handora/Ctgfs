@@ -15,100 +15,122 @@
 namespace ctgfs {
 namespace client {
 
-Client::Client(const std::string& input) { Client(input, DEFAULT_SERVER_ADDR); }
-
-Client::Client(const std::string& input, const std::string& ip, const int port)
-    : command_input_(input) {
-  initChannel(ip, port);
+Client::Client() {
+  Client(DEFAULT_SERVER_ADDR);
 }
 
-Client::Client(const std::string& input, const std::string& addr)
-    : command_input_(input) {
-  initChannel(addr);
+Client::~Client() {
+  {
+    std::unique_lock<std::mutex> lock_guard(task_queue_mutex_);
+    is_stop_ = true;
+  }
+  thread_condition_.notify_all();
+  for(auto& running_thread : thread_vec_)
+    running_thread.join();
 }
 
-bool Client::StartClient() {
-  auto res = parserInput();
-  return res.IsOK();
+Client::Client(const std::string& ip, const int& port) {
+  master_addr_ = ip + ":" + std::to_string(port);
 }
 
-void Client::initChannel(const std::string& addr) {
-  client_response_ptr_ = std::make_shared<ClientKVResponse>();
-  brpc::ChannelOptions options;
-  client_channel_.Init(addr.c_str(), &options);
+Client::Client(const std::string& addr) : master_addr_(addr) { }
+
+util::Status Client::AddTask(const std::string& command_input) {
+  std::shared_ptr<ClientKVRequest> req_ptr = std::make_shared<ClientKVRequest>();
+  auto parser_status = parserInput(command_input, req_ptr);
+  if(parser_status.IsOK()) {
+    auto task_ptr = std::make_shared<ClientTask>(req_ptr);
+    {
+      std::unique_lock<std::mutex> lock_guard(task_queue_mutex_);
+      if(is_stop_) {
+        return util::Status::ClientStop();
+      }
+      task_queue_.emplace(task_ptr);
+    }
+  }
+  return parser_status;
 }
 
-void Client::initChannel(const std::string& ip, const int port) {
-  client_response_ptr_ = std::make_shared<ClientKVResponse>();
-  brpc::ChannelOptions options;
-  client_channel_.Init(ip.c_str(), port, &options);
+util::Status Client::StartClient(int thread_num) {
+  thread_num = std::max(1, thread_num);
+  for(int i = 0;i < thread_num; i ++) {
+    thread_vec_.emplace_back([&]() {
+        while(true) {
+          std::shared_ptr<ClientTask> task_ptr = nullptr;
+          {
+            std::unique_lock<std::mutex> lock_guard(task_queue_mutex_);
+            while(!is_stop_ && task_queue_.empty()) {
+                thread_condition_.wait(lock_guard);
+            }
+            if (is_stop_ && task_queue_.empty()) {
+              return;
+            }
+            task_ptr = std::move(task_queue_.front());
+            task_queue_.pop();
+          }
+          if(task_ptr != nullptr)
+            connectToMaster(task_ptr);
+        }
+    });
+  }
+  return util::Status::OK();
 }
 
-util::Status Client::parserInput() {
-  client_request_ptr_ = std::make_shared<ClientKVRequest>();
-  parser::Parser parser;
+util::Status Client::parserInput(const std::string& command_input, std::shared_ptr<ClientKVRequest> req_ptr) {
   util::Status s =
-      parser.ParseFromInput(command_input_, (*client_request_ptr_.get()));
+      parser_.ParseFromInput(command_input, (*req_ptr.get()));
   if (!s.IsOK()) {
     debugErrorParserInput(true, "Parse Input Command Error!");
     return util::Status::ParserInputError();
   }
-  if (client_request_ptr_->has_command()) {
-    auto command = client_request_ptr_->command();
-    if (command.has_value()) {
-      command_value_ = std::move(command.value());
-      command.clear_value();
-    }
-  }
-  debugErrorParserInput(false,
-                        "Parse Successfully, Starting Connecting Master");
-  return connectToMaster();
+  return util::Status::OK();
 }
 
-util::Status Client::connectToMaster() {
-  debugErrorConnectToMaster(
-      false, "Master Connect Successfully\nStarting Communicating");
-  return askKV();
+util::Status Client::connectToMaster(std::shared_ptr<ClientTask> task_ptr) {
+  // debugErrorConnectToMaster(
+  //     false, "Master Connect Successfully\nStarting Communicating");
+  return askKV(task_ptr);
 }
 
-util::Status Client::askKV() {
-  MasterService_Stub stub(&client_channel_);
+util::Status Client::askKV(std::shared_ptr<ClientTask> task_ptr) {
+  brpc::Channel channel;
+  brpc::ChannelOptions options;
+  channel.Init(master_addr_.c_str(), &options);
+  MasterService_Stub stub(&channel);
   brpc::Controller ctrl;
-  stub.ClientAskForKV(&ctrl, client_request_ptr_.get(),
-                      client_response_ptr_.get(), NULL);
+  auto client_request_ptr = task_ptr->client_request_ptr;
+  auto client_response_ptr = task_ptr->client_response_ptr;
+  stub.ClientAskForKV(&ctrl, client_request_ptr.get(),
+                      client_response_ptr.get(), NULL);
   if (ctrl.Failed()) {
     LOG(ERROR) << ctrl.ErrorText() << std::endl;
     return util::Status::NotFound("Fail to get target address");
   } else {
-    return connectToKV();
+    return connectToKV(task_ptr);
   }
 }
 
 util::Status Client::connectCallback() { return util::Status::OK(); }
 
-util::Status Client::connectToKV() {
+util::Status Client::connectToKV(std::shared_ptr<ClientTask> task_ptr) {
   // connect kv
-  // const std::string kv_addr = client_response_ptr_->addr();
-  // initChannel(kv_addr);
-  // TODO(multithread)
-  return doCommand();
+  return doCommand(task_ptr);
   // return true;
 }
 
-util::Status Client::doCommand() {
+util::Status Client::doCommand(std::shared_ptr<ClientTask> task_ptr) {
   // do command
-  // initChannel(fs_addr);
-  if (!command_value_.empty()) {
-    return doCommandWithStream();
+  if (!(task_ptr->command_value).empty()) {
+    return doCommandWithStream(task_ptr);
   }
-  const std::string& fs_addr = client_response_ptr_->addr();
+  const std::string& fs_addr = task_ptr->client_response_ptr->addr();
   brpc::ChannelOptions options;
   brpc::Channel channel;
   channel.Init(fs_addr.c_str(), &options);
   brpc::Controller ctrl;
   FileSystemService_Stub stub(&channel);
   auto fs_res_ptr = std::make_shared<FileSystemResponse>();
-  stub.DoCommandOnFS(&ctrl, client_request_ptr_.get(), fs_res_ptr.get(), NULL);
+  stub.DoCommandOnFS(&ctrl, (task_ptr->client_request_ptr).get(), (fs_res_ptr).get(), NULL);
   if (ctrl.Failed()) {
     LOG(ERROR) << "Connect Fail" << std::endl;
     return util::Status::ConnectFailed();
@@ -116,7 +138,7 @@ util::Status Client::doCommand() {
   return util::Status::OK();
 }
 
-util::Status Client::doCommandWithStream() {
+util::Status Client::doCommandWithStream(std::shared_ptr<ClientTask> task_ptr) {
   brpc::Controller ctrl;
   brpc::StreamId stream;
   if (brpc::StreamCreate(&stream, ctrl, NULL) != 0) {
@@ -125,18 +147,18 @@ util::Status Client::doCommandWithStream() {
   }
   brpc::ScopedStream stream_guard(stream);
 
-  const std::string& fs_addr = client_response_ptr_->addr();
+  const std::string& fs_addr = task_ptr->client_response_ptr->addr();
   brpc::ChannelOptions options;
   brpc::Channel channel;
   channel.Init(fs_addr.c_str(), &options);
   FileSystemService_Stub stub(&channel);
-  auto fs_res_ptr = std::make_shared<FileSystemResponse>();
-  stub.DoCommandOnFS(&ctrl, client_request_ptr_.get(), fs_res_ptr.get(), NULL);
-
-  int st = 0, ed = std::min(static_cast<int>(command_value_.size()), 1023);
+  auto fs_res_ptr = task_ptr->file_system_response_ptr;
+  stub.DoCommandOnFS(&ctrl, (task_ptr->client_request_ptr).get(), fs_res_ptr.get(), NULL);
+  auto command_value = task_ptr->command_value;
+  int st = 0, ed = std::min(static_cast<int>(command_value.size()), 1023);
   do {
     std::string buf_str =
-        std::string(command_value_.begin() + st, command_value_.begin() + ed);
+        std::string(command_value.begin() + st, command_value.begin() + ed);
     butil::IOBuf buf;
     buf.append(buf_str.c_str());
     int write_status = brpc::StreamWrite(stream, buf);
@@ -158,12 +180,12 @@ util::Status Client::doCommandWithStream() {
         return util::Status::StreamCrash();
       }
     } else {
-      if(ed == static_cast<int>(command_value_.size()))
+      if(ed == static_cast<int>(command_value.size()))
         break;
-      st = std::min(ed, static_cast<int>(command_value_.size()));
-      ed = std::min(ed + 1023, static_cast<int>(command_value_.size()));
+      st = std::min(ed, static_cast<int>(command_value.size()));
+      ed = std::min(ed + 1023, static_cast<int>(command_value.size()));
     }
-  } while (ed <= static_cast<int>(command_value_.size()));
+  } while (ed <= static_cast<int>(command_value.size()));
   brpc::StreamClose(stream);
   return util::Status::OK();
 }
