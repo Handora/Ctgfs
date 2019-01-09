@@ -20,7 +20,33 @@ Generator::Generator(const Value& val, std::string& result)
 }
 
 void Generator::stringifyValue(const Value& v) {
-
+  switch (v.GetType()) {
+    case type::kNull: res_ += "null"; break;
+    case type::kTrue: res_ += "true"; break;
+    case type::kFalse: res_ += "false"; break;
+    case type::kNumber: {
+      
+    }
+    case type::kString: stringifyString(v.GetString()); break;
+    case type::kArray: 
+      res_ += '[';
+      for (int i = 0; i < v.GetArraySize(); ++i) {
+        if (i > 0) res_ += ',';
+        stringifyValue(v.GetArrayElement(i));
+      }
+      res_ += ']';
+      break;
+    case type::kObject:
+      res_ += '{';
+      for (int i = 0; i < v.GetObjectSize(); ++i) {
+        if (i > 0) res_ += ',';
+        stringifyString(v.GetObjectKey(i));
+        res_ += ':';
+        stringifyValue(v.GetObjectValue(i));
+      }
+      res_ += '}';
+      break;
+  }
 }
 
 void Generator::stringifyString(const std::string& str) {

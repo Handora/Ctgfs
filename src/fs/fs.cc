@@ -5,45 +5,46 @@
 #include <string>
 #include <vector>
 #include <memory>
-
+#include <cassert>
 #include <fs/fs.h>
+#include <util/json.h>
 
 namespace ctgfs {
 namespace fs {
+using util::Status;
 
-bool FileSystem::CreateDir(const std::string& path) {
+Status FileSystem::CreateDir(const std::string& path) {
   // todo 
-  return true;
 }
 
-bool FileSystem::ReadDir(const std::string& path, std::vector<std::string>& children) const {
+Status FileSystem::ReadDir(const std::string& path, std::vector<std::string>& children) const {
   // todo    
-  return true;
 }
 
-bool FileSystem::RemoveDir(const std::string& path) {
+Status FileSystem::RemoveDir(const std::string& path) {
   // todo 
-  return true;
 }
 
-bool FileSystem::WriteFile(const std::string& path, const std::string& content) {
+Status FileSystem::WriteFile(const std::string& path, const std::string& content) {
   // todo 
-  return true;
 }
 
-bool FileSystem::ReadFile(const std::string& path, std::string& content) const {
+Status FileSystem::ReadFile(const std::string& path, std::string& content) const {
   // todo 
-  return true;
 }
 
-bool FileSystem::RemoveFile(const std::string& path) {
+Status FileSystem::RemoveFile(const std::string& path) {
   // todo
-  return true;
 }
 
-bool FileSystem::ChangeDir(const std::string& path, std::string& key) const {
-  // todo  
-  return true;
+Status FileSystem::parsePath(const std::string& path, std::string& key) const {
+  /*
+  size_t len = 0;
+  assert((len = path.size()) != 0 && path[0] == '/');
+
+  std::string cur_dir = "/", content;
+  kv_->Get("/", content); 
+  */
 }
 
 } // namespace fs

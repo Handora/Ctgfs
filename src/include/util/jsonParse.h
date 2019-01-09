@@ -16,7 +16,6 @@ class Parser final {
  public:
   Parser(Value& val, const std::string& content);
 
-  Status Init();
  private:
   void parseWhitespace() noexcept;
   void parseValue();

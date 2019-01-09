@@ -4,11 +4,11 @@
  * and Syopain/Json(https://github.com/Syopain/Json)
  * */
 
-#include <assert.h>
+#include <cassert>
 #include <string>
-#include "util/jsonValue.h"
-#include "util/jsonParse.h"
-#include "util/jsonGenerator.h"
+#include <util/jsonValue.h>
+#include <util/jsonParse.h>
+#include <util/jsonGenerator.h>
 
 namespace ctgfs {
 namespace util {
