@@ -17,15 +17,15 @@ enum FileType{
   kFolder
 };
 
-class FileSystem {
+class IFileSystem {
  public:
   // Create a directory with its absolute path. 
   // Return bool to indicate success or not.
-  bool CreateDir(const std::string& path);
+  virtual bool CreateDir(const std::string& path)=0;
   
   // Get the content of a folder with its absolute path. 
   // Return bool to indicate success or not.
-  bool ReadDir(const std::string& path, std::vector<std::string>& children) const;
+  virtual bool ReadDir(const std::string& path, std::vector<std::string>& children) const=0;
 
   // Delete a directory with its absolute path.
   // Return bool to indicate success or not.

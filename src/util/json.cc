@@ -49,6 +49,10 @@ namespace jsontree {
     v->Parse(content);
   }
 
+  void Json::Stringify(std::string& content) const noexcept {
+    v->Stringify(content); 
+  }
+
   int Json::GetType() const noexcept {
     if (v == nullptr) 
       return json::type::kNull;

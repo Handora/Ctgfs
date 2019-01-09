@@ -187,6 +187,10 @@ namespace json {
     Parser(*this, content);
   }
 
+  void Value::Stringify(std::string& content) const noexcept {
+    Generator(*this, content);
+  }
+
   bool operator==(const Value& lhs, const Value& rhs) noexcept {
     if (lhs.type_ != rhs.type_) 
       return false;

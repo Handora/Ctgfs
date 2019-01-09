@@ -4,14 +4,25 @@
  * and Syopain/Json(https://github.com/Syopain/Json)
  * */
 
- #include <string>
- #include <vector>
- #include <utility>
- #include <util/json.h>
+ #include <util/jsonValue.h>
 
 namespace ctgfs {
 namespace util {
 
+namespace json {
+
+class Generator final {
+ public:
+  Generator(const Value& val, std::string& result);
+
+ private:
+  void stringifyValue(const Value& v);
+  void stringifyString(const std::string& str);
+
+  std::string& res_;
+};
+
+} // namespace json
 
 } // namespace ctgfs
 } // namespace util
