@@ -48,10 +48,12 @@ class IFileSystem {
   virtual Status RemoveFile(const std::string& path) = 0;
 
  private:
-  // This is an aid function.
   // Change the directory with an absolute path. If success, get the key of the folder.
   // Return virtual Status to indicate success or not.
   virtual Status parsePath(const std::string& path, std::string& key) const = 0;
+
+  virtual Status encodeFile(const std::string& path, std::string& result, int type) const = 0;
+  virtual Status decodeFile(const std::string& content, std::vector<std::string>& result, int& type) const = 0;
 };
 
 class FileSystem : public IFileSystem {
@@ -65,6 +67,8 @@ class FileSystem : public IFileSystem {
 
  private:
   Status parsePath(const std::string& path, std::string& key) const override;
+  Status encodeFile(const std::string& path, std::string& result, int type) const override;
+  Status decodeFile(const std::string& content, std::vector<std::string>& result, int& type) const override;
 
  private:
   std::shared_ptr<kv::KV> kv_;
