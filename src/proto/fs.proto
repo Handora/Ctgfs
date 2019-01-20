@@ -1,0 +1,20 @@
+/*
+ *  Author: fftlover(ltang970618@gmail.com)
+ */
+
+syntax="proto2";
+
+option cc_generic_services = true;
+
+package ctgfs;
+
+import "master.proto";
+
+message FileSystemResponse {
+  // need add info
+};
+
+// service on fs
+service FileSystemService {
+  rpc DoCommandOnFS(ClientKVRequest) returns (FileSystemResponse);
+};

@@ -14,6 +14,5 @@ bool RaftKV::Get(const std::string& key, std::string& value) {
   // TODO(Handora): Fill in function
   return true;
 }
-
-}
-}
+}  // namespace kv
+}  // namespace ctgfs

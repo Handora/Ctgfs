@@ -14,10 +14,7 @@ namespace fs {
 
 // 0: the file type
 // 1: the folder type
-enum FileType{
-  kFile = 0,
-  kFolder
-};
+enum FileType { kFile = 0, kFolder };
 
 using util::Status;
 
@@ -74,5 +71,5 @@ class FileSystem : public IFileSystem {
   std::shared_ptr<kv::KV> kv_;
 };
 
-} // namespace fs
-} // namespace ctgfs
+}  // namespace fs
+}  // namespace ctgfs

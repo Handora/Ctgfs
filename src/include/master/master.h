@@ -1,10 +1,12 @@
 /*
-* author: OneDay_(ltang970618@gmail.com)
-**/
+ * author: OneDay_(ltang970618@gmail.com)
+ **/
 #pragma once
 #include <brpc/channel.h>
 #include <butil/time.h>
-#include <client.pb.h>
+#include <fs.pb.h>
+#include <fs/heart_beat_sender.h>
+#include <master.pb.h>
 #include <map>
 #include <memory>
 #include <queue>
@@ -22,16 +24,19 @@
 // (TODO) 6. add redis to help kv write file
 namespace ctgfs {
 namespace master {
+using namespace heart_beat;
 class Master : public MasterService {
- protected:
-  inline Master();
-
  public:
+  Master();
   ~Master();
   void ClientAskForKV(::google::protobuf::RpcController* controller,
                       const ::ctgfs::ClientKVRequest* request,
                       ::ctgfs::ClientKVResponse* response,
                       ::google::protobuf::Closure* done);
+  void SendHeartBeat(::google::protobuf::RpcController* controller,
+                     const ::ctgfs::HeartBeatMessageRequest* request,
+                     ::ctgfs::HeartBeatMessageResponse* response,
+                     ::google::protobuf::Closure* done);
 
  private:
   // char set need hash
@@ -45,11 +50,14 @@ class Master : public MasterService {
   std::map<int, std::string> register_id_to_addr_;
   // get register id by addr
   std::map<std::string, int> addr_to_register_id_;
+  std::vector<std::shared_ptr<heart_beat::HeartBeatInfo> > kv_info_;
   // every kv connect to master will get a distinct id
   int cur_register_kv_id_ = 0;
   // collect disconnect kv's id
   // to make hash space closer
   std::queue<int> reused_queue_;
+  // called when kv info update
+  void updateKVInfo(const std::shared_ptr<ctgfs::heart_beat::HeartBeatInfo>);
   // fill the info of resp
   // PROBLEM: if a kv disconnect it's file will lose
   // should have a dynamic method to track a kv's connect and disconnect
@@ -58,7 +66,9 @@ class Master : public MasterService {
                                   ::ctgfs::ClientKVResponse* response);
   // register a new kv
   // if success return true else false
+  // addr : ip:port
   bool registerKV(const std::string& ip, const int& port);
+  bool registerKV(const std::string& addr);
   // get new kv
   // if register fail return -1
   // else return a distinc regist id

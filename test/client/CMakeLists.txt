@@ -1,0 +1,7 @@
+file(GLOB TEST_CLIENT_SRCS "test_*.cc")
+foreach(CLIENT_T ${TEST_CLIENT_SRCS})
+  get_filename_component(CLIENT_T_WE ${CLIENT_T} NAME_WE)
+  add_executable(${CLIENT_T_WE} ${CLIENT_T})
+  target_link_libraries("${CLIENT_T_WE}" fs_service heart_beat_sender master client gtest_main proto protobuf)
+  add_test(NAME "${CLIENT_T_WE}" COMMAND "${CLIENT_T_WE}")
+endforeach()

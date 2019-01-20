@@ -30,6 +30,31 @@ message ClientKVResponse {
 	required string addr = 2;
 };
 
+
+// send the pacage at regular time
+// shared the info from filesystem
+// you should give the info to master so that master can give choice
+message HeartBeatMessageRequest {
+  enum HeartBeatType {
+    kRegist = 0;
+    kInfoUpdate = 1;
+    kUnregist = 2;
+  }
+  required HeartBeatType type = 1;
+  // ip:port
+  // Example : 
+  // 127.0.0.1:1234
+  required string addr = 2;
+  // should add more info later
+};
+
+message HeartBeatMessageResponse { 
+  // inform the file system the heart beat has been accecpted 
+  // it can add more info later
+};
+
+// master service
 service MasterService{
 	rpc ClientAskForKV(ClientKVRequest) returns (ClientKVResponse);	
+  rpc SendHeartBeat(HeartBeatMessageRequest) returns (HeartBeatMessageResponse);
 };

@@ -8,5 +8,5 @@ git submodule update --init --recursive
 ## format
 ```
 ./format.sh <path>
+// example: format.sh src
 ```
-> example: format.sh src
