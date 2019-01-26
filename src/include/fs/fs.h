@@ -12,6 +12,8 @@
 namespace ctgfs {
 namespace fs {
 
+#define ROOT_KEY "ctgfs"
+
 // 0: the file type
 // 1: the folder type
 enum FileType { kFile = 0, kFolder };
@@ -50,7 +52,17 @@ class IFileSystem {
   virtual Status parsePath(const std::string& path, std::string& key) const = 0;
 
   virtual Status encodeFile(const std::string& path, std::string& result, int type) const = 0;
-  virtual Status decodeFile(const std::string& content, std::vector<std::string>& result, int& type) const = 0;
+  virtual Status decodeFile(
+    const std::string& raw_content, 
+    std::string& file_content, 
+    std::vector<std::string>& result_name, std::vector<std::string>& result_guid, 
+    int& type) const = 0; 
+
+  virtual Status decodeFileFromKey(
+    const std::string& key, 
+    std::string& file_content, 
+    std::vector<std::string>& result_name, std::vector<std::string>& result_guid, 
+    int& type) const = 0; 
 };
 
 class FileSystem : public IFileSystem {
@@ -65,7 +77,17 @@ class FileSystem : public IFileSystem {
  private:
   Status parsePath(const std::string& path, std::string& key) const override;
   Status encodeFile(const std::string& path, std::string& result, int type) const override;
-  Status decodeFile(const std::string& content, std::vector<std::string>& result, int& type) const override;
+  Status decodeFile(
+    const std::string& raw_content, 
+    std::string& file_content, 
+    std::vector<std::string>& result_name, std::vector<std::string>& result_guid, 
+    int& type) const override; 
+
+  Status decodeFileFromKey(
+    const std::string& key, 
+    std::string& file_content, 
+    std::vector<std::string>& result_name, std::vector<std::string>& result_guid, 
+    int& type) const override; 
 
  private:
   std::shared_ptr<kv::KV> kv_;
