@@ -10,13 +10,66 @@
 #include <functional>
 #include <cassert>
 #include <fs/fs.h>
+#include <util/guid.h>
 
 namespace ctgfs {
 namespace fs {
 using namespace util;
 
 Status FileSystem::CreateDir(const std::string& path) {
-  // todo 
+  std::size_t found = path.find_last_of("/");
+  if (found == std::string::npos) {
+    return Status::InvalidArgument(path + " is invalid.");
+  }
+
+  std::string parent_dir_path = path.substr(0, found);
+  std::string target_dir_name = path.substr(found + 1);
+  if (target_dir_name.empty()) {
+    // path is "/"
+    return Status::InvalidArgument("/, file exists.");
+  }
+
+  // maybe, it's better to write some other functions like hasFile(find file, find folder) to make things easier.
+
+  std::string parent_dir_key;
+  Status status_get_parent_key = parsePath(parent_dir_path, parent_dir_key);
+  if (!status_get_parent_key.IsOK()) {
+    return status_get_parent_key;
+  }
+
+  // get files under the directory.
+  int type = -1;
+  std::string parent_dir_raw_content, unused_content;
+  std::vector<std::string> child_file_guid, child_file_name;
+  Status status_get_dir = decodeFileFromKey(parent_dir_key, parent_dir_raw_content, unused_content, child_file_name, child_file_guid, type);
+  if (!status_get_dir.IsOK()) {
+    return status_get_dir;
+  }
+  if (type != 1) {
+    return Status::InvalidArgument(parent_dir_path + "is not a directory.");
+  }
+
+  // check if there is a file/folder has the same name of the folder to be created.
+  auto namehit= std::find(child_file_name.begin(), child_file_name.end(), target_dir_name);
+
+  if (namehit != child_file_name.end()) {
+    return Status::InvalidArgument(target_dir_name + "exists.");
+  }
+
+  // 1. generate an unique key.
+  Guid target_guid = NewGuid();
+  std::string target_dir_key = target_guid.str();
+
+  // 2. append the new folder in the parent folder content
+  // and update the parent directory in KV.
+  parent_dir_raw_content += "|" + target_dir_name + "/" +  target_dir_key;
+  kv_->Put(parent_dir_key, parent_dir_raw_content);
+
+  // 3. put this new folder in KV.
+  std::string target_dir_content = "1|"; // now it is empty.
+  kv_->Put(target_dir_key, target_dir_content);
+
+  return Status::OK();
 }
 
 Status FileSystem::ReadDir(const std::string& path, std::vector<std::string>& children) const {
@@ -25,22 +78,30 @@ Status FileSystem::ReadDir(const std::string& path, std::vector<std::string>& ch
     return Status::InvalidArgument(path + " is invalid.");
   }
 
-  std::string parent_dir = path.substr(0, found);
+  // std::string parent_dir = path.substr(0, found);
   std::string target_dir = path.substr(found + 1);
-  std::string target_key, content, unused_content;
   std::vector<std::string> child_file_guid;
+  // unused in this section
+  std::string raw_content, unused_content;
   int type = -1;
+
+  // check whether the target directory is root.
   if (target_dir.empty()) {
     // path is "/"
-    Status s = decodeFileFromKey(ROOT_KEY, unused_content, children, child_file_guid, type);
+    Status s = decodeFileFromKey(ROOT_KEY, raw_content, unused_content, children, child_file_guid, type);
     assert(type == 1 && s.IsOK());
     return s;
   }
+
+  // 1. get the key of the target directory.
+  std::string target_key;
   Status s = parsePath(path, target_key);
   if (!s.IsOK()) {
     return s;
   }
-  Status sret = decodeFileFromKey(target_key, unused_content, children, child_file_guid, type);
+  
+  // 2. get value from kv by key and deserialize the value to content.
+  Status sret = decodeFileFromKey(target_key, raw_content, unused_content, children, child_file_guid, type);
   if (!sret.IsOK()) {
     return sret; 
   }
@@ -52,18 +113,22 @@ Status FileSystem::ReadDir(const std::string& path, std::vector<std::string>& ch
 
 Status FileSystem::RemoveDir(const std::string& path) {
   // todo 
+  return Status::OK();
 }
 
 Status FileSystem::WriteFile(const std::string& path, const std::string& content) {
   // todo 
+  return Status::OK();
 }
 
 Status FileSystem::ReadFile(const std::string& path, std::string& content) const {
   // todo 
+  return Status::OK();
 }
 
 Status FileSystem::RemoveFile(const std::string& path) {
   // todo
+  return Status::OK();
 }
 
 Status FileSystem::parsePath(const std::string& path, std::string& key) const {
@@ -94,7 +159,7 @@ Status FileSystem::parsePath(const std::string& path, std::string& key) const {
   std::vector<std::string>::iterator it;
   for (it = folders.begin(); it != folders.end(); ++it) {
     const std::string& cur_target = *it;
-    Status s = decodeFileFromKey(cur_dir_key, unused_content, child_file_name, child_file_guid, type);
+    Status s = decodeFileFromKey(cur_dir_key, raw_content, unused_content, child_file_name, child_file_guid, type);
     if (!s.IsOK()) {
       return s;
     }
@@ -121,10 +186,13 @@ Status FileSystem::parsePath(const std::string& path, std::string& key) const {
 
   // succeeded in parsing the path.
   key = cur_dir_key;
+
+  return Status::OK();
 }
 
 Status FileSystem::encodeFile(const std::string& path, std::string& result, int type) const {
-
+  // todo
+  return Status::OK();
 }
 
 Status FileSystem::decodeFile(
@@ -164,15 +232,16 @@ Status FileSystem::decodeFile(
 
 Status FileSystem::decodeFileFromKey(
     const std::string& key,
+    std::string& raw_content, 
     std::string& file_content, 
     std::vector<std::string>& file_name, std::vector<std::string>& file_guid, 
     int& type) const 
 {
-  std::string raw_content;
   // maybe, need to validate the key here.
+  
   kv_->Get(key, raw_content);
 
-  // check the result of the kv::Get
+  // check the raw content got from kv::Get here.
 
   return decodeFile(raw_content, file_content, file_name, file_guid, type);
 }

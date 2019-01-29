@@ -60,6 +60,7 @@ class IFileSystem {
 
   virtual Status decodeFileFromKey(
     const std::string& key, 
+    std::string& raw_content,
     std::string& file_content, 
     std::vector<std::string>& result_name, std::vector<std::string>& result_guid, 
     int& type) const = 0; 
@@ -85,6 +86,7 @@ class FileSystem : public IFileSystem {
 
   Status decodeFileFromKey(
     const std::string& key, 
+    std::string& raw_content,
     std::string& file_content, 
     std::vector<std::string>& result_name, std::vector<std::string>& result_guid, 
     int& type) const override; 
