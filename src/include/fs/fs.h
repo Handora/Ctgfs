@@ -6,6 +6,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include <kv/kv.h>
 #include <util/status.h>
 
@@ -68,6 +69,9 @@ class IFileSystem {
 
 class FileSystem : public IFileSystem {
  public:
+  FileSystem() noexcept;
+
+ public:
   Status CreateDir(const std::string& path) override;
   Status ReadDir(const std::string& path, std::vector<std::string>& children) const override;
   Status RemoveDir(const std::string& path) override;
@@ -92,7 +96,8 @@ class FileSystem : public IFileSystem {
     int& type) const override; 
 
  private:
-  std::shared_ptr<kv::KV> kv_;
+  // std::shared_ptr<kv::KV> kv_;
+  std::shared_ptr< std::map<std::string, std::string> > kv_;
 };
 
 }  // namespace fs

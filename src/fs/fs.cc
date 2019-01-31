@@ -2,6 +2,7 @@
  * author: wfgu(peter.wfgu@gmail.com)
  * */
 
+#include <iostream>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -16,18 +17,47 @@ namespace ctgfs {
 namespace fs {
 using namespace util;
 
+// for print debug message
+const std::string red("\033[0;31m"); 
+const std::string reset("\033[0m"); 
+
+void debug(const std::string& msg) {
+  std::cerr << red << msg << reset << std::endl;
+}
+
+FileSystem::FileSystem() noexcept {
+  kv_ = std::make_shared< std::map<std::string, std::string> >( );
+  (*kv_)[ROOT_KEY] = "1|"; // create root directory.
+}
+
 Status FileSystem::CreateDir(const std::string& path) {
+  #ifdef dev
+  debug("- command: mkdir " + path);
+  #endif
+
   std::size_t found = path.find_last_of("/");
   if (found == std::string::npos) {
     return Status::InvalidArgument(path + " is invalid.");
   }
 
   std::string parent_dir_path = path.substr(0, found);
+  if (parent_dir_path.empty() && found == 0) {
+    /* when deal with "/a", 
+     * parent_dir_path: " ", for the found = 0, so we need to fix it to "/"
+     * target_dir_name: "a"
+    * */
+    parent_dir_path = "/";
+  }
   std::string target_dir_name = path.substr(found + 1);
   if (target_dir_name.empty()) {
     // path is "/"
     return Status::InvalidArgument("/, file exists.");
   }
+
+  #ifdef dev
+  debug("- parent dir: " + parent_dir_path);
+  debug("- target dir: " + target_dir_name);
+  #endif
 
   // maybe, it's better to write some other functions like hasFile(find file, find folder) to make things easier.
 
@@ -36,6 +66,10 @@ Status FileSystem::CreateDir(const std::string& path) {
   if (!status_get_parent_key.IsOK()) {
     return status_get_parent_key;
   }
+
+  #ifdef dev
+  debug("- get key: " + parent_dir_key);
+  #endif
 
   // get files under the directory.
   int type = -1;
@@ -49,6 +83,14 @@ Status FileSystem::CreateDir(const std::string& path) {
     return Status::InvalidArgument(parent_dir_path + "is not a directory.");
   }
 
+  #ifdef dev
+  // debug("- get subdirectory: ok");
+  // std::size_t size_n = child_file_guid.size();
+  // for (std::size_t i = 0; i < size_n; ++i) {
+  //   debug("    - " + child_file_name[i] + " <-> " + child_file_guid[i]);
+  // }
+  #endif
+
   // check if there is a file/folder has the same name of the folder to be created.
   auto namehit= std::find(child_file_name.begin(), child_file_name.end(), target_dir_name);
 
@@ -56,27 +98,44 @@ Status FileSystem::CreateDir(const std::string& path) {
     return Status::InvalidArgument(target_dir_name + "exists.");
   }
 
+
   // 1. generate an unique key.
   Guid target_guid = NewGuid();
   std::string target_dir_key = target_guid.str();
 
   // 2. append the new folder in the parent folder content
   // and update the parent directory in KV.
-  parent_dir_raw_content += "|" + target_dir_name + "/" +  target_dir_key;
-  kv_->Put(parent_dir_key, parent_dir_raw_content);
+  parent_dir_raw_content += std::string(target_dir_name + "/" +  target_dir_key + "|");
+  (*kv_)[parent_dir_key] = parent_dir_raw_content; // for test
+  // kv_->Put(parent_dir_key, parent_dir_raw_content);
+
 
   // 3. put this new folder in KV.
   std::string target_dir_content = "1|"; // now it is empty.
-  kv_->Put(target_dir_key, target_dir_content);
+  (*kv_)[target_dir_key] = target_dir_content; // for test
+  // kv_->Put(target_dir_key, target_dir_content);
+  
+
+  #ifdef dev
+  // for (const auto & kv : *kv_) {
+  //   debug("\t" + kv.first + " <-> " + kv.second);
+  // }
+  #endif
 
   return Status::OK();
 }
 
 Status FileSystem::ReadDir(const std::string& path, std::vector<std::string>& children) const {
+  #ifdef dev
+  debug("- command: ls " + path);
+  #endif
+
   std::size_t found = path.find_last_of("/");
   if (found == std::string::npos) {
     return Status::InvalidArgument(path + " is invalid.");
   }
+
+  children.clear();
 
   // std::string parent_dir = path.substr(0, found);
   std::string target_dir = path.substr(found + 1);
@@ -90,6 +149,12 @@ Status FileSystem::ReadDir(const std::string& path, std::vector<std::string>& ch
     // path is "/"
     Status s = decodeFileFromKey(ROOT_KEY, raw_content, unused_content, children, child_file_guid, type);
     assert(type == 1 && s.IsOK());
+    #ifdef dev
+    // std::size_t k = children.size();
+    // for (std::size_t i = 0; i < k; ++i) {
+    //   debug("    - " + children[i] + " <-> " + child_file_guid[i]);
+    // }
+    #endif
     return s;
   }
 
@@ -99,7 +164,7 @@ Status FileSystem::ReadDir(const std::string& path, std::vector<std::string>& ch
   if (!s.IsOK()) {
     return s;
   }
-  
+
   // 2. get value from kv by key and deserialize the value to content.
   Status sret = decodeFileFromKey(target_key, raw_content, unused_content, children, child_file_guid, type);
   if (!sret.IsOK()) {
@@ -108,6 +173,14 @@ Status FileSystem::ReadDir(const std::string& path, std::vector<std::string>& ch
   if (type != 1) {
     return Status::InvalidArgument(target_dir + "is not a directory.");
   }
+
+  #ifdef dev
+  // std::size_t k = children.size();
+  // for (std::size_t i = 0; i < k; ++i) {
+  //   debug("    - " + children[i] + " <-> " + child_file_guid[i]);
+  // }
+  #endif
+
   return Status::OK();
 }
 
@@ -142,15 +215,15 @@ Status FileSystem::parsePath(const std::string& path, std::string& key) const {
   std::vector<std::string> folders;
   std::istringstream iss(path);
   while (getline(iss, name, '/')) {
-    folders.emplace_back(name);   
+    if (!name.empty()) {
+      folders.emplace_back(name);   
+    }
   }
   if (folders.size() == 0) {
     // path is '/' or '//' ...
     key = ROOT_KEY;
     return Status::OK();;
   }
-  std::string tar = folders.back();
-  folders.pop_back();
   
   int type = -1;
   std::string cur_dir_key = ROOT_KEY, cur_dir_name = "/"; // The path to be parsed must start from '/'
@@ -239,7 +312,10 @@ Status FileSystem::decodeFileFromKey(
 {
   // maybe, need to validate the key here.
   
-  kv_->Get(key, raw_content);
+  if (kv_->count(key)) {
+    raw_content = (*kv_)[key]; // for test
+  }
+  // kv_->Get(key, raw_content);
 
   // check the raw content got from kv::Get here.
 
