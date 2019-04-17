@@ -5,3 +5,6 @@ target_link_libraries(fs_service proto)
 target_link_libraries(fs_service brpc rpc)
 target_link_libraries(heart_beat_sender proto)
 target_link_libraries(heart_beat_sender brpc)
+
+add_executable(extent_server extent_server.cc extent_smain.cc)
+target_link_libraries(extent_server rpc)
