@@ -6,3 +6,4 @@ third_party/braft
 third_party/brpc
 tags
 tmp
+*log
