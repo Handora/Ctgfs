@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(CMAKE_CXX_FLAGS "-ggdb3 -std=c++11 -pthread ${CMAKE_CXX_FLAGS} -lprotobuf -luuid -Wall -ltcmalloc_minimal")
+set(CMAKE_CXX_FLAGS "-ggdb3 -std=c++11 -pthread ${CMAKE_CXX_FLAGS} -lprotobuf -luuid -Wall -ltcmalloc_minimal -D_FILE_OFFSET_BITS=64 -DFUSE_USE_VERSION=25")
 set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS)
 set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS)
 
