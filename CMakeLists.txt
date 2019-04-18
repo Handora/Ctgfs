@@ -23,6 +23,6 @@ link_directories(/usr/local/lib)
 enable_testing()
 
 add_subdirectory(src)
-add_subdirectory(test)
+add_subdirectory(unittest)
 add_subdirectory(example)
 add_subdirectory(third_party)
