@@ -46,6 +46,11 @@ message HeartBeatMessageRequest {
   // 127.0.0.1:1234
   required string addr = 2;
   // should add more info later
+
+  // the information of the file system.
+  required uint32 file_num = 3;
+  required uint32 disk_usage = 4;
+
 };
 
 message HeartBeatMessageResponse { 
