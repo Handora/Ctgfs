@@ -21,34 +21,33 @@ extent_server::extent_server() {
   VERIFY(put(0x00000001, "", res) == extent_protocol::OK);
 
   
+  /* the instance to get the file system info, it likes a global pointer. */
   InfoDetector* info = InfoDetector::detector();
-  // auto p_heart_beat_info = std::make_shared<ctgfs::heart_beat::HeartBeatInfo>(
-  //   (ctgfs::heart_beat::HeartBeatInfo){
-  //     ctgfs::HeartBeatMessageRequest_HeartBeatType::HeartBeatMessageRequest_HeartBeatType_kInfoUpdate,
-  //     std::string("127.0.0.1:1235"),
-  //     info->get().file_num, 
-  //     info->get().disk_usage
-  //   });
+
+  /* a shared_ptr to the HeartBeatInfo. */
   auto p_heart_beat_info = std::make_shared<ctgfs::heart_beat::HeartBeatInfo>();
+
   std::string addr = std::string("127.0.0.1:1235");
-  ctgfs::heart_beat::HeartBeatSender sender(
-    addr, p_heart_beat_info);
-  sender.SendHeartBeat();
-  // std::thread t_heart_beat([&]() {
-  //   while (true) {
-  //     auto p_heart_beat_info = std::make_shared<ctgfs::heart_beat::HeartBeatInfo>(
-  //       (ctgfs::heart_beat::HeartBeatInfo){
-  //         ctgfs::HeartBeatMessageRequest_HeartBeatType::HeartBeatMessageRequest_HeartBeatType_kInfoUpdate,
-  //         std::string("127.0.0.1:1235"),
-  //         info->get().file_num, 
-  //         info->get().disk_usage
-  //       });
-  //     sender.SetHeartBeatInfo(p_heart_beat_info);
-  //     sender.SendHeartBeat();
-  //     std::this_thread::sleep_for(std::chrono::seconds(3));
-  //   }
-  // });
-  // t_heart_beat.detach();
+
+  /* Sender is used to send the heart beat package. */
+  ctgfs::heart_beat::HeartBeatSender sender(addr, p_heart_beat_info);
+  std::thread t_heart_beat([&]() {
+    while (true) {
+      auto p_heart_beat_info = std::make_shared<ctgfs::heart_beat::HeartBeatInfo>(
+        (ctgfs::heart_beat::HeartBeatInfo){
+          ctgfs::HeartBeatMessageRequest_HeartBeatType::HeartBeatMessageRequest_HeartBeatType_kInfoUpdate,
+          std::string("127.0.0.1:1235"),
+          info->get().file_num, 
+          info->get().disk_usage
+        });
+      sender.SetHeartBeatInfo(p_heart_beat_info);
+      sender.SendHeartBeat();
+      std::this_thread::sleep_for(std::chrono::seconds(3));
+    }
+  });
+
+  /* detach this thread for it should run till the main thread is off. */
+  t_heart_beat.detach();
 }
 
 extent_server::~extent_server() {}
