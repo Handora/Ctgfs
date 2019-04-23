@@ -14,5 +14,10 @@ bool RaftKV::Get(const std::string& key, std::string& value) {
   // TODO(Handora): Fill in function
   return true;
 }
+
+bool RaftKV::Query(const std::string& key, std::map<std::string, std::string>& value) {
+  // TODO(Handora): Fill in function
+  return true;
+}
 }  // namespace kv
 }  // namespace ctgfs
