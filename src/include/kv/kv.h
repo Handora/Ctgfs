@@ -2,6 +2,7 @@
 
 #pragma once
 #include <string>
+#include <map>
 
 namespace ctgfs {
 namespace kv {
@@ -20,6 +21,9 @@ class KV {
   // the value will be the corresponding value. Otherwise, don't use
   // it.
   virtual bool Get(const std::string& key, std::string& value) = 0;
+
+  // Given the predicate and get the value lists, use this for mvcc_get
+  virtual bool Query(const std::string& key, std::map<std::string, std::string>& values) = 0;
 };
 
 }  // namespace kv

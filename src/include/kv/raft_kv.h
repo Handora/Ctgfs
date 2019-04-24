@@ -30,6 +30,11 @@ class RaftKV : public KV {
   // several threads.
   bool Get(const std::string& key, std::string& value) override;
 
+  // Given the predicate and get the value lists, use this for mvcc_get
+  //
+  // The function is re-entrant, so you can use it directly within
+  // several threads.
+  bool Query(const std::string& key, std::map<std::string, std::string>& values) override;
  private:
   // TODO(Handora): Fill in private function and varaiable
 };
