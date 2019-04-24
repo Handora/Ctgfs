@@ -15,49 +15,68 @@
 namespace ctgfs {
 namespace util {
 
-int RemoveDirectoryRecursively(const char *dirname) {
-  DIR *dir;
-  struct dirent *entry;
-  char path[PATH_MAX];
+// TODO why link error
+static int MyRemoveDirectoryRecursively(const char *path) {
+   DIR *d = opendir(path);
+   size_t path_len = strlen(path);
+   int r = -1;
 
-  if (path == NULL) {
-    return 0;
-  }
-  dir = opendir(dirname);
-  if (dir == NULL) {
-    perror("Error opendir()");
-    return 0;
-  }
+   if (d)
+     {
+       struct dirent *p;
 
-  while ((entry = readdir(dir)) != NULL) {
-    if (strcmp(entry->d_name, ".") && strcmp(entry->d_name, "..")) {
-      if (entry->d_type == DT_DIR) {
-        RemoveDirectoryRecursively(path);
-      }
+       r = 0;
 
-      /*
-       * Here, the actual deletion must be done.  Beacuse this is
-       * quite a dangerous thing to do, and this program is not very
-       * well tested, we are just printing as if we are deleting.
-       */
-      /*
-       * When you are finished testing this and feel you are ready to do the
-       * real
-       * deleting, use this: remove*STUB*(path);
-       * (see "man 3 remove")
-       * Please note that I DONT TAKE RESPONSIBILITY for data you delete with
-       * this!
-       */
-    }
-  }
-  closedir(dir);
+       while (!r && (p=readdir(d)))
+         {
+           int r2 = -1;
+           char *buf;
+           size_t len;
 
-  /*
-   * Now the directory is emtpy, finally delete the directory itself. (Just
-   * printing here, see above)
-   */
-  return 1;
-}
+           /* Skip the names "." and ".." as we don't want to recurse on them. */
+           if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))
+             {
+               continue;
+             }
+
+           len = path_len + strlen(p->d_name) + 2;
+           buf = (char *)malloc(len);
+
+           if (buf)
+             {
+               struct stat statbuf;
+
+               snprintf(buf, len, "%s/%s", path, p->d_name);
+
+               if (!stat(buf, &statbuf))
+                 {
+                   if (S_ISDIR(statbuf.st_mode))
+                     {
+                       r2 = MyRemoveDirectoryRecursively(buf);
+                     }
+                   else
+                     {
+                       r2 = unlink(buf);
+                     }
+                 }
+
+               free(buf);
+             }
+
+           r = r2;
+         }
+
+       closedir(d);
+     }
+
+   if (!r)
+     {
+       r = rmdir(path);
+     }
+
+   return r;
+ }
+ 
 
 }  // namespace util
 }  // namespace ctgfs

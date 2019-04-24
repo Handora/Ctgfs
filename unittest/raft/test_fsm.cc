@@ -1,7 +1,7 @@
 // Authors: Chen Qian(qcdsr970209@gmail.com)
 
-#include <brpc/server.h>
 #include <gtest/gtest.h>
+#include <brpc/server.h>
 #include <raft/fsm.h>
 #include <util/util.h>
 
@@ -10,7 +10,7 @@ namespace raft {
 
 /*
 TEST(FSMTest, Basic) {
-  util::RemoveDirectoryRecursively("./tmp");
+  util::MyRemoveDirectoryRecursively("./tmp");
   brpc::Server server;
 
   int port = 15122;
@@ -46,7 +46,7 @@ TEST(FSMTest, Basic) {
 */
 
 TEST(FSMTest, Multiple) {
-  util::RemoveDirectoryRecursively("tmp");
+  util::MyRemoveDirectoryRecursively("./tmp");
 
   int port = 15122;
   std::string initial_conf = "";
@@ -90,18 +90,43 @@ TEST(FSMTest, Multiple) {
       be_leader = true;
       auto fsm = fsms[i];
 
-      util::Status s = fsm->Put("key", "value", waiter);
+      util::Status s = fsm->Put("key_1", "value", waiter);
+      EXPECT_EQ(true, s.IsOK());
+
+      s = waiter->Wait();
+      EXPECT_EQ(true, s.IsOK());
+
+      waiter = std::make_shared<util::Waiter>();
+      s = fsm->Put("key_2", "value2", waiter);
+      EXPECT_EQ(true, s.IsOK());
+
+      s = waiter->Wait();
+      EXPECT_EQ(true, s.IsOK());
+
+      waiter = std::make_shared<util::Waiter>();
+      s = fsm->Put("key_3", "value3", waiter);
       EXPECT_EQ(true, s.IsOK());
 
       s = waiter->Wait();
       EXPECT_EQ(true, s.IsOK());
 
       std::string value;
-      s = fsm->Get("key", waiter);
+      s = fsm->Get("key_1", waiter);
       EXPECT_EQ(true, s.IsOK());
-      s = fsm->LocalGet("key", value);
+      s = fsm->LocalGet("key_1", value);
       EXPECT_EQ(true, s.IsOK());
       EXPECT_EQ("value", value);
+
+      std::map<std::string, std::string> values;
+      s = fsm->LocalQuery("key", values);
+      for (auto iter = values.begin(); iter != values.end(); iter++) {
+        std::cout << iter->first << " " << iter->second << std::endl;
+      }
+      EXPECT_EQ(true, s.IsOK());
+      EXPECT_EQ(3, values.size());
+      EXPECT_EQ("value", values["key_1"]);
+      EXPECT_EQ("value2", values["key_2"]);
+      EXPECT_EQ("value3", values["key_3"]);
     }
   }
   EXPECT_EQ(true, be_leader);
