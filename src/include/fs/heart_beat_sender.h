@@ -18,6 +18,8 @@ namespace heart_beat {
 struct HeartBeatInfo {
   HeartBeatMessageRequest_HeartBeatType type;
   std::string addr;
+  unsigned int file_num;
+  unsigned int disk_usage;
   // assume deep copy to make data persistent
   //  void operator=(const HeartBeatInfo& heart_beat_info) {
   //    addr = heart_beat_info.addr;
