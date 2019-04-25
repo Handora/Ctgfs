@@ -117,10 +117,17 @@ util::Status RocksFSM::Put(const std::string& key, const std::string& value,
 }
 
 util::Status RocksFSM::LocalGet(const std::string& key, std::string& value) {
-  // TODO(Handora) read is not linearzy consistent
   rocksdb::Status s = db_->Get(rocksdb::ReadOptions(), key, &value);
   if (!s.ok()) {
     return util::Status::Corruption(s.ToString());
+  }
+  return util::Status::OK();
+}
+
+util::Status RocksFSM::LocalQuery(const std::string& key, std::map<std::string, std::string>& values) {
+  auto iter = db_->NewIterator(rocksdb::ReadOptions());
+  for (iter->Seek(key); iter->Valid(); iter->Next()) {
+    values.insert({iter->key().ToString(), iter->value().ToString()}); 
   }
   return util::Status::OK();
 }
@@ -159,6 +166,8 @@ util::Status RocksFSM::propose(ProposeType type, const std::string& key,
       size = static_cast<uint32_t>(value.size());
       log.append(&size, sizeof(uint32_t));
       log.append(value);
+    default:
+      assert("unsupported");
     }
   }
 
