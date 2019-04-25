@@ -15,8 +15,8 @@ class GTG {
   GTG(int port);
   ~GTG();
   int get_ts(int, int& r);
- private:
-  static const int GET_TS; 
+ public:
+  static const int GET_TS = 6543; 
  private:
   int logical_;
   std::mutex mu_;
