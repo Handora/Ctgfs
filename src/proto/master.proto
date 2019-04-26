@@ -6,30 +6,27 @@ option cc_generic_services = true;
 
 package ctgfs;
 
-message ClientKVRequest {
-    required uint64 id = 1;
-    required string addr = 2;
-
-    message Command {
-        enum Type {
-            kCreateDir = 0;
-            kRemoveDir = 1;
-            kWriteFile = 2;
-            kRemoveFile = 3;
-            kReadFile = 4;
-        }
-        required Type type = 2;
-        required string path = 3;
-        optional string value = 4;
-    }
-    optional Command command = 3;
+message ClientAskForInoRequest {
+  // absolute path
+  required string path = 1;
+  // file size
+  optional uint32 size = 2;
+  required bool is_dir = 3;
 };
 
-message ClientKVResponse {
-	required uint64 id = 1;
-	required string addr = 2;
+message ClientAskForInoResponse {
+  required uint64 ino = 1;
+  // ip:port
+  required string addr = 2;
 };
 
+message ClientAskForKVByInoRequest {
+  required uint64 ino = 1;
+};
+
+message ClientAskForKVByInoResponse {
+  required string addr = 1;
+};
 
 // send the pacage at regular time
 // shared the info from filesystem
@@ -55,6 +52,7 @@ message HeartBeatMessageResponse {
 
 // master service
 service MasterService{
-	rpc ClientAskForKV(ClientKVRequest) returns (ClientKVResponse);	
+  rpc AskForIno(ClientAskForInoRequest) returns (ClientAskForInoResponse);
+  rpc AskForKV(ClientAskForKVByInoRequest) returns (ClientAskForKVByInoResponse);
   rpc SendHeartBeat(HeartBeatMessageRequest) returns (HeartBeatMessageResponse);
 };

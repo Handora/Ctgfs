@@ -19,9 +19,9 @@ Master::Master() {
 
 Master::~Master() {}
 
-void Master::ClientAskForKV(::google::protobuf::RpcController* controller,
-                            const ::ctgfs::ClientKVRequest* request,
-                            ::ctgfs::ClientKVResponse* response,
+void Master::AskForIno(::google::protobuf::RpcController* controller,
+                            const ::ctgfs::ClientAskForInoRequest* request,
+                            ::ctgfs::ClientAskForInoResponse* response,
                             ::google::protobuf::Closure* done) {
   brpc::ClosureGuard done_guard(done);
   if (cur_register_kv_id_ == 0) {
@@ -30,7 +30,29 @@ void Master::ClientAskForKV(::google::protobuf::RpcController* controller,
     return;
   }
   // brpc::Controller* ctrl = static_cast<brpc::Controller*>(controller);
-  setKVAddrByClientKVRequest(request, response);
+  const std::string path = request->path();
+  bool is_dir = request->is_dir();
+  std::string kv_addr;
+  response->set_ino(genInum(path, is_dir));
+  response->set_addr(kv_addr);
+  // TODO: need add more options 
+  return;  
+}
+
+void Master::AskForKV(::google::protobuf::RpcController* controller,
+                            const ::ctgfs::ClientAskForKVByInoRequest* request,
+                            ::ctgfs::ClientAskForKVByInoResponse* response,
+                            ::google::protobuf::Closure* done) {
+  brpc::ClosureGuard done_guard(done);
+  if (cur_register_kv_id_ == 0) {
+    LOG(ERROR) << "NO FS CONNECT" << std::endl;
+    controller->SetFailed("NO FS CONNECT");
+    return;
+  }
+
+  unsigned long long ino = request->ino();
+  response->set_addr(getInfoByInum(ino));
+  return;
 }
 
 void Master::SendHeartBeat(::google::protobuf::RpcController* controller,
@@ -60,16 +82,6 @@ void Master::updateKVInfo(
     int id = addr_to_register_id_[info->addr];
     kv_info_[id] = info;
   }
-}
-
-void Master::setKVAddrByClientKVRequest(const ::ctgfs::ClientKVRequest* request,
-                                        ::ctgfs::ClientKVResponse* response) {
-  auto command = request->command();
-  const std::string& path = command.path();
-  int tar_kv_id = hashPath(path);
-  std::string addr = register_id_to_addr_.at(tar_kv_id);
-  response->set_id(request->id());
-  response->set_addr(addr);
 }
 
 bool Master::registerKV(const std::string& ip, const int& port) {
@@ -171,6 +183,22 @@ void Master::debugRegisterKV(bool is_error, const std::string& str) {
 
 void Master::debugRegisterKV(bool is_error, const char* str) {
   debugRegisterKV(is_error, std::string(str));
+}
+
+unsigned long long Master::genInum(const std::string& path, bool is_dir) {
+  unsigned long long id = 0;
+  id += random() % (2147483648);
+  if (!is_dir)
+    id |= 0x80000000;
+  int sum = hashStr(path); 
+  hashValueToRegisterID(sum);
+  inum_to_path_[id] = path;
+  inum_to_register_id_[id] = sum;
+  return id;
+}
+
+std::string Master::getInfoByInum(unsigned long long inum) {
+  return register_id_to_addr_[inum_to_register_id_[inum]];
 }
 
 }  // namespace master

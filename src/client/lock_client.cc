@@ -1,6 +1,6 @@
 // RPC stubs for clients to talk to lock_server
 
-#include "lock_client.h"
+#include "client/lock_client.h"
 #include "rpc/rpc.h"
 #include <arpa/inet.h>
 

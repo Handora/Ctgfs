@@ -1,6 +1,6 @@
 // RPC stubs for clients to talk to extent_server
 
-#include "extent_client.h"
+#include "client/extent_client.h"
 #include <sstream>
 #include <iostream>
 #include <stdio.h>
@@ -9,7 +9,7 @@
 
 // The calls assume that the caller holds a lock on the extent
 
-extent_client::extent_client(std::string dst)
+extent_client::extent_client(std::string dst): addr_(dst)
 {
   sockaddr_in dstsock;
   make_sockaddr(dst.c_str(), &dstsock);
@@ -17,6 +17,10 @@ extent_client::extent_client(std::string dst)
   if (cl->bind() != 0) {
     printf("extent_client: bind failed\n");
   }
+}
+
+std::string extent_client::GetCurAddr() {
+  return addr_;
 }
 
 extent_protocol::status

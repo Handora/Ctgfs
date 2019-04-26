@@ -5,9 +5,11 @@
 #include "extent_client.h"
 #include "extent_client_cache.h"
 #include <vector>
-
+#include "client.h"
 #include "lock_protocol.h"
 #include "lock_client.h"
+
+using namespace ctgfs::client;
 
 class lock_release_user_impl : public lock_release_user {
  private:
@@ -23,8 +25,11 @@ class lock_release_user_impl : public lock_release_user {
 };
 
 class yfs_client {
+  lock_release_user_impl* lock_release;
   extent_client *ec;
   lock_client *lc;
+  Client* client;
+  std::string lock_dst_;
  public:
 
   typedef unsigned long long inum;
@@ -50,6 +55,8 @@ class yfs_client {
  private:
   static std::string filename(inum);
   static inum n2i(std::string);
+  void initExtentClient(inum ino);
+  void initExtentClient(const std::string& addr);
   void print_hex(const std::string& content);
   inum str_to_inum(std::string k);
   std::string inum_to_str(inum k);
