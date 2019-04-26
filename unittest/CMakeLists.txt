@@ -1,0 +1,8 @@
+add_subdirectory(parser)
+add_subdirectory(kv)
+add_subdirectory(master)
+add_subdirectory(guid)
+add_subdirectory(util)
+add_subdirectory(raft)
+add_subdirectory(client)
+add_subdirectory(mvcc)

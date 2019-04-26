@@ -54,6 +54,9 @@ class RocksFSM : public braft::StateMachine {
   util::Status Get(const std::string& key,
                    std::shared_ptr<util::Waiter> waiter);
 
+  util::Status LocalQuery(const std::string& key, std::map<std::string, std::string>& values);
+  // TODO: Query
+
   bool IsLeader() const;
 
  protected:

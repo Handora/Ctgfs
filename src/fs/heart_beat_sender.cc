@@ -20,6 +20,8 @@ void HeartBeatSender::SetHeartBeatInfo(
   auto info_ptr = heart_beat_info.get();
   req_ptr->set_type(info_ptr->type);
   req_ptr->set_addr(info_ptr->addr);
+  req_ptr->set_file_num(info_ptr->file_num);
+  req_ptr->set_disk_usage(info_ptr->disk_usage);
 }
 
 util::Status HeartBeatSender::SendHeartBeat() {
