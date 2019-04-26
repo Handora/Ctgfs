@@ -22,7 +22,7 @@ extent_server::extent_server() {
 
   
   /* the instance to get the file system info, it likes a global pointer. */
- // InfoDetector* info = InfoDetector::GetInstance();
+ // InfoCollector* info = InfoCollector::GetInstance();
 
  // /* a shared_ptr to the HeartBeatInfo. */
  // auto p_heart_beat_info = std::make_shared<ctgfs::heart_beat::HeartBeatInfo>();
@@ -68,7 +68,7 @@ int extent_server::put(extent_protocol::extentid_t id, std::string buf, int &)
   extent *value = new extent(now, now, now, buf);
   extent_map_.insert(std::pair<extent_protocol::extentid_t, extent*>(id, value));
 
-  // InfoDetector* info = InfoDetector::GetInstance();
+  // InfoCollector* info = InfoCollector::GetInstance();
   // fs_info attr = info->get();
   // attr.file_num++;
   // attr.disk_usage += buf.size();
@@ -127,7 +127,7 @@ int extent_server::setattr(extent_protocol::extentid_t id, extent_protocol::attr
       it->second->content.resize(new_size);
     }
 
-    // InfoDetector* info = InfoDetector::GetInstance();
+    // InfoCollector* info = InfoCollector::GetInstance();
     // fs_info attr = info->get();
     // attr.disk_usage += new_size - old_size;
     // info->set(attr);
@@ -148,7 +148,7 @@ int extent_server::remove(extent_protocol::extentid_t id, int &)
     delete it->second;
     extent_map_.erase(it);
 
-    // InfoDetector* info = InfoDetector::GetInstance();
+    // InfoCollector* info = InfoCollector::GetInstance();
     // fs_info attr = info->get();
     // attr.file_num--;
     // attr.disk_usage -= file_size;

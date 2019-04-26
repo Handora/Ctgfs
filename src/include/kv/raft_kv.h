@@ -3,6 +3,9 @@
 #pragma once
 #include <kv/kv.h>
 #include <string>
+#include <brpc/server.h>
+#include <raft/fsm.h>
+#include <util/util.h>
 
 namespace ctgfs {
 namespace kv {
@@ -13,6 +16,8 @@ namespace kv {
 // Example:
 class RaftKV : public KV {
  public:
+  RaftKV(std::string name, int port, const std::string& initial_conf);
+  ~RaftKV();
   // Given the key reference and value reference which you want to
   // put into the kv store, it will return bool to indicate success
   // or not.
@@ -30,8 +35,14 @@ class RaftKV : public KV {
   // several threads.
   bool Get(const std::string& key, std::string& value) override;
 
+  // Given the predicate and get the value lists, use this for mvcc_get
+  //
+  // The function is re-entrant, so you can use it directly within
+  // several threads.
+  bool Query(const std::string& key, std::map<std::string, std::string>& values) override;
  private:
-  // TODO(Handora): Fill in private function and varaiable
+  std::shared_ptr<raft::RocksFSM> fsm_;
+  brpc::Server* server_;
 };
 
 }  // namespace kv
