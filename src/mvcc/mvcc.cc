@@ -101,10 +101,11 @@ bool SimpleMVCC::Select(const std::string& raw_key, std::string& value, int ts) 
     data_value.emplace_back(kv.second);
   }
 
-  std::sort(data_timestamp.begin(), data_timestamp.end(), 
-    [](const std::pair<int, int>& x, const std::pair<int, int>& y) {
-      return x.first < y.first;
-  });
+  /* Since the key in map is sorted, the vector has no need to be sorted. */
+  // std::sort(data_timestamp.begin(), data_timestamp.end(), 
+  //   [](const std::pair<int, int>& x, const std::pair<int, int>& y) {
+  //     return x.first < y.first;
+  // });
 
   /* to find the latest timestamp which is smaller than ts */
   int idx = func::search_version(data_timestamp, ts);
