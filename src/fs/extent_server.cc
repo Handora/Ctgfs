@@ -22,7 +22,7 @@ extent_server::extent_server() {
 
   
   /* the instance to get the file system info, it likes a global pointer. */
-  InfoDetector* info = InfoDetector::detector();
+ // InfoDetector* info = InfoDetector::detector();
 
  // /* a shared_ptr to the HeartBeatInfo. */
  // auto p_heart_beat_info = std::make_shared<ctgfs::heart_beat::HeartBeatInfo>();
