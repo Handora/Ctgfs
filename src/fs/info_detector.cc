@@ -8,7 +8,7 @@ InfoDetector* InfoDetector::detector() {
 }
 
 fs_info InfoDetector::get() const {
-  return this->attr;
+  return attr;
 }
 
 void InfoDetector::set(const fs_info& atrr) {
