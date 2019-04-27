@@ -1,25 +1,25 @@
 // the extent cache implementation
 
 #include "client/extent_client_cache.h"
-#include <sstream>
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
+#include <stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sstream>
 
-extent_client_cache::extent_client_cache(std::string dst)
-  : extent_client(dst) {
+extent_client_cache::extent_client_cache(std::string dst) : extent_client(dst) {
   VERIFY(pthread_mutex_init(&cache_mu_, 0) == 0);
 }
 
 extent_client_cache::~extent_client_cache() {}
 
-extent_protocol::status extent_client_cache::put(extent_protocol::extentid_t id, std::string buf)
-{
+extent_protocol::status extent_client_cache::put(extent_protocol::extentid_t id,
+                                                 std::string buf) {
   pthread_mutex_lock(&cache_mu_);
 
-  std::map<extent_protocol::extentid_t, extent*>::iterator it = cache_map_.find(id);
+  std::map<extent_protocol::extentid_t, extent *>::iterator it =
+      cache_map_.find(id);
   extent *value = NULL;
   unsigned int now = (unsigned int)time(NULL);
   if (it != cache_map_.end()) {
@@ -28,11 +28,11 @@ extent_protocol::status extent_client_cache::put(extent_protocol::extentid_t id,
     // BUG: Need get the attribute(atime) from server
     // I don't want to handle it too (~0v0)~
     value = new extent(now, now, now, buf);
-    cache_map_.insert(std::pair<extent_protocol::extentid_t, extent*>(id, value));
+    cache_map_.insert(
+        std::pair<extent_protocol::extentid_t, extent *>(id, value));
   }
 
-  if (value->deleted)
-    value->atime = now;
+  if (value->deleted) value->atime = now;
   value->ctime = now;
   value->mtime = now;
   value->content = buf;
@@ -43,31 +43,29 @@ extent_protocol::status extent_client_cache::put(extent_protocol::extentid_t id,
   return extent_protocol::OK;
 }
 
-extent_protocol::status extent_client_cache::get(extent_protocol::extentid_t id, std::string &buf)
-{
+extent_protocol::status extent_client_cache::get(extent_protocol::extentid_t id,
+                                                 std::string &buf) {
   pthread_mutex_lock(&cache_mu_);
   extent_protocol::status ret = extent_protocol::OK;
 
-  std::map<extent_protocol::extentid_t, extent*>::iterator it = cache_map_.find(id);
+  std::map<extent_protocol::extentid_t, extent *>::iterator it =
+      cache_map_.find(id);
   unsigned int now = time(NULL);
   extent_protocol::attr attr;
   if (it == cache_map_.end()) {
     pthread_mutex_unlock(&cache_mu_);
 
-
     ret = cl->call(extent_protocol::get, id, buf);
-    if (ret != extent_protocol::OK)
-      return ret;
+    if (ret != extent_protocol::OK) return ret;
 
     ret = cl->call(extent_protocol::getattr, id, attr);
-    if (ret != extent_protocol::OK)
-      return ret;
+    if (ret != extent_protocol::OK) return ret;
 
     pthread_mutex_lock(&cache_mu_);
-    extent* value = new extent(attr.atime, attr.mtime,
-                               attr.ctime, buf);
-    
-    cache_map_.insert(std::pair<extent_protocol::extentid_t, extent*>(id, value));
+    extent *value = new extent(attr.atime, attr.mtime, attr.ctime, buf);
+
+    cache_map_.insert(
+        std::pair<extent_protocol::extentid_t, extent *>(id, value));
   } else {
     if (it->second->deleted) {
       pthread_mutex_unlock(&cache_mu_);
@@ -77,33 +75,33 @@ extent_protocol::status extent_client_cache::get(extent_protocol::extentid_t id,
     it->second->atime = now;
     it->second->dirty = true;
   }
-  
+
   pthread_mutex_unlock(&cache_mu_);
   return extent_protocol::OK;
 }
 
-extent_protocol::status extent_client_cache::getattr(extent_protocol::extentid_t id, extent_protocol::attr &attr)
-{
+extent_protocol::status extent_client_cache::getattr(
+    extent_protocol::extentid_t id, extent_protocol::attr &attr) {
   pthread_mutex_lock(&cache_mu_);
   extent_protocol::status ret = extent_protocol::OK;
 
-  std::map<extent_protocol::extentid_t, extent*>::iterator it = cache_map_.find(id);
+  std::map<extent_protocol::extentid_t, extent *>::iterator it =
+      cache_map_.find(id);
   std::string buf;
   if (it == cache_map_.end()) {
     pthread_mutex_unlock(&cache_mu_);
 
     ret = cl->call(extent_protocol::getattr, id, attr);
-    if (ret != extent_protocol::OK)
-      return ret;
+    if (ret != extent_protocol::OK) return ret;
 
     ret = cl->call(extent_protocol::get, id, buf);
-    if (ret != extent_protocol::OK)
-      return ret;
+    if (ret != extent_protocol::OK) return ret;
 
     pthread_mutex_lock(&cache_mu_);
-    extent* value = new extent(attr.atime, attr.mtime, attr.ctime, buf);
-    
-    cache_map_.insert(std::pair<extent_protocol::extentid_t, extent*>(id, value));
+    extent *value = new extent(attr.atime, attr.mtime, attr.ctime, buf);
+
+    cache_map_.insert(
+        std::pair<extent_protocol::extentid_t, extent *>(id, value));
   } else {
     if (it->second->deleted) {
       pthread_mutex_unlock(&cache_mu_);
@@ -114,17 +112,18 @@ extent_protocol::status extent_client_cache::getattr(extent_protocol::extentid_t
     attr.mtime = it->second->mtime;
     attr.size = it->second->content.size();
   }
-  
+
   pthread_mutex_unlock(&cache_mu_);
   return extent_protocol::OK;
 }
 
-extent_protocol::status extent_client_cache::setattr(extent_protocol::extentid_t id, extent_protocol::attr& attr)
-{
+extent_protocol::status extent_client_cache::setattr(
+    extent_protocol::extentid_t id, extent_protocol::attr &attr) {
   pthread_mutex_lock(&cache_mu_);
   extent_protocol::status ret = extent_protocol::OK;
 
-  std::map<extent_protocol::extentid_t, extent*>::iterator it = cache_map_.find(id);
+  std::map<extent_protocol::extentid_t, extent *>::iterator it =
+      cache_map_.find(id);
   extent *value = NULL;
   std::string buf;
   if (it != cache_map_.end()) {
@@ -144,7 +143,8 @@ extent_protocol::status extent_client_cache::setattr(extent_protocol::extentid_t
     pthread_mutex_lock(&cache_mu_);
 
     value = new extent(attr.atime, attr.ctime, attr.mtime, buf);
-    cache_map_.insert(std::pair<extent_protocol::extentid_t, extent*>(id, value));
+    cache_map_.insert(
+        std::pair<extent_protocol::extentid_t, extent *>(id, value));
   }
 
   size_t old_size = value->content.size();
@@ -166,10 +166,11 @@ extent_protocol::status extent_client_cache::setattr(extent_protocol::extentid_t
   return extent_protocol::OK;
 }
 
-extent_protocol::status extent_client_cache::remove(extent_protocol::extentid_t id)
-{
+extent_protocol::status extent_client_cache::remove(
+    extent_protocol::extentid_t id) {
   ScopedLock lm(&cache_mu_);
-  std::map<extent_protocol::extentid_t, extent*>::iterator it = cache_map_.find(id);
+  std::map<extent_protocol::extentid_t, extent *>::iterator it =
+      cache_map_.find(id);
   extent *value = NULL;
 
   if (it != cache_map_.end()) {
@@ -181,21 +182,24 @@ extent_protocol::status extent_client_cache::remove(extent_protocol::extentid_t 
     value = new extent(0, 0, 0, "");
     value->deleted = true;
     value->dirty = true;
-    cache_map_.insert(std::pair<extent_protocol::extentid_t, extent*>(id, value));
+    cache_map_.insert(
+        std::pair<extent_protocol::extentid_t, extent *>(id, value));
     return extent_protocol::OK;
   }
 }
 
-extent_protocol::status extent_client_cache::flush(extent_protocol::extentid_t id) {
+extent_protocol::status extent_client_cache::flush(
+    extent_protocol::extentid_t id) {
   pthread_mutex_lock(&cache_mu_);
-  
+
   extent_protocol::status ret = extent_protocol::OK;
   int r;
-  std::map<extent_protocol::extentid_t, extent*>::iterator it = cache_map_.find(id);
+  std::map<extent_protocol::extentid_t, extent *>::iterator it =
+      cache_map_.find(id);
 
   if (it != cache_map_.end()) {
     extent_protocol::extentid_t id = it->first;
-    extent* value = it->second;
+    extent *value = it->second;
     if (value->dirty) {
       if (value->deleted) {
         pthread_mutex_unlock(&cache_mu_);

@@ -17,66 +17,56 @@ namespace util {
 
 // TODO why link error
 static int MyRemoveDirectoryRecursively(const char *path) {
-   DIR *d = opendir(path);
-   size_t path_len = strlen(path);
-   int r = -1;
+  DIR *d = opendir(path);
+  size_t path_len = strlen(path);
+  int r = -1;
 
-   if (d)
-     {
-       struct dirent *p;
+  if (d) {
+    struct dirent *p;
 
-       r = 0;
+    r = 0;
 
-       while (!r && (p=readdir(d)))
-         {
-           int r2 = -1;
-           char *buf;
-           size_t len;
+    while (!r && (p = readdir(d))) {
+      int r2 = -1;
+      char *buf;
+      size_t len;
 
-           /* Skip the names "." and ".." as we don't want to recurse on them. */
-           if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))
-             {
-               continue;
-             }
+      /* Skip the names "." and ".." as we don't want to recurse on them. */
+      if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, "..")) {
+        continue;
+      }
 
-           len = path_len + strlen(p->d_name) + 2;
-           buf = (char *)malloc(len);
+      len = path_len + strlen(p->d_name) + 2;
+      buf = (char *)malloc(len);
 
-           if (buf)
-             {
-               struct stat statbuf;
+      if (buf) {
+        struct stat statbuf;
 
-               snprintf(buf, len, "%s/%s", path, p->d_name);
+        snprintf(buf, len, "%s/%s", path, p->d_name);
 
-               if (!stat(buf, &statbuf))
-                 {
-                   if (S_ISDIR(statbuf.st_mode))
-                     {
-                       r2 = MyRemoveDirectoryRecursively(buf);
-                     }
-                   else
-                     {
-                       r2 = unlink(buf);
-                     }
-                 }
+        if (!stat(buf, &statbuf)) {
+          if (S_ISDIR(statbuf.st_mode)) {
+            r2 = MyRemoveDirectoryRecursively(buf);
+          } else {
+            r2 = unlink(buf);
+          }
+        }
 
-               free(buf);
-             }
+        free(buf);
+      }
 
-           r = r2;
-         }
+      r = r2;
+    }
 
-       closedir(d);
-     }
+    closedir(d);
+  }
 
-   if (!r)
-     {
-       r = rmdir(path);
-     }
+  if (!r) {
+    r = rmdir(path);
+  }
 
-   return r;
- }
- 
+  return r;
+}
 
 }  // namespace util
 }  // namespace ctgfs

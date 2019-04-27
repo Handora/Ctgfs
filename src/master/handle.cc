@@ -4,21 +4,13 @@
 
 handle_mgr mgr;
 
-handle::handle(std::string m) 
-{
-  h = mgr.get_handle(m);
-}
+handle::handle(std::string m) { h = mgr.get_handle(m); }
 
-rpcc *
-handle::safebind()
-{
-  if (!h)
-    return NULL;
+rpcc *handle::safebind() {
+  if (!h) return NULL;
   ScopedLock ml(&h->cl_mutex);
-  if (h->del)
-    return NULL;
-  if (h->cl)
-    return h->cl;
+  if (h->del) return NULL;
+  if (h->cl) return h->cl;
   sockaddr_in dstsock;
   make_sockaddr(h->m.c_str(), &dstsock);
   rpcc *cl = new rpcc(dstsock);
@@ -36,19 +28,15 @@ handle::safebind()
   return h->cl;
 }
 
-handle::~handle() 
-{
+handle::~handle() {
   if (h) mgr.done_handle(h);
 }
 
-handle_mgr::handle_mgr()
-{
-  VERIFY (pthread_mutex_init(&handle_mutex, NULL) == 0);
+handle_mgr::handle_mgr() {
+  VERIFY(pthread_mutex_init(&handle_mutex, NULL) == 0);
 }
 
-struct hinfo *
-handle_mgr::get_handle(std::string m)
-{
+struct hinfo *handle_mgr::get_handle(std::string m) {
   ScopedLock ml(&handle_mutex);
   struct hinfo *h = 0;
   if (hmap.find(m) == hmap.end()) {
@@ -61,33 +49,27 @@ handle_mgr::get_handle(std::string m)
     hmap[m] = h;
   } else if (!hmap[m]->del) {
     h = hmap[m];
-    h->refcnt ++;
+    h->refcnt++;
   }
   return h;
 }
 
-void 
-handle_mgr::done_handle(struct hinfo *h)
-{
+void handle_mgr::done_handle(struct hinfo *h) {
   ScopedLock ml(&handle_mutex);
   h->refcnt--;
-  if (h->refcnt == 0 && h->del)
-    delete_handle_wo(h->m);
+  if (h->refcnt == 0 && h->del) delete_handle_wo(h->m);
 }
 
-void
-handle_mgr::delete_handle(std::string m)
-{
+void handle_mgr::delete_handle(std::string m) {
   ScopedLock ml(&handle_mutex);
   delete_handle_wo(m);
 }
 
 // Must be called with handle_mutex locked.
-void
-handle_mgr::delete_handle_wo(std::string m)
-{
+void handle_mgr::delete_handle_wo(std::string m) {
   if (hmap.find(m) == hmap.end()) {
-    tprintf("handle_mgr::delete_handle_wo: cl %s isn't in cl list\n", m.c_str());
+    tprintf("handle_mgr::delete_handle_wo: cl %s isn't in cl list\n",
+            m.c_str());
   } else {
     struct hinfo *h = hmap[m];
     if (h->refcnt == 0) {

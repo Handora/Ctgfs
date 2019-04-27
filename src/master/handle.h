@@ -38,6 +38,7 @@ struct hinfo {
 class handle {
  private:
   struct hinfo *h;
+
  public:
   handle(std::string m);
   ~handle();
@@ -45,7 +46,7 @@ class handle {
    * Since bind may block, the caller probably should not hold a mutex
    * when calling safebind.
    *
-   * return: 
+   * return:
    *   if the first safebind succeeded, all later calls would return
    *   a rpcc object; otherwise, all later calls would return NULL.
    *
@@ -66,6 +67,7 @@ class handle_mgr {
  private:
   pthread_mutex_t handle_mutex;
   std::map<std::string, struct hinfo *> hmap;
+
  public:
   handle_mgr();
   struct hinfo *get_handle(std::string m);

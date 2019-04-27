@@ -1,11 +1,11 @@
 // Authors: Chen Qian(qcdsr970209@gmail.com)
 
 #pragma once
-#include <kv/kv.h>
-#include <string>
 #include <brpc/server.h>
+#include <kv/kv.h>
 #include <raft/fsm.h>
 #include <util/util.h>
+#include <string>
 
 namespace ctgfs {
 namespace kv {
@@ -39,7 +39,9 @@ class RaftKV : public KV {
   //
   // The function is re-entrant, so you can use it directly within
   // several threads.
-  bool Query(const std::string& key, std::map<std::string, std::string>& values) override;
+  bool Query(const std::string& key,
+             std::map<std::string, std::string>& values) override;
+
  private:
   std::shared_ptr<raft::RocksFSM> fsm_;
   brpc::Server* server_;
