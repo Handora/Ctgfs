@@ -22,32 +22,32 @@ extent_server::extent_server() {
 
   
   /* the instance to get the file system info, it likes a global pointer. */
-  InfoDetector* info = InfoDetector::detector();
+ // InfoDetector* info = InfoDetector::detector();
 
-  /* a shared_ptr to the HeartBeatInfo. */
-  auto p_heart_beat_info = std::make_shared<ctgfs::heart_beat::HeartBeatInfo>();
+ // /* a shared_ptr to the HeartBeatInfo. */
+ // auto p_heart_beat_info = std::make_shared<ctgfs::heart_beat::HeartBeatInfo>();
 
-  std::string addr = std::string("127.0.0.1:1235");
+ // std::string addr = std::string("127.0.0.1:1235");
 
-  /* Sender is used to send the heart beat package. */
-  ctgfs::heart_beat::HeartBeatSender sender(addr, p_heart_beat_info);
-  std::thread t_heart_beat([&]() {
-    while (true) {
-      auto p_heart_beat_info = std::make_shared<ctgfs::heart_beat::HeartBeatInfo>(
-        (ctgfs::heart_beat::HeartBeatInfo){
-          ctgfs::HeartBeatMessageRequest_HeartBeatType::HeartBeatMessageRequest_HeartBeatType_kInfoUpdate,
-          std::string("127.0.0.1:1235"),
-          info->get().file_num, 
-          info->get().disk_usage
-        });
-      sender.SetHeartBeatInfo(p_heart_beat_info);
-      sender.SendHeartBeat();
-      std::this_thread::sleep_for(std::chrono::seconds(3));
-    }
-  });
+ // /* Sender is used to send the heart beat package. */
+ // ctgfs::heart_beat::HeartBeatSender sender(addr, p_heart_beat_info);
+ // std::thread t_heart_beat([&]() {
+ //   while (true) {
+ //     auto p_heart_beat_info = std::make_shared<ctgfs::heart_beat::HeartBeatInfo>(
+ //       (ctgfs::heart_beat::HeartBeatInfo){
+ //         ctgfs::HeartBeatMessageRequest_HeartBeatType::HeartBeatMessageRequest_HeartBeatType_kInfoUpdate,
+ //         std::string("127.0.0.1:1235"),
+ //         info->get().file_num, 
+ //         info->get().disk_usage
+ //       });
+ //     sender.SetHeartBeatInfo(p_heart_beat_info);
+ //     sender.SendHeartBeat();
+ //     std::this_thread::sleep_for(std::chrono::seconds(3));
+ //   }
+ // });
 
-  /* detach this thread for it should run till the main thread is off. */
-  t_heart_beat.detach();
+ // /* detach this thread for it should run till the main thread is off. */
+ // t_heart_beat.detach();
 }
 
 extent_server::~extent_server() {}
@@ -68,11 +68,11 @@ int extent_server::put(extent_protocol::extentid_t id, std::string buf, int &)
   extent *value = new extent(now, now, now, buf);
   extent_map_.insert(std::pair<extent_protocol::extentid_t, extent*>(id, value));
 
-  InfoDetector* info = InfoDetector::detector();
-  fs_info attr = info->get();
-  attr.file_num++;
-  attr.disk_usage += buf.size();
-  info->set(attr);
+  // InfoDetector* info = InfoDetector::detector();
+  // fs_info attr = info->get();
+  // attr.file_num++;
+  // attr.disk_usage += buf.size();
+  // info->set(attr);
 
   return extent_protocol::OK;
 }
@@ -127,10 +127,10 @@ int extent_server::setattr(extent_protocol::extentid_t id, extent_protocol::attr
       it->second->content.resize(new_size);
     }
 
-    InfoDetector* info = InfoDetector::detector();
-    fs_info attr = info->get();
-    attr.disk_usage += new_size - old_size;
-    info->set(attr);
+    // InfoDetector* info = InfoDetector::detector();
+    // fs_info attr = info->get();
+    // attr.disk_usage += new_size - old_size;
+    // info->set(attr);
 
     return extent_protocol::OK;
   }
@@ -148,11 +148,11 @@ int extent_server::remove(extent_protocol::extentid_t id, int &)
     delete it->second;
     extent_map_.erase(it);
 
-    InfoDetector* info = InfoDetector::detector();
-    fs_info attr = info->get();
-    attr.file_num--;
-    attr.disk_usage -= file_size;
-    info->set(attr);
+    // InfoDetector* info = InfoDetector::detector();
+    // fs_info attr = info->get();
+    // attr.file_num--;
+    // attr.disk_usage -= file_size;
+    // info->set(attr);
 
     return extent_protocol::OK;
   }
