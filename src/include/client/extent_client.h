@@ -10,11 +10,12 @@
 class extent_client {
  protected:
   rpcc *cl;
-  const std::string addr_;
+  std::string addr_;
  public:
-  extent_client(std::string dst);
+  extent_client(const std::string& dst);
 
   std::string GetCurAddr();
+  void ConnectTo(const std::string& dst);
   virtual extent_protocol::status get(extent_protocol::extentid_t eid, 
 			      std::string &buf);
   virtual extent_protocol::status getattr(extent_protocol::extentid_t eid, 

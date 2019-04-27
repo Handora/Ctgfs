@@ -27,12 +27,12 @@ const std::string DEFAULT_SERVER_ADDR = "127.0.0.1:1234";
 class Client {
  public:
   typedef unsigned long long inum;
-  Client();  // use default addr
+  // Client();  // use default addr
   Client(const std::string& ip, const int& port);
   // addr(ip:port)
   // Example:
   // 127.0.0.1:1234
-  Client(const std::string& addr);
+  Client(const std::string& addr = DEFAULT_SERVER_ADDR);
   // should join all thread
   ~Client();
   // use inum to find the KV

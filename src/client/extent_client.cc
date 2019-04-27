@@ -9,12 +9,24 @@
 
 // The calls assume that the caller holds a lock on the extent
 
-extent_client::extent_client(std::string dst): addr_(dst)
-{
+extent_client::extent_client(const std::string& dst) {
+  // sockaddr_in dstsock;
+  // make_sockaddr(dst.c_str(), &dstsock);
+  // cl = new rpcc(dstsock);
+  // if (cl->bind() != 0) {
+  //   printf("extent_client: bind failed\n");
+  // }
+  ConnectTo(dst);
+}
+
+void extent_client::ConnectTo(const std::string& dst) {
   sockaddr_in dstsock;
+  addr_ = dst;
   make_sockaddr(dst.c_str(), &dstsock);
+  if(cl)
+    delete cl;
   cl = new rpcc(dstsock);
-  if (cl->bind() != 0) {
+  if(cl->bind() != 0) {
     printf("extent_client: bind failed\n");
   }
 }

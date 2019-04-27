@@ -817,10 +817,19 @@ void yfs_client::initExtentClient(const std::string& addr) {
       return;
     }
   }
-  delete lock_release;
-  delete ec;
-  ec = new extent_client_cache(addr);
-  lock_release = new lock_release_user_impl(ec);
-  lc = new lock_client_cache(lock_dst_, lock_release);
+  if(ec == nullptr) {
+    ec = new extent_client_cache(addr);
+    lock_release = new lock_release_user_impl(ec);
+    lc = new lock_client_cache(lock_dst_, lock_release);
+  }
+  else {
+    ec->ConnectTo(addr);
+    lc->ConnectTo(addr);
+  }
+  // delete lock_release;
+  // delete ec;
+  // ec = new extent_client_cache(addr);
+  // lock_release = new lock_release_user_impl(ec);
+  // lc = new lock_client_cache(lock_dst_, lock_release);
 }
 

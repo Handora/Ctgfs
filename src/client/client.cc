@@ -14,8 +14,6 @@
 namespace ctgfs {
 namespace client {
 
-Client::Client() { Client(DEFAULT_SERVER_ADDR); }
-
 Client::~Client() {
 }
 
