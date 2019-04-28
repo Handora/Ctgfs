@@ -1,58 +1,49 @@
 // yfs client.  implements FS operations using extent and lock server
 #include "client/yfs_client.h"
+#include <fcntl.h>
+#include <stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <iostream>
+#include <sstream>
 #include "client/extent_client.h"
 #include "client/extent_client_cache.h"
 #include "client/lock_client.h"
 #include "client/lock_client_cache.h"
-#include <sstream>
-#include <iostream>
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 using namespace ctgfs::client;
 
-void
-yfs_client::print_hex(const std::string& content) {
+void yfs_client::print_hex(const std::string& content) {
   for (unsigned int i = 0; i < content.size(); i++) {
     printf("%x", content[i] & 0xff);
   }
   printf("\n");
 }
 
-yfs_client::inum
-yfs_client::str_to_inum(std::string k) {
+yfs_client::inum yfs_client::str_to_inum(std::string k) {
   return *(inum*)(k.c_str());
 }
 
-std::string
-yfs_client::inum_to_str(inum k) {
+std::string yfs_client::inum_to_str(inum k) {
   return std::string((char*)(&k), sizeof(inum));
 }
 
-int
-yfs_client::str_to_int(std::string k) {
-  return *(int*)(k.c_str());
-}
+int yfs_client::str_to_int(std::string k) { return *(int*)(k.c_str()); }
 
-std::string
-yfs_client::int_to_str(int k) {
+std::string yfs_client::int_to_str(int k) {
   return std::string((char*)(&k), sizeof(int));
 }
 
-yfs_client::inum
-yfs_client::gen_inum(bool is_dir) {
+yfs_client::inum yfs_client::gen_inum(bool is_dir) {
   inum id = 0;
-  id += random() % (2147483648); // 2 ^ (32 - 1)
-  if (!is_dir)
-    id |= 0x80000000;
+  id += random() % (2147483648);  // 2 ^ (32 - 1)
+  if (!is_dir) id |= 0x80000000;
   printf("gen inum %016llx\n", id);
   return id;
 }
 
-int
-yfs_client::parse_dir(const std::string& dir_content, std::vector<dirent>& vec) {
+int yfs_client::parse_dir(const std::string& dir_content,
+                          std::vector<dirent>& vec) {
   unsigned int i = 0;
   while (i < dir_content.size()) {
     // parse file name
@@ -60,13 +51,13 @@ yfs_client::parse_dir(const std::string& dir_content, std::vector<dirent>& vec) 
       return -1;
     }
     int size = str_to_int(dir_content.substr(i, sizeof(int)));
-    i+= sizeof(int);
+    i += sizeof(int);
 
     if (dir_content.size() - i < (unsigned int)size) {
       return -1;
     }
     std::string name = dir_content.substr(i, size);
-    i+= size;
+    i += size;
 
     // parse inum
     if (dir_content.size() - i < sizeof(inum)) {
@@ -84,8 +75,8 @@ yfs_client::parse_dir(const std::string& dir_content, std::vector<dirent>& vec) 
   return 0;
 }
 
-int
-yfs_client::encode_dir(std::string& content, const std::vector<dirent>& vec) {
+int yfs_client::encode_dir(std::string& content,
+                           const std::vector<dirent>& vec) {
   content.clear();
   for (unsigned int i = 0; i < vec.size(); i++) {
     int size = (int)(vec[i].name.size());
@@ -95,8 +86,8 @@ yfs_client::encode_dir(std::string& content, const std::vector<dirent>& vec) {
   return 0;
 }
 
-yfs_client::yfs_client(std::string extent_dst, std::string lock_dst): lock_dst_(lock_dst)
-{
+yfs_client::yfs_client(std::string extent_dst, std::string lock_dst)
+    : lock_dst_(lock_dst) {
   // ec = new extent_client_cache(extent_dst);
   // lock_release_user *lu = new lock_release_user_impl(ec);
   ec = nullptr;
@@ -105,41 +96,29 @@ yfs_client::yfs_client(std::string extent_dst, std::string lock_dst): lock_dst_(
   client = new Client;
 }
 
-yfs_client::inum
-yfs_client::n2i(std::string n)
-{
+yfs_client::inum yfs_client::n2i(std::string n) {
   std::istringstream ist(n);
   unsigned long long finum;
   ist >> finum;
   return finum;
 }
 
-std::string
-yfs_client::filename(inum inum)
-{
+std::string yfs_client::filename(inum inum) {
   std::ostringstream ost;
   ost << inum;
   return ost.str();
 }
 
-bool
-yfs_client::isfile(inum inum)
-{
-  if(inum & 0x80000000)
-    return true;
+bool yfs_client::isfile(inum inum) {
+  if (inum & 0x80000000) return true;
   return false;
 }
 
-bool
-yfs_client::isdir(inum inum)
-{
-  return ! isfile(inum);
-}
+bool yfs_client::isdir(inum inum) { return !isfile(inum); }
 
-int
-yfs_client::setattr(inum inum, const struct stat* attr, struct stat& st) {
+int yfs_client::setattr(inum inum, const struct stat* attr, struct stat& st) {
   int r = OK;
-  
+
   initExtentClient(inum);
   lock_protocol::status s = lc->acquire(inum);
   if (s != lock_protocol::OK) {
@@ -182,8 +161,7 @@ yfs_client::setattr(inum inum, const struct stat* attr, struct stat& st) {
   return OK;
 }
 
-int
-yfs_client::getfileInfo(inum inum, fileinfo &fin) {
+int yfs_client::getfileInfo(inum inum, fileinfo& fin) {
   initExtentClient(inum);
   lock_protocol::status s = lc->acquire(inum);
   if (s != lock_protocol::OK) {
@@ -197,9 +175,7 @@ yfs_client::getfileInfo(inum inum, fileinfo &fin) {
   return r;
 }
 
-int
-yfs_client::getfile(inum inum, fileinfo &fin)
-{
+int yfs_client::getfile(inum inum, fileinfo& fin) {
   int r = OK;
   // You modify this function for Lab 3
   // - hold and release the file lock
@@ -217,13 +193,12 @@ yfs_client::getfile(inum inum, fileinfo &fin)
   fin.size = a.size;
   printf("getfile %016llx -> sz %llu\n", inum, fin.size);
 
- release:
+release:
 
   return r;
 }
 
-int
-yfs_client::getdirInfo(inum inum, dirinfo &din) {
+int yfs_client::getdirInfo(inum inum, dirinfo& din) {
   initExtentClient(inum);
   lock_protocol::status s = lc->acquire(inum);
   if (s != lock_protocol::OK) {
@@ -237,9 +212,7 @@ yfs_client::getdirInfo(inum inum, dirinfo &din) {
   return r;
 }
 
-int
-yfs_client::getdir(inum inum, dirinfo &din)
-{
+int yfs_client::getdir(inum inum, dirinfo& din) {
   int r = OK;
   // You modify this function for Lab 3
   // - hold and release the directory lock
@@ -254,15 +227,14 @@ yfs_client::getdir(inum inum, dirinfo &din)
   din.mtime = a.mtime;
   din.ctime = a.ctime;
 
- release:
+release:
   return r;
 }
 
-int
-yfs_client::create(inum parent, std::string name, inum& inum, fileinfo& info)
-{
+int yfs_client::create(inum parent, std::string name, inum& inum,
+                       fileinfo& info) {
   int r = OK;
-  
+
   initExtentClient(parent);
   lock_protocol::status s = lc->acquire(parent);
   if (s != lock_protocol::OK) {
@@ -272,15 +244,16 @@ yfs_client::create(inum parent, std::string name, inum& inum, fileinfo& info)
   printf("   create get content in the parent dir %016llx\n", parent);
   std::string data;
   r = get(parent, data);
-  if(r != OK) {
+  if (r != OK) {
     s = lc->release(parent);
     if (s != lock_protocol::OK) {
       return IOERR;
     }
     return r;
   }
-  
-  printf("   create check %s whether in the parent dir %016llx\n", name.c_str(), parent);
+
+  printf("   create check %s whether in the parent dir %016llx\n", name.c_str(),
+         parent);
   std::vector<dirent> files;
   if (parse_dir(data, files) < 0) {
     s = lc->release(parent);
@@ -323,7 +296,8 @@ yfs_client::create(inum parent, std::string name, inum& inum, fileinfo& info)
     return r;
   }
 
-  printf("   create insert entry %s(%016llx) in the parent dir %016llx\n", name.c_str(), inum, parent);
+  printf("   create insert entry %s(%016llx) in the parent dir %016llx\n",
+         name.c_str(), inum, parent);
   dirent f;
   f.name = name;
   f.inum = inum;
@@ -367,9 +341,7 @@ yfs_client::create(inum parent, std::string name, inum& inum, fileinfo& info)
   return OK;
 }
 
-int
-yfs_client::put(inum inum, const std::string& value)
-{
+int yfs_client::put(inum inum, const std::string& value) {
   int r = OK;
 
   printf("put %016llx\n", inum);
@@ -378,13 +350,11 @@ yfs_client::put(inum inum, const std::string& value)
     goto release;
   }
 
- release:
+release:
   return r;
 }
 
-int
-yfs_client::get(inum inum, std::string& value)
-{
+int yfs_client::get(inum inum, std::string& value) {
   int r = OK;
 
   printf("get %016llx\n", inum);
@@ -393,13 +363,11 @@ yfs_client::get(inum inum, std::string& value)
     goto release;
   }
 
- release:
+release:
   return r;
 }
 
-int
-yfs_client::remove(inum inum)
-{
+int yfs_client::remove(inum inum) {
   int r = OK;
 
   printf("remove %016llx\n", inum);
@@ -409,13 +377,11 @@ yfs_client::remove(inum inum)
     goto release;
   }
 
- release:
+release:
   return r;
 }
 
-int
-yfs_client::read(inum inum, size_t size, off_t off, std::string& buf)
-{
+int yfs_client::read(inum inum, size_t size, off_t off, std::string& buf) {
   buf.clear();
   int r = OK;
 
@@ -454,9 +420,8 @@ yfs_client::read(inum inum, size_t size, off_t off, std::string& buf)
   return OK;
 }
 
-int
-yfs_client::write(inum inum, size_t size, off_t off, const std::string& buf)
-{
+int yfs_client::write(inum inum, size_t size, off_t off,
+                      const std::string& buf) {
   int r = OK;
 
   initExtentClient(inum);
@@ -487,7 +452,8 @@ yfs_client::write(inum inum, size_t size, off_t off, const std::string& buf)
     if ((unsigned int)(origin.end() - (origin.begin() + off)) > size) {
       need_append = std::string(origin.begin() + off + size, origin.end());
     }
-    origin = std::string(origin.begin(), origin.begin() + off) + buf + need_append;
+    origin =
+        std::string(origin.begin(), origin.begin() + off) + buf + need_append;
   }
 
   r = put(inum, origin);
@@ -506,9 +472,8 @@ yfs_client::write(inum inum, size_t size, off_t off, const std::string& buf)
   return OK;
 }
 
-int
-yfs_client::lookup(inum parent, std::string name, inum& inum, bool& is_dir, fileinfo& finfo, dirinfo& dinfo)
-{
+int yfs_client::lookup(inum parent, std::string name, inum& inum, bool& is_dir,
+                       fileinfo& finfo, dirinfo& dinfo) {
   int r = OK;
   bool found = false;
   initExtentClient(parent);
@@ -516,18 +481,19 @@ yfs_client::lookup(inum parent, std::string name, inum& inum, bool& is_dir, file
   if (s != lock_protocol::OK) {
     return IOERR;
   }
-  printf("   lookup try to get content of %s on dir %016llx\n", name.c_str(), parent);
+  printf("   lookup try to get content of %s on dir %016llx\n", name.c_str(),
+         parent);
   std::string data;
   r = get(parent, data);
   printf("  get ok with %d\n", r);
-  if(r != OK) {
+  if (r != OK) {
     s = lc->release(parent);
     if (s != lock_protocol::OK) {
       return IOERR;
     }
     return r;
   }
-  
+
   std::vector<dirent> files;
   if (parse_dir(data, files) < 0) {
     s = lc->release(parent);
@@ -541,11 +507,12 @@ yfs_client::lookup(inum parent, std::string name, inum& inum, bool& is_dir, file
     if (files[i].name == name) {
       found = true;
       inum = files[i].inum;
-      printf("   lookup get attr of %s(%016llx) on parent dir %016llx\n", name.c_str(), files[i].inum,  parent);
-      if(isfile(inum)) {
+      printf("   lookup get attr of %s(%016llx) on parent dir %016llx\n",
+             name.c_str(), files[i].inum, parent);
+      if (isfile(inum)) {
         is_dir = false;
         r = getfileInfo(inum, finfo);
-        if(r != OK) {
+        if (r != OK) {
           s = lc->release(parent);
           if (s != lock_protocol::OK) {
             return IOERR;
@@ -555,7 +522,7 @@ yfs_client::lookup(inum parent, std::string name, inum& inum, bool& is_dir, file
       } else {
         is_dir = true;
         r = getdirInfo(inum, dinfo);
-        if(r != OK) {
+        if (r != OK) {
           s = lc->release(parent);
           if (s != lock_protocol::OK) {
             return IOERR;
@@ -575,14 +542,13 @@ yfs_client::lookup(inum parent, std::string name, inum& inum, bool& is_dir, file
     return OK;
   } else {
     return NOENT;
-  } 
+  }
 }
 
-int
-yfs_client::readdir(inum inum, size_t size, off_t off, std::vector<dirent>& files)
-{
+int yfs_client::readdir(inum inum, size_t size, off_t off,
+                        std::vector<dirent>& files) {
   int r = OK;
-  if(!isdir(inum)){
+  if (!isdir(inum)) {
     return NOTDIR;
   }
   initExtentClient(inum);
@@ -593,14 +559,14 @@ yfs_client::readdir(inum inum, size_t size, off_t off, std::vector<dirent>& file
   printf("   readdir from ino[%016llx]\n", inum);
   std::string data;
   r = get(inum, data);
-  if(r != yfs_client::OK) {
+  if (r != yfs_client::OK) {
     s = lc->release(inum);
     if (s != lock_protocol::OK) {
       return IOERR;
     }
     return r;
   }
-  
+
   if (parse_dir(data, files) < 0) {
     s = lc->release(inum);
     if (s != lock_protocol::OK) {
@@ -616,9 +582,8 @@ yfs_client::readdir(inum inum, size_t size, off_t off, std::vector<dirent>& file
   return OK;
 }
 
-int
-yfs_client::mkdir(inum parent, std::string name, inum& inum, dirinfo& info)
-{
+int yfs_client::mkdir(inum parent, std::string name, inum& inum,
+                      dirinfo& info) {
   int r = OK;
   initExtentClient(parent);
   lock_protocol::status s = lc->acquire(parent);
@@ -629,15 +594,16 @@ yfs_client::mkdir(inum parent, std::string name, inum& inum, dirinfo& info)
   printf("   mkdir get content of parent dir %016llx\n", parent);
   std::string data;
   r = get(parent, data);
-  if(r != OK) {
+  if (r != OK) {
     s = lc->release(parent);
     if (s != lock_protocol::OK) {
       return IOERR;
     }
     return r;
   }
-  
-  printf("   mkdir check %s whether in the parent dir %016llx\n", name.c_str(), parent);
+
+  printf("   mkdir check %s whether in the parent dir %016llx\n", name.c_str(),
+         parent);
   std::vector<dirent> files;
   if (parse_dir(data, files) < 0) {
     s = lc->release(parent);
@@ -679,7 +645,8 @@ yfs_client::mkdir(inum parent, std::string name, inum& inum, dirinfo& info)
     return r;
   }
 
-  printf("   mkdir insert entry %s(%016llx) in the parent dir %016llx\n", name.c_str(), inum, parent);
+  printf("   mkdir insert entry %s(%016llx) in the parent dir %016llx\n",
+         name.c_str(), inum, parent);
   dirent f;
   f.name = name;
   f.inum = inum;
@@ -723,9 +690,7 @@ yfs_client::mkdir(inum parent, std::string name, inum& inum, dirinfo& info)
   return OK;
 }
 
-int
-yfs_client::unlink(inum parent, std::string name)
-{
+int yfs_client::unlink(inum parent, std::string name) {
   int r = OK;
   std::string data;
   initExtentClient(parent);
@@ -736,11 +701,12 @@ yfs_client::unlink(inum parent, std::string name)
 
   printf("   unlink %s on parent dir %016llx\n", name.c_str(), parent);
   r = get(parent, data);
-  if(r != OK) {
+  if (r != OK) {
     return r;
   }
-  
-  printf("   unlink check %s whether in the parent dir %016llx\n", name.c_str(), parent);
+
+  printf("   unlink check %s whether in the parent dir %016llx\n", name.c_str(),
+         parent);
   std::vector<dirent> files;
   if (parse_dir(data, files) < 0) {
     s = lc->release(parent);
@@ -764,7 +730,8 @@ yfs_client::unlink(inum parent, std::string name)
       }
       id = files[i].inum;
 
-      printf("   unlink remove entry %s(%016llx) from the parent dir %016llx\n", name.c_str(), id, parent);
+      printf("   unlink remove entry %s(%016llx) from the parent dir %016llx\n",
+             name.c_str(), id, parent);
       files.erase(files.begin() + i);
       encode_dir(data, files);
       r = put(parent, data);
@@ -811,25 +778,20 @@ void yfs_client::initExtentClient(inum ino) {
 }
 
 void yfs_client::initExtentClient(const std::string& addr) {
-  if(ec != nullptr) {
+  if (ec != nullptr) {
     const std::string& ec_addr = ec->GetCurAddr();
-    if(addr == ec_addr) {
-      printf("reuse\n");
+    if (addr == ec_addr) {
       return;
     }
   }
-  if(ec == nullptr) {
+  if (ec == nullptr) {
     ec = new extent_client_cache(addr);
     printf("start lock real\n");
     lock_release = new lock_release_user_impl(ec);
     printf("start lc\n");
     lc = new lock_client_cache(lock_dst_, lock_release);
-    printf("succ\n");
-  }
-  else {
-    printf("reconnect\n");
+  } else {
     ec->ConnectTo(addr);
     // lc->ConnectTo(addr);
   }
 }
-

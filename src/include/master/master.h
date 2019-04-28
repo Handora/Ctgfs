@@ -30,13 +30,13 @@ class Master : public MasterService {
   Master();
   ~Master();
   void AskForIno(::google::protobuf::RpcController* controller,
-                      const ::ctgfs::ClientAskForInoRequest* request,
-                      ::ctgfs::ClientAskForInoResponse* response,
-                      ::google::protobuf::Closure* done);
+                 const ::ctgfs::ClientAskForInoRequest* request,
+                 ::ctgfs::ClientAskForInoResponse* response,
+                 ::google::protobuf::Closure* done);
   void AskForKV(::google::protobuf::RpcController* controller,
-                      const ::ctgfs::ClientAskForKVByInoRequest* request,
-                      ::ctgfs::ClientAskForKVByInoResponse* response,
-                      ::google::protobuf::Closure* done);
+                const ::ctgfs::ClientAskForKVByInoRequest* request,
+                ::ctgfs::ClientAskForKVByInoResponse* response,
+                ::google::protobuf::Closure* done);
   void SendHeartBeat(::google::protobuf::RpcController* controller,
                      const ::ctgfs::HeartBeatMessageRequest* request,
                      ::ctgfs::HeartBeatMessageResponse* response,

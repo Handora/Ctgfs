@@ -1,29 +1,26 @@
 #include "mvcc/mvcc.h"
-#include <map>
+#include <algorithm>
 #include <climits>
-#include <vector>
+#include <iostream>
+#include <map>
 #include <unordered_set>
 #include <utility>
-#include <algorithm>
-#include <iostream>
+#include <vector>
 
 namespace ctgfs {
 namespace mvcc {
 namespace func {
 
-std::string ts_to_str(int t) {
-  return std::string((char*)(&t), sizeof(int));
-}
+std::string ts_to_str(int t) { return std::string((char*)(&t), sizeof(int)); }
 
-int str_to_ts (std::string str) {
-  return *(int*)(str.c_str());
-}
+int str_to_ts(std::string str) { return *(int*)(str.c_str()); }
 
-/* binary search to find the biggest value which is smaller than key or equal to key */
+/* binary search to find the biggest value which is smaller than key or equal to
+ * key */
 /* {1, 3, 4, 7, 9}, key = 6 -> return 2(index) */
-int search_version(const std::vector< std::pair<int, int> >& vec, int key) {
+int search_version(const std::vector<std::pair<int, int> >& vec, int key) {
   /* if ret == -1, means the ts is smaller than all the timestamp in vector */
-  int ret = -1; 
+  int ret = -1;
 
   int lb = 0, ub = vec.size() - 1;
   while (lb <= ub) {
@@ -39,22 +36,19 @@ int search_version(const std::vector< std::pair<int, int> >& vec, int key) {
 
   return ret;
 }
-
-}}}
+}
+}
+}
 
 namespace ctgfs {
 namespace mvcc {
 
-SimpleMVCC::SimpleMVCC(const std::shared_ptr<KV> kv) 
-  : m_kv_(kv) {
+SimpleMVCC::SimpleMVCC(const std::shared_ptr<KV> kv) : m_kv_(kv) {}
 
-}
+SimpleMVCC::~SimpleMVCC() {}
 
-SimpleMVCC::~SimpleMVCC() {
-
-}
-
-bool SimpleMVCC::Insert(const std::string& raw_key, const std::string& value, int ts) {
+bool SimpleMVCC::Insert(const std::string& raw_key, const std::string& value,
+                        int ts) {
   /* e.g. {key_2, value} , 2 is the timestamp*/
   std::string key = raw_key + "_" + func::ts_to_str(ts);
 
@@ -63,19 +57,20 @@ bool SimpleMVCC::Insert(const std::string& raw_key, const std::string& value, in
   return true;
 }
 
-bool SimpleMVCC::Select(const std::string& raw_key, std::string& value, int ts) {
+bool SimpleMVCC::Select(const std::string& raw_key, std::string& value,
+                        int ts) {
   std::map<std::string, std::string> data;
   m_kv_->Query(raw_key, data);
 
-  if (data.empty())  {
+  if (data.empty()) {
     return false;
   }
 
-  std::vector< std::pair<int, int> > data_timestamp;
-  std::vector< std::string > data_value;
-  std::unordered_set< int > data_del;
+  std::vector<std::pair<int, int> > data_timestamp;
+  std::vector<std::string> data_value;
+  std::unordered_set<int> data_del;
   int cnt = 0;
-  for (const auto & kv : data) {
+  for (const auto& kv : data) {
     /* check if the file has been delete. */
     int times_ = std::count(kv.first.begin(), kv.first.end(), '_');
     if (times_ <= 0 || times_ > 2) {
@@ -88,13 +83,14 @@ bool SimpleMVCC::Select(const std::string& raw_key, std::string& value, int ts) 
       std::size_t pos_ts = kv.first.find_last_of("_");
 
       /* push {timestamp, index} */
-      data_timestamp.emplace_back(func::str_to_ts(kv.first.substr(pos_ts + 1)), cnt++);
+      data_timestamp.emplace_back(func::str_to_ts(kv.first.substr(pos_ts + 1)),
+                                  cnt++);
     } else {
       /* the file was deleted. */
       std::size_t pos_ts = kv.first.find_first_of("_");
       int t = func::str_to_ts(kv.first.substr(pos_ts + 1, sizeof(int)));
       data_timestamp.emplace_back(t, cnt++);
-      data_del.insert(t); 
+      data_del.insert(t);
     }
 
     /* push value */
@@ -102,7 +98,7 @@ bool SimpleMVCC::Select(const std::string& raw_key, std::string& value, int ts) 
   }
 
   /* Since the key in map is sorted, the vector has no need to be sorted. */
-  // std::sort(data_timestamp.begin(), data_timestamp.end(), 
+  // std::sort(data_timestamp.begin(), data_timestamp.end(),
   //   [](const std::pair<int, int>& x, const std::pair<int, int>& y) {
   //     return x.first < y.first;
   // });
@@ -110,11 +106,11 @@ bool SimpleMVCC::Select(const std::string& raw_key, std::string& value, int ts) 
   /* to find the latest timestamp which is smaller than ts */
   int idx = func::search_version(data_timestamp, ts);
 
-  /* the timestamp is smaller than any other.*/ 
+  /* the timestamp is smaller than any other.*/
   if (idx < 0) {
     value = "";
     return false;
-  } 
+  }
 
   if (data_del.count(data_timestamp[idx].first)) {
     /* the file was deleted. */
@@ -132,7 +128,7 @@ bool SimpleMVCC::Delete(const std::string& raw_key, int ts) {
   std::map<std::string, std::string> data;
   m_kv_->Query(raw_key, data);
 
-  if (data.empty())  {
+  if (data.empty()) {
     return false;
   }
 
@@ -143,5 +139,5 @@ bool SimpleMVCC::Delete(const std::string& raw_key, int ts) {
 
   return true;
 }
-
-}}
+}
+}

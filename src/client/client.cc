@@ -2,9 +2,9 @@
  * author: OneDay_(ltang970618@gmail.com)
  **/
 
+#include "client/client.h"
 #include <brpc/stream.h>
 #include <butil/logging.h>
-#include "client/client.h"
 #include <sys/time.h>
 #include <time.h>
 #include <algorithm>
@@ -14,8 +14,7 @@
 namespace ctgfs {
 namespace client {
 
-Client::~Client() {
-}
+Client::~Client() {}
 
 Client::Client(const std::string& ip, const int& port) {
   master_addr_ = ip + ":" + std::to_string(port);
@@ -26,7 +25,7 @@ Client::Client(const std::string& addr) : master_addr_(addr) {}
 std::string Client::GetKVAddrByInum(Client::inum ino) {
   brpc::Controller cntl;
   brpc::Channel channel;
-  if(channel.Init(master_addr_.c_str(), &options) != 0) {
+  if (channel.Init(master_addr_.c_str(), &options) != 0) {
     LOG(ERROR) << "Fail to initialize channel" << std::endl;
     return "";
   }
@@ -35,16 +34,17 @@ std::string Client::GetKVAddrByInum(Client::inum ino) {
   ::ctgfs::MasterService_Stub stub(&channel);
   request.set_ino(ino);
   stub.AskForKV(&cntl, &request, &response, NULL);
-  if(!cntl.Failed()) {
+  if (!cntl.Failed()) {
     return response.addr();
   }
   return "";
 }
 
-std::pair<Client::inum, std::string> Client::GetInumByName(const std::string& name, bool is_dir) {
+std::pair<Client::inum, std::string> Client::GetInumByName(
+    const std::string& name, bool is_dir) {
   brpc::Controller cntl;
   brpc::Channel channel;
-  if(channel.Init(master_addr_.c_str(), &options) != 0) {
+  if (channel.Init(master_addr_.c_str(), &options) != 0) {
     LOG(ERROR) << "Fail to initialize channel" << std::endl;
     return std::make_pair(0, "");
   }
@@ -54,8 +54,7 @@ std::pair<Client::inum, std::string> Client::GetInumByName(const std::string& na
   request.set_path(name);
   request.set_is_dir(is_dir);
   stub.AskForIno(&cntl, &request, &response, NULL);
-  if(!cntl.Failed()) {
-    printf("resp addr %s\n", response.addr().c_str());
+  if (!cntl.Failed()) {
     return std::make_pair(response.ino(), response.addr());
   }
   return std::make_pair(0, "");

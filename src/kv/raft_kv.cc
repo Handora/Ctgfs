@@ -8,10 +8,12 @@ namespace kv {
 RaftKV::RaftKV(std::string name, int port, const std::string& initial_conf) {
   util::Options options(name, port);
   options.initial_conf = initial_conf;
-  options.log_uri = "local://tmp/fsm_" + name + "_" + std::to_string(port) + "/log";
+  options.log_uri =
+      "local://tmp/fsm_" + name + "_" + std::to_string(port) + "/log";
   options.raft_meta_uri =
-        "local://tmp/fsm_" + name + "_" + std::to_string(port) + "/raft_meta";
-  options.snapshot_uri = "local://tmp/fsm_" + name + "_" + std::to_string(port) + "/snapshot";
+      "local://tmp/fsm_" + name + "_" + std::to_string(port) + "/raft_meta";
+  options.snapshot_uri =
+      "local://tmp/fsm_" + name + "_" + std::to_string(port) + "/snapshot";
   options.rocksdb_path = "tmp/rocksdb_" + name + "_" + std::to_string(port);
 
   server_ = new brpc::Server();
@@ -64,7 +66,8 @@ bool RaftKV::Get(const std::string& key, std::string& value) {
   return ret;
 }
 
-bool RaftKV::Query(const std::string& key, std::map<std::string, std::string>& value) {
+bool RaftKV::Query(const std::string& key,
+                   std::map<std::string, std::string>& value) {
   bool ret = true;
   std::map<std::string, std::string> tmp;
   util::Status s = fsm_->LocalQuery(key, tmp);

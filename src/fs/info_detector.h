@@ -15,13 +15,12 @@ class InfoDetector {
   ~InfoDetector() {
     delete detector_;
     detector_ = nullptr;
-
   }
 
  private:
   static InfoDetector* detector_;
 
-  InfoDetector() { }
+  InfoDetector() {}
   InfoDetector(const InfoDetector&);
   InfoDetector& operator=(const InfoDetector&);
 

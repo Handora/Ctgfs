@@ -1,61 +1,62 @@
 // the extent server implementation
 
 #include "extent_server.h"
-#include "info_detector.h"
-#include "master.pb.h"
-#include "fs/heart_beat_sender.h"
-#include <sstream>
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <thread>
+#include <brpc/channel.h>
 #include <brpc/server.h>
 #include <brpc/stream.h>
-#include <brpc/channel.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sstream>
+#include <thread>
+#include "fs/heart_beat_sender.h"
+#include "info_detector.h"
+#include "master.pb.h"
 
 extent_server::extent_server() {
   VERIFY(pthread_mutex_init(&server_mu_, 0) == 0);
   int res;
   VERIFY(put(0x00000001, "", res) == extent_protocol::OK);
 
-  
   /* the instance to get the file system info, it likes a global pointer. */
- // InfoDetector* info = InfoDetector::detector();
+  // InfoDetector* info = InfoDetector::detector();
 
- // /* a shared_ptr to the HeartBeatInfo. */
- // auto p_heart_beat_info = std::make_shared<ctgfs::heart_beat::HeartBeatInfo>();
+  // /* a shared_ptr to the HeartBeatInfo. */
+  // auto p_heart_beat_info =
+  // std::make_shared<ctgfs::heart_beat::HeartBeatInfo>();
 
- // std::string addr = std::string("127.0.0.1:1235");
+  // std::string addr = std::string("127.0.0.1:1235");
 
- // /* Sender is used to send the heart beat package. */
- // ctgfs::heart_beat::HeartBeatSender sender(addr, p_heart_beat_info);
- // std::thread t_heart_beat([&]() {
- //   while (true) {
- //     auto p_heart_beat_info = std::make_shared<ctgfs::heart_beat::HeartBeatInfo>(
- //       (ctgfs::heart_beat::HeartBeatInfo){
- //         ctgfs::HeartBeatMessageRequest_HeartBeatType::HeartBeatMessageRequest_HeartBeatType_kInfoUpdate,
- //         std::string("127.0.0.1:1235"),
- //         info->get().file_num, 
- //         info->get().disk_usage
- //       });
- //     sender.SetHeartBeatInfo(p_heart_beat_info);
- //     sender.SendHeartBeat();
- //     std::this_thread::sleep_for(std::chrono::seconds(3));
- //   }
- // });
+  // /* Sender is used to send the heart beat package. */
+  // ctgfs::heart_beat::HeartBeatSender sender(addr, p_heart_beat_info);
+  // std::thread t_heart_beat([&]() {
+  //   while (true) {
+  //     auto p_heart_beat_info =
+  //     std::make_shared<ctgfs::heart_beat::HeartBeatInfo>(
+  //       (ctgfs::heart_beat::HeartBeatInfo){
+  //         ctgfs::HeartBeatMessageRequest_HeartBeatType::HeartBeatMessageRequest_HeartBeatType_kInfoUpdate,
+  //         std::string("127.0.0.1:1235"),
+  //         info->get().file_num,
+  //         info->get().disk_usage
+  //       });
+  //     sender.SetHeartBeatInfo(p_heart_beat_info);
+  //     sender.SendHeartBeat();
+  //     std::this_thread::sleep_for(std::chrono::seconds(3));
+  //   }
+  // });
 
- // /* detach this thread for it should run till the main thread is off. */
- // t_heart_beat.detach();
+  // /* detach this thread for it should run till the main thread is off. */
+  // t_heart_beat.detach();
 }
 
 extent_server::~extent_server() {}
 
-int extent_server::put(extent_protocol::extentid_t id, std::string buf, int &)
-{
+int extent_server::put(extent_protocol::extentid_t id, std::string buf, int &) {
   ScopedLock lm(&server_mu_);
-  std::map<extent_protocol::extentid_t, extent*>::iterator it = extent_map_.find(id);
+  std::map<extent_protocol::extentid_t, extent *>::iterator it =
+      extent_map_.find(id);
   unsigned int now = (unsigned int)time(NULL);
   if (it != extent_map_.end()) {
     it->second->ctime = now;
@@ -64,9 +65,10 @@ int extent_server::put(extent_protocol::extentid_t id, std::string buf, int &)
 
     return extent_protocol::OK;
   }
-  
+
   extent *value = new extent(now, now, now, buf);
-  extent_map_.insert(std::pair<extent_protocol::extentid_t, extent*>(id, value));
+  extent_map_.insert(
+      std::pair<extent_protocol::extentid_t, extent *>(id, value));
 
   // InfoDetector* info = InfoDetector::detector();
   // fs_info attr = info->get();
@@ -77,10 +79,10 @@ int extent_server::put(extent_protocol::extentid_t id, std::string buf, int &)
   return extent_protocol::OK;
 }
 
-int extent_server::get(extent_protocol::extentid_t id, std::string &buf)
-{
+int extent_server::get(extent_protocol::extentid_t id, std::string &buf) {
   ScopedLock lm(&server_mu_);
-  std::map<extent_protocol::extentid_t, extent*>::iterator it = extent_map_.find(id);
+  std::map<extent_protocol::extentid_t, extent *>::iterator it =
+      extent_map_.find(id);
   unsigned int now = time(NULL);
   if (it != extent_map_.end()) {
     it->second->atime = now;
@@ -88,14 +90,15 @@ int extent_server::get(extent_protocol::extentid_t id, std::string &buf)
 
     return extent_protocol::OK;
   }
-  
+
   return extent_protocol::NOENT;
 }
 
-int extent_server::getattr(extent_protocol::extentid_t id, extent_protocol::attr &a)
-{
+int extent_server::getattr(extent_protocol::extentid_t id,
+                           extent_protocol::attr &a) {
   ScopedLock lm(&server_mu_);
-  std::map<extent_protocol::extentid_t, extent*>::iterator it = extent_map_.find(id);
+  std::map<extent_protocol::extentid_t, extent *>::iterator it =
+      extent_map_.find(id);
   if (it != extent_map_.end()) {
     a.size = it->second->content.size();
     a.atime = it->second->atime;
@@ -108,10 +111,11 @@ int extent_server::getattr(extent_protocol::extentid_t id, extent_protocol::attr
   return extent_protocol::NOENT;
 }
 
-int extent_server::setattr(extent_protocol::extentid_t id, extent_protocol::attr a, int& r)
-{
+int extent_server::setattr(extent_protocol::extentid_t id,
+                           extent_protocol::attr a, int &r) {
   ScopedLock lm(&server_mu_);
-  std::map<extent_protocol::extentid_t, extent*>::iterator it = extent_map_.find(id);
+  std::map<extent_protocol::extentid_t, extent *>::iterator it =
+      extent_map_.find(id);
   if (it != extent_map_.end()) {
     size_t old_size = it->second->content.size();
     size_t new_size = a.size;
@@ -138,10 +142,10 @@ int extent_server::setattr(extent_protocol::extentid_t id, extent_protocol::attr
   return extent_protocol::NOENT;
 }
 
-int extent_server::remove(extent_protocol::extentid_t id, int &)
-{
+int extent_server::remove(extent_protocol::extentid_t id, int &) {
   ScopedLock lm(&server_mu_);
-  std::map<extent_protocol::extentid_t, extent*>::iterator it = extent_map_.find(id);
+  std::map<extent_protocol::extentid_t, extent *>::iterator it =
+      extent_map_.find(id);
   if (it != extent_map_.end()) {
     int file_size = it->second->content.size();
 
@@ -159,4 +163,3 @@ int extent_server::remove(extent_protocol::extentid_t id, int &)
 
   return extent_protocol::OK;
 }
-

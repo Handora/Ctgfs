@@ -10,13 +10,7 @@ class extent_protocol {
   typedef int status;
   typedef unsigned long long extentid_t;
   enum xxstatus { OK, RPCERR, NOENT, IOERR };
-  enum rpc_numbers {
-    put = 0x6001,
-    get,
-    getattr,
-    remove,
-    setattr
-  };
+  enum rpc_numbers { put = 0x6001, get, getattr, remove, setattr };
 
   struct attr {
     unsigned int atime;
@@ -26,9 +20,7 @@ class extent_protocol {
   };
 };
 
-inline unmarshall &
-operator>>(unmarshall &u, extent_protocol::attr &a)
-{
+inline unmarshall &operator>>(unmarshall &u, extent_protocol::attr &a) {
   u >> a.atime;
   u >> a.mtime;
   u >> a.ctime;
@@ -36,9 +28,7 @@ operator>>(unmarshall &u, extent_protocol::attr &a)
   return u;
 }
 
-inline marshall &
-operator<<(marshall &m, extent_protocol::attr a)
-{
+inline marshall &operator<<(marshall &m, extent_protocol::attr a) {
   m << a.atime;
   m << a.mtime;
   m << a.ctime;
@@ -46,4 +36,4 @@ operator<<(marshall &m, extent_protocol::attr a)
   return m;
 }
 
-#endif 
+#endif

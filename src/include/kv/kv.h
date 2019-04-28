@@ -1,8 +1,8 @@
 // Authors: Chen Qian(qcdsr970209@gmail.com)
 
 #pragma once
-#include <string>
 #include <map>
+#include <string>
 
 namespace ctgfs {
 namespace kv {
@@ -23,7 +23,8 @@ class KV {
   virtual bool Get(const std::string& key, std::string& value) = 0;
 
   // Given the predicate and get the value lists, use this for mvcc_get
-  virtual bool Query(const std::string& key, std::map<std::string, std::string>& values) = 0;
+  virtual bool Query(const std::string& key,
+                     std::map<std::string, std::string>& values) = 0;
 };
 
 }  // namespace kv
