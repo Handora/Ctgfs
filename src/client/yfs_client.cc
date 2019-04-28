@@ -814,22 +814,22 @@ void yfs_client::initExtentClient(const std::string& addr) {
   if(ec != nullptr) {
     const std::string& ec_addr = ec->GetCurAddr();
     if(addr == ec_addr) {
+      printf("reuse\n");
       return;
     }
   }
   if(ec == nullptr) {
     ec = new extent_client_cache(addr);
+    printf("start lock real\n");
     lock_release = new lock_release_user_impl(ec);
+    printf("start lc\n");
     lc = new lock_client_cache(lock_dst_, lock_release);
+    printf("succ\n");
   }
   else {
+    printf("reconnect\n");
     ec->ConnectTo(addr);
-    lc->ConnectTo(addr);
+    // lc->ConnectTo(addr);
   }
-  // delete lock_release;
-  // delete ec;
-  // ec = new extent_client_cache(addr);
-  // lock_release = new lock_release_user_impl(ec);
-  // lc = new lock_client_cache(lock_dst_, lock_release);
 }
 

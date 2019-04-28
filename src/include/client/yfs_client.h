@@ -2,36 +2,36 @@
 #define yfs_client_h
 
 #include <string>
-#include "extent_client.h"
-#include "extent_client_cache.h"
 #include <vector>
 #include "client.h"
-#include "lock_protocol.h"
+#include "extent_client.h"
+#include "extent_client_cache.h"
 #include "lock_client.h"
+#include "lock_protocol.h"
 
 using namespace ctgfs::client;
 
 class lock_release_user_impl : public lock_release_user {
  private:
-  extent_client *ec;
+  extent_client* ec;
+
  public:
-  lock_release_user_impl(extent_client *c) : ec(c) {}
+  lock_release_user_impl(extent_client* c) : ec(c) {}
   void dorelease(lock_protocol::lockid_t id) {
-    ((extent_client_cache *)ec)->flush((extent_protocol::extentid_t)id);
+    ((extent_client_cache*)ec)->flush((extent_protocol::extentid_t)id);
   }
-  ~lock_release_user_impl() {
-    ec = NULL;
-  };
+  ~lock_release_user_impl() { ec = NULL; };
 };
 
 class yfs_client {
   lock_release_user_impl* lock_release;
-  extent_client *ec;
-  lock_client *lc;
+  extent_client* ec;
+  lock_client* lc;
   Client* client;
   std::string lock_dst_;
- public:
+  std::string default_extent_dst_;
 
+ public:
   typedef unsigned long long inum;
   enum xxstatus { OK, RPCERR, NOENT, IOERR, EXIST, DIRENTERR, NOTDIR };
   typedef int status;
@@ -67,16 +67,15 @@ class yfs_client {
   int encode_dir(std::string& content, const std::vector<dirent>& vec);
 
  public:
-
   yfs_client(std::string, std::string);
 
   bool isfile(inum);
   bool isdir(inum);
 
-  int getfileInfo(inum, fileinfo &);
-  int getfile(inum, fileinfo &);
-  int getdirInfo(inum, dirinfo &);
-  int getdir(inum, dirinfo &);
+  int getfileInfo(inum, fileinfo&);
+  int getfile(inum, fileinfo&);
+  int getdirInfo(inum, dirinfo&);
+  int getdir(inum, dirinfo&);
   int get(inum, std::string&);
   int put(inum, const std::string&);
   int remove(inum);
@@ -84,10 +83,11 @@ class yfs_client {
   int setattr(inum inum, const struct stat* attr, struct stat& st);
   int read(inum inum, size_t size, off_t off, std::string& buf);
   int write(inum inum, size_t size, off_t off, const std::string& buf);
-  int lookup(inum parent, std::string name, inum& inum, bool& is_dir, fileinfo& finfo, dirinfo& dinfo);
+  int lookup(inum parent, std::string name, inum& inum, bool& is_dir,
+             fileinfo& finfo, dirinfo& dinfo);
   int readdir(inum inum, size_t size, off_t off, std::vector<dirent>& files);
   int mkdir(inum parent, std::string name, inum& inum, dirinfo& info);
   int unlink(inum parent, std::string name);
 };
 
-#endif 
+#endif

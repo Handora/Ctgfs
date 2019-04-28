@@ -55,6 +55,7 @@ std::pair<Client::inum, std::string> Client::GetInumByName(const std::string& na
   request.set_is_dir(is_dir);
   stub.AskForIno(&cntl, &request, &response, NULL);
   if(!cntl.Failed()) {
+    printf("resp addr %s\n", response.addr().c_str());
     return std::make_pair(response.ino(), response.addr());
   }
   return std::make_pair(0, "");

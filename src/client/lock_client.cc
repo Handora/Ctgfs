@@ -9,10 +9,12 @@
 #include <stdio.h>
 
 lock_client::lock_client(const std::string& dst) {
+  cl = nullptr;
   ConnectTo(dst);
 }
 
 void lock_client::ConnectTo(const std::string& dst) {
+  // can't reconnect
   sockaddr_in dstsock;
   make_sockaddr(dst.c_str(), &dstsock);
   if(cl)

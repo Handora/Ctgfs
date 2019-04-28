@@ -82,4 +82,12 @@ if [ `mount | grep "$pwd/yfs2" | grep -v grep | wc -l` -ne 1 ]; then
     exit -1
 fi
 
+echo "start master > master.log 2>&1 &"
+./build/src/master/master_main > master.log 2>&1 &
+
+sleep 2
+
+echo "start heartbeat client > heart_beat.log 2>&1 &"
+./build/src/fs/heart_beat_sender_main > heart_beat.log 2>&1 &
+
 echo "done"

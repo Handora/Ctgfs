@@ -4,6 +4,7 @@
 #include <butil/logging.h>
 #include <fs/heart_beat_sender.h>
 #include <master/master.h>
+#include <brpc/server.h>
 
 namespace ctgfs {
 namespace master {
@@ -20,9 +21,9 @@ Master::Master() {
 Master::~Master() {}
 
 void Master::AskForIno(::google::protobuf::RpcController* controller,
-                            const ::ctgfs::ClientAskForInoRequest* request,
-                            ::ctgfs::ClientAskForInoResponse* response,
-                            ::google::protobuf::Closure* done) {
+                       const ::ctgfs::ClientAskForInoRequest* request,
+                       ::ctgfs::ClientAskForInoResponse* response,
+                       ::google::protobuf::Closure* done) {
   brpc::ClosureGuard done_guard(done);
   if (cur_register_kv_id_ == 0) {
     LOG(ERROR) << "NO FS CONNECT" << std::endl;
@@ -32,17 +33,17 @@ void Master::AskForIno(::google::protobuf::RpcController* controller,
   // brpc::Controller* ctrl = static_cast<brpc::Controller*>(controller);
   const std::string path = request->path();
   bool is_dir = request->is_dir();
-  std::string kv_addr;
-  response->set_ino(genInum(path, is_dir));
-  response->set_addr(kv_addr);
-  // TODO: need add more options 
-  return;  
+  auto ino = genInum(path, is_dir);
+  response->set_ino(ino);
+  response->set_addr(getInfoByInum(ino));
+  // TODO: need add more options
+  return;
 }
 
 void Master::AskForKV(::google::protobuf::RpcController* controller,
-                            const ::ctgfs::ClientAskForKVByInoRequest* request,
-                            ::ctgfs::ClientAskForKVByInoResponse* response,
-                            ::google::protobuf::Closure* done) {
+                      const ::ctgfs::ClientAskForKVByInoRequest* request,
+                      ::ctgfs::ClientAskForKVByInoResponse* response,
+                      ::google::protobuf::Closure* done) {
   brpc::ClosureGuard done_guard(done);
   if (cur_register_kv_id_ == 0) {
     LOG(ERROR) << "NO FS CONNECT" << std::endl;
@@ -60,6 +61,7 @@ void Master::SendHeartBeat(::google::protobuf::RpcController* controller,
                            ::ctgfs::HeartBeatMessageResponse* response,
                            ::google::protobuf::Closure* done) {
   brpc::ClosureGuard done_guard(done);
+  printf("In Send Heart Beat\n");
   // empty resp now so needn't fill
   // use rq to generate struct HeartBeatInfo
   // call the update method
@@ -188,9 +190,8 @@ void Master::debugRegisterKV(bool is_error, const char* str) {
 unsigned long long Master::genInum(const std::string& path, bool is_dir) {
   unsigned long long id = 0;
   id += random() % (2147483648);
-  if (!is_dir)
-    id |= 0x80000000;
-  int sum = hashStr(path); 
+  if (!is_dir) id |= 0x80000000;
+  int sum = hashStr(path);
   hashValueToRegisterID(sum);
   inum_to_path_[id] = path;
   inum_to_register_id_[id] = sum;
@@ -201,5 +202,7 @@ std::string Master::getInfoByInum(unsigned long long inum) {
   return register_id_to_addr_[inum_to_register_id_[inum]];
 }
 
+
 }  // namespace master
 }  // namespace ctgfs
+
