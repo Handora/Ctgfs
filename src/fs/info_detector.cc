@@ -1,4 +1,4 @@
-#include "info_detector.h"
+#include "fs/info_detector.h"
 
 /* initialze the instance */
 InfoDetector* InfoDetector::detector_ = new InfoDetector();

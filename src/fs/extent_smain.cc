@@ -3,7 +3,7 @@
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "extent_server.h"
+#include "fs/extent_server.h"
 
 // Main loop of extent server
 
