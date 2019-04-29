@@ -13,3 +13,5 @@ $UMOUNT $YFSDIR2
 killall extent_server
 killall yfs_client
 killall lock_server
+killall master_main
+killall heart_beat_sender_main

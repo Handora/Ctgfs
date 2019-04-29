@@ -15,7 +15,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include "yfs_client.h"
+#include "client/yfs_client.h"
 
 int myid;
 yfs_client *yfs;
@@ -602,3 +602,4 @@ main(int argc, char *argv[])
 
   return err ? 1 : 0;
 }
+

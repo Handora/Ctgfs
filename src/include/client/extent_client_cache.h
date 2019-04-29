@@ -5,9 +5,9 @@
 
 #include <string>
 #include <map>
-#include "extent_protocol.h"
-#include "extent_client.h"
-#include "lock_client_cache.h"
+#include "client/extent_protocol.h"
+#include "client/extent_client.h"
+#include "client/lock_client_cache.h"
 
 class extent_client_cache : public extent_client {
 

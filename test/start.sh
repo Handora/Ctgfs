@@ -55,6 +55,7 @@ rm -rf $YFSDIR1
 mkdir $YFSDIR1 || exit 1
 sleep 1
 echo "starting yfs_client $YFSDIR1 $EXTENT_PORT $LOCK_PORT > yfs_client1.log 2>&1 &"
+
 build/src/client/yfs_client $YFSDIR1 $EXTENT_PORT $LOCK_PORT > yfs_client1.log 2>&1 &
 sleep 1
 
@@ -79,5 +80,13 @@ if [ `mount | grep "$pwd/yfs2" | grep -v grep | wc -l` -ne 1 ]; then
     echo "Failed to mount YFS properly at ./yfs2"
     exit -1
 fi
+
+echo "start master > master.log 2>&1 &"
+./build/src/master/master_main > master.log 2>&1 &
+
+sleep 2
+
+echo "start heartbeat client > heart_beat.log 2>&1 &"
+./build/src/fs/heart_beat_sender_main > heart_beat.log 2>&1 &
 
 echo "done"

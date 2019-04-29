@@ -16,5 +16,4 @@ message FileSystemResponse {
 
 // service on fs
 service FileSystemService {
-  rpc DoCommandOnFS(ClientKVRequest) returns (FileSystemResponse);
 };

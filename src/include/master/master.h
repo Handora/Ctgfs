@@ -29,9 +29,13 @@ class Master : public MasterService {
  public:
   Master();
   ~Master();
-  void ClientAskForKV(::google::protobuf::RpcController* controller,
-                      const ::ctgfs::ClientKVRequest* request,
-                      ::ctgfs::ClientKVResponse* response,
+  void AskForIno(::google::protobuf::RpcController* controller,
+                      const ::ctgfs::ClientAskForInoRequest* request,
+                      ::ctgfs::ClientAskForInoResponse* response,
+                      ::google::protobuf::Closure* done);
+  void AskForKV(::google::protobuf::RpcController* controller,
+                      const ::ctgfs::ClientAskForKVByInoRequest* request,
+                      ::ctgfs::ClientAskForKVByInoResponse* response,
                       ::google::protobuf::Closure* done);
   void SendHeartBeat(::google::protobuf::RpcController* controller,
                      const ::ctgfs::HeartBeatMessageRequest* request,
@@ -48,6 +52,9 @@ class Master : public MasterService {
   // <1, "127.0.0.1:1234">
   // get addr by register id
   std::map<int, std::string> register_id_to_addr_;
+  // <path, register_id>
+  std::map<int, int> inum_to_register_id_;
+  std::map<int, std::string> inum_to_path_;
   // get register id by addr
   std::map<std::string, int> addr_to_register_id_;
   std::vector<std::shared_ptr<heart_beat::HeartBeatInfo> > kv_info_;
@@ -62,8 +69,8 @@ class Master : public MasterService {
   // PROBLEM: if a kv disconnect it's file will lose
   // should have a dynamic method to track a kv's connect and disconnect
   // can't simply hash to a continuous register id
-  void setKVAddrByClientKVRequest(const ::ctgfs::ClientKVRequest* request,
-                                  ::ctgfs::ClientKVResponse* response);
+  // void setKVAddrByClientKVRequest(const ::ctgfs::ClientKVRequest* request,
+  //                                ::ctgfs::ClientKVResponse* response);
   // register a new kv
   // if success return true else false
   // addr : ip:port
@@ -87,6 +94,10 @@ class Master : public MasterService {
   void unregisterKV(const int& regist_id);
   // do unregist
   void doUnregister(const int& regist_id);
+  // generate inum
+  unsigned long long genInum(const std::string& path, bool is_dir);
+  // get kv info by inum
+  std::string getInfoByInum(unsigned long long inum);
   // for debug
   void debugRegisterKV(bool, const std::string&);
   void debugRegisterKV(bool, const char*);

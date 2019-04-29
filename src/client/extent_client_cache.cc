@@ -1,6 +1,6 @@
 // the extent cache implementation
 
-#include "extent_client_cache.h"
+#include "client/extent_client_cache.h"
 #include <sstream>
 #include <stdio.h>
 #include <unistd.h>
