@@ -9,13 +9,71 @@ namespace wal {
 using util::Status;
 using namespace util;
 
+std::string int_to_str(int i) {
+  return std::string((char*)(&i), sizeof(i));
+}
+
+int str_to_int(char *s) {
+  return *(int*)(s);
+}
+
+ostream& operator<<(ostream& out, const Log& s) {
+  if (out << int_to_str((int)(s.type_))) {
+    if (out << int_to_str((int)(s.key_.size()))) {
+      if (out << s.key_) {
+        if (out << int_to_str((int)(s.value_.size()))) {
+          out << s.value_;
+        }
+      }
+    }
+  }
+  return out;
+}
+
+bool operator==(const Log &left, const Log &right) {
+  return left.type_ == right.type_
+      && left.key_ == right.key_
+      && left.value_ == right.value_;
+}
+
+istream& operator>>(istream& in, Log& s) {
+  int res;
+  char *a;
+  char tmp[10];
+  tmp[sizeof(int)] = '\0';
+  
+  if (in.read(tmp, sizeof(int))) {
+    s.type_ = (WalType)(str_to_int(tmp));
+
+    if (in.read(tmp, sizeof(int))) {
+      res = str_to_int(tmp);
+      a = new char(res + 1);
+      in.read(a, res);
+      a[res] = '\0';
+      s.key_ = std::string(a);
+      delete a;
+
+      if (in.read(tmp, sizeof(int))) {
+        res = str_to_int(tmp);
+        a = new char(res + 1);
+        in.read(a, res);
+        a[res] = '\0';
+        s.value_ = std::string(a);
+        delete a;
+      }
+    }
+  }
+
+  return in;
+}
+
 Wal::Wal() 
   : log_file_("") {}
 
 Wal::~Wal() {}
 
 Status Wal::Init(const std::string& path) {
-  Status ret = Status::Status::OK();
+  Status ret = Status::OK();
   
   if (path.size() == 0) {
     ret = Status::InvalidArgument("path size is 0");
@@ -25,9 +83,8 @@ Status Wal::Init(const std::string& path) {
     log_file_ = path + "/log.ctgfs";   
   }
 
-  std::ofstream tmp;
-  tmp.open(log_file_, ios::in);
-  if (ret.IsOK() && tmp.good()) {
+  std::ifstream tmp(log_file_, ios::in);
+  if (ret.IsOK() && !tmp.fail()) {
     tmp.close();
     ret = Recover();
   } else if (ret.IsOK()) {
@@ -41,7 +98,16 @@ Status Wal::Init(const std::string& path) {
 Status Wal::Start() {
   Status ret = Status::OK();
   mlog_.clear();
-  dlog_.open(log_file_, ios::app | ios::trunc );
+  std::ofstream tmp(log_file_.c_str(), ios::trunc);
+  tmp.close();
+  dlog_.open(log_file_.c_str(), ios::out | ios::trunc );
+  return ret;
+}
+
+Status Wal::Stop() {
+  Status ret = Status::OK();
+  SyncToDLog();
+  dlog_.close();
   return ret;
 }
 
@@ -50,7 +116,7 @@ Status Wal::Recover() {
   std::ifstream reader;
   mlog_.clear();
   Log log;
-  reader.open(log_file_, ios::in);
+  reader.open(log_file_.c_str(), ios::in);
   if (!reader.is_open()) {
     ret = Status::Corruption("open error");
   } else {
@@ -58,7 +124,7 @@ Status Wal::Recover() {
       mlog_.push_back(log);
     }
     reader.close();
-    dlog_.open(log_file_, ios::app);
+    dlog_.open(log_file_.c_str(), ios::app);
     if (!dlog_.is_open()) {
       ret = Status::Corruption("open error");
     }
@@ -108,6 +174,7 @@ Status Wal::SyncToDLog() {
   for (unsigned int i = 0; ret.IsOK() && i < mlog_.size(); i++) {
     ret = LogToDiskWithoutLock(mlog_[i]);
   }
+  dlog_.flush();
   mlog_.clear();
 
   return ret;

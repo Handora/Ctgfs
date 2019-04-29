@@ -1,6 +1,7 @@
 // Authors: Chen Qian(qcdsr970209@gmail.com)
 
 #pragma once
+
 #include <util/status.h>
 #include <fstream>
 #include <iostream>
@@ -26,37 +27,9 @@ struct Log {
   std::string value_;
 };
 
-ostream& operator<<(ostream& out, const Log& s) {
-  out << (int)(s.type_);
-  out << (int)(s.key_.size());
-  out << s.key_;
-  out << (int)(s.value_.size());
-  out << s.value_;
-  return out;
-}
-
-istream& operator>>(istream& in, Log& s) {
-  int res;
-  char *a;
-  
-  in >> res;
-  s.type_ = (WalType)res;
-
-  in >> res;
-  a = new char(res + 1);
-  in.read(a, res);
-  a[res] = '\0';
-  s.key_ = std::string(a);
-  delete a;
-
-  in >> res;
-  a = new char(res + 1);
-  in.read(a, res);
-  a[res] = '\0';
-  s.value_ = std::string(a);
-  delete a;
-  return in;
-}
+ostream& operator<<(ostream& out, const Log& s);
+bool operator==(const Log &left, const Log &right);
+istream& operator>>(istream& in, Log& s);
 
 class Wal {
  public:
@@ -65,10 +38,12 @@ class Wal {
   Status Init(const std::string& path);
   Status Start();
   Status Recover();
+  Status Stop();
   Status LogToDisk(const Log& log);
-  Status LogToDiskWithoutLock(const Log& log);
   Status AppendToMLog(const Log& log);
   Status SyncToDLog();
+ private:
+  Status LogToDiskWithoutLock(const Log& log);
  private:
   std::vector<Log> mlog_;
   ofstream dlog_;
