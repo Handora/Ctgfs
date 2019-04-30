@@ -40,13 +40,13 @@ TEST(MasterTest, Connect) {
 
   // start server
   brpc::ServerOptions options;
-  std::string addr = std::string("127.0.0.1:1234");
+  std::string addr = std::string("127.0.0.1:41234");
   int start_status = server.Start(addr.c_str(), &options);
   ASSERT_EQ(0, start_status) << "start error! status : " << start_status
                              << std::endl;
 
   // new a heart_beat_sender
-  std::string fs_addr = std::string("127.0.0.1:1233");
+  std::string fs_addr = std::string("127.0.0.1:41233");
   auto heart_beat_info = std::make_shared<HeartBeatInfo>();
   heart_beat_info->type = HeartBeatMessageRequest_HeartBeatType::
       HeartBeatMessageRequest_HeartBeatType_kRegist;  // kRgist
