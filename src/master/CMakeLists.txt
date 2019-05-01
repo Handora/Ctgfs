@@ -9,3 +9,5 @@ target_link_libraries(master_main proto brpc rpc master)
 
 add_library(gtg gtg.cc)
 target_link_libraries(gtg rpc)
+
+add_library(prefix_tree prefix_tree_node.cc prefix_tree.cc)
