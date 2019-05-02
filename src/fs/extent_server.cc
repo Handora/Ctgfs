@@ -1,9 +1,9 @@
 // the extent server implementation
 
-#include "extent_server.h"
-#include "info_collector.h"
-#include "master.pb.h"
+#include "fs/extent_server.h"
+#include "fs/info_detector.h"
 #include "fs/heart_beat_sender.h"
+#include "master.pb.h"
 #include <sstream>
 #include <stdio.h>
 #include <unistd.h>

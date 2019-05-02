@@ -1,6 +1,6 @@
 // RPC stubs for clients to talk to lock_server
 
-#include "lock_client.h"
+#include "client/lock_client.h"
 #include "rpc/rpc.h"
 #include <arpa/inet.h>
 
@@ -8,10 +8,17 @@
 #include <iostream>
 #include <stdio.h>
 
-lock_client::lock_client(std::string dst)
-{
+lock_client::lock_client(const std::string& dst) {
+  cl = nullptr;
+  ConnectTo(dst);
+}
+
+void lock_client::ConnectTo(const std::string& dst) {
+  // can't reconnect
   sockaddr_in dstsock;
   make_sockaddr(dst.c_str(), &dstsock);
+  if(cl)
+    delete cl;
   cl = new rpcc(dstsock);
   if (cl->bind() < 0) {
     printf("lock_client: call bind\n");

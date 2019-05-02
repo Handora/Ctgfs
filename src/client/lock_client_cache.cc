@@ -1,12 +1,12 @@
 // RPC stubs for clients to talk to lock_server, and cache the locks
 // see lock_client.cache.h for protocol details.
 
-#include "lock_client_cache.h"
+#include "client/lock_client_cache.h"
 #include "rpc/rpc.h"
 #include <sstream>
 #include <iostream>
 #include <stdio.h>
-#include "tprintf.h"
+#include "client/tprintf.h"
 
 lock_client_cache::lock_client_cache(std::string xdst, 
 				     class lock_release_user *_lu)
