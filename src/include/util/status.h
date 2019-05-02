@@ -110,6 +110,13 @@ class Status {
 
   bool IsHeartBeatFail() const { return (code_ == Code::kHeartBeatFail); }
 
+  /*************************** PrefixTree Part ******************************/
+  static Status PrefixTreeError(const std::string& msg = "") {
+    return Status(Code::kPrefixTreeError, msg);
+  }
+
+  bool IsPrefixTreeError() const { return (code_ == Code::kPrefixTreeError); }
+
  private:
   enum class Code {
     // General part
@@ -131,6 +138,9 @@ class Status {
 
     // HeartBeat part
     kHeartBeatFail,
+
+    // PrefixTree part
+    kPrefixTreeError,
   };
 
   Code code_;
