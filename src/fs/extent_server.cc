@@ -3,6 +3,7 @@
 #include "fs/extent_server.h"
 #include "fs/info_detector.h"
 #include "fs/heart_beat_sender.h"
+#include "rpc/rpc.h"
 #include "master.pb.h"
 #include <sstream>
 #include <stdio.h>
@@ -11,9 +12,10 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <thread>
-#include <brpc/server.h>
-#include <brpc/stream.h>
-#include <brpc/channel.h>
+#include <memory>
+// #include <brpc/server.h>
+// #include <brpc/stream.h>
+// #include <brpc/channel.h>
 
 extent_server::extent_server() {
   VERIFY(pthread_mutex_init(&server_mu_, 0) == 0);
@@ -155,6 +157,38 @@ int extent_server::remove(extent_protocol::extentid_t id, int &)
     // info->set(attr);
 
     return extent_protocol::OK;
+  }
+
+  return extent_protocol::OK;
+}
+
+
+int extent_server::move(const std::vector<extent_protocol::extentid_t>& ids, std::string dst)
+{
+  ScopedLock lm(&server_mu_);
+
+  /* Create a rpc client to connect the dst. */
+  sockaddr_in dst_sin;
+  make_sockaddr(dst.c_str(), &dst_sin);
+  std::unique_ptr<rpcc> ptr_rpc_cl(new rpcc(dst_sin));
+  if (ptr_rpc_cl->bind() != 0) {
+    printf("Move failed: failed to bind the rpc client.\n");
+    return extent_protocol::RPCERR;
+  }
+
+  for (extent_protocol::extentid_t eid : ids) {
+    std::map<extent_protocol::extentid_t, extent*>::iterator it = extent_map_.find(eid);
+
+    if (it != extent_map_.end()) {
+      extent_protocol::status ret = extent_protocol::OK;
+      ret = ptr_rpc_cl->call(extent_protocol::put, eid, it->second->content);
+      
+      if (ret == extent_protocol::OK) {
+        /* move succeeded, remove extent from this server. */
+        delete it->second;
+        extent_map_.erase(it);
+      }
+    }
   }
 
   return extent_protocol::OK;
