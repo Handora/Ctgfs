@@ -30,6 +30,8 @@ class extent_server {
   int remove(extent_protocol::extentid_t id, int &);
   int setattr(extent_protocol::extentid_t id, extent_protocol::attr, int&);
 
+  int move(const std::vector<extent_protocol::extentid_t>& ids, std::string dst);
+
  private:
   pthread_mutex_t server_mu_;
   std::map<extent_protocol::extentid_t, extent*> extent_map_; 

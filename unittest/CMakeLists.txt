@@ -8,4 +8,4 @@ add_subdirectory(raft)
 add_subdirectory(mvcc)
 add_subdirectory(prefix_tree)
 add_subdirectory(wal)
-
+add_subdirectory(move)
