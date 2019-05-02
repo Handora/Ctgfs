@@ -10,7 +10,7 @@ struct fs_info {
 
 class InfoDetector {
  public:
-  static InfoDetector* detector();
+  static InfoDetector* GetInstance();
 
   ~InfoDetector() {
     delete detector_;
