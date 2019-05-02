@@ -167,9 +167,18 @@ int extent_server::move(const std::vector<extent_protocol::extentid_t>& ids, std
 {
   ScopedLock lm(&server_mu_);
 
+  /* parse the dst, ip:port */
+  size_t pos_ = dst.find_last_of(":");
+  if (pos_ == std::string::npos) {
+    /* the dst format is wrong. */
+    return extent_protocol::IOERR;
+  }
+  std::string dst_ip = dst.substr(0, pos_);
+  std::string dst_port = dst.substr(pos_ + 1);
+
   /* Create a rpc client to connect the dst. */
   sockaddr_in dst_sin;
-  make_sockaddr(dst.c_str(), &dst_sin);
+  make_sockaddr(dst_port.c_str(), &dst_sin);
   std::unique_ptr<rpcc> ptr_rpc_cl(new rpcc(dst_sin));
   if (ptr_rpc_cl->bind() != 0) {
     printf("Move failed: failed to bind the rpc client.\n");
@@ -181,7 +190,10 @@ int extent_server::move(const std::vector<extent_protocol::extentid_t>& ids, std
 
     if (it != extent_map_.end()) {
       extent_protocol::status ret = extent_protocol::OK;
-      ret = ptr_rpc_cl->call(extent_protocol::put, eid, it->second->content);
+      int r;
+      ret = ptr_rpc_cl->call(extent_protocol::put, eid, it->second->content, r);
+
+      /* if it does need to check the status of r here? */
       
       if (ret == extent_protocol::OK) {
         /* move succeeded, remove extent from this server. */
