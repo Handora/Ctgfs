@@ -7,3 +7,5 @@ add_subdirectory(raft)
 # add_subdirectory(client)
 add_subdirectory(mvcc)
 add_subdirectory(prefix_tree)
+add_subdirectory(wal)
+
