@@ -1,0 +1,7 @@
+file(GLOB TEST_STORAGE_SRCS "test_*.cc")
+foreach(STORAGE_T ${TEST_STORAGE_SRCS})
+    get_filename_component(STORAGE_T_WE ${STORAGE_T} NAME_WE)
+    add_executable(${STORAGE_T_WE} ${STORAGE_T})
+    target_link_libraries("${STORAGE_T_WE}" gtest_main sst_meta)
+    add_test(NAME "${STORAGE_T_WE}" COMMAND "${STORAGE_T_WE}")
+endforeach()
