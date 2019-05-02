@@ -187,6 +187,15 @@ int extent_server::move(const std::vector<extent_protocol::extentid_t>& ids, std
   std::string dst_ip = dst.substr(0, pos_);
   std::string dst_port = dst.substr(pos_ + 1);
 
+  /* parse the dst, ip:port */
+  size_t pos_ = dst.find_last_of(":");
+  if (pos_ == std::string::npos) {
+    /* the dst format is wrong. */
+    return extent_protocol::IOERR;
+  }
+  std::string dst_ip = dst.substr(0, pos_);
+  std::string dst_port = dst.substr(pos_ + 1);
+
   /* Create a rpc client to connect the dst. */
   sockaddr_in dst_sin;
   make_sockaddr(dst_port.c_str(), &dst_sin);
