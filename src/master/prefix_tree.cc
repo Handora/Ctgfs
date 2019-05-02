@@ -50,7 +50,7 @@ Status PrefixTree::doInsert(PrefixTreeNodePtr cur_node, std::string& path, bool 
   // insert directly
   if(sz == 0) {
     auto child_node = createNode(path, is_dir, cur_node);
-    pushUp(child_node);
+    pushUp(cur_node);
     return Status::OK();
   }
   // split the front
@@ -66,13 +66,16 @@ Status PrefixTree::doInsert(PrefixTreeNodePtr cur_node, std::string& path, bool 
   }
   else {
     if ((*insert_pos)->GetPath() == cur_path) {
-      return Status::PrefixTreeError();
+      auto status = doInsert(*insert_pos, path, is_dir);
+      pushUp(cur_node);
+      return status;
+      // return Status::PrefixTreeError();
     }
     else {
       // can't be split
       if(!status) {
         auto child_node = createNode(cur_path, is_dir, cur_node);
-        pushUp(child_node);
+        pushUp(cur_node);
         return Status::OK();
       }
       else {
@@ -109,7 +112,8 @@ Status PrefixTree::doInsert(PrefixTreeNodePtr cur_node, std::string& path, bool 
           return res;
         }
         else {
-          pushUp(createNode(cur_path + "/" + path, is_dir, cur_node));
+          createNode(cur_path + "/" + path, is_dir, cur_node);
+          pushUp(cur_node);
           return Status::OK();
         }
       }
