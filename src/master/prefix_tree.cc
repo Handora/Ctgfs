@@ -11,6 +11,10 @@ namespace prefix_tree {
 
 using PrefixTreeNodePtr = std::shared_ptr<PrefixTreeNode>;
 
+PrefixTree::PrefixTree() {
+  root_ = createNode("", true);
+}
+
 PrefixTreeNodePtr PrefixTree::GetRoot() const {
   return root_;
 }
@@ -20,11 +24,13 @@ bool PrefixTree::splitPath(std::string& full_path, std::string& split_path) {
   bool flag = true;
   if(split_pos == std::string::npos) {
     flag = false;
+    split_path = full_path;
+    full_path = "";
   }
-  split_path = std::string(full_path.begin(), full_path.begin() + split_pos);
-  if(flag)
-    full_path.erase(full_path.begin() + split_pos + 1, full_path.end());
-  else full_path = "";
+  else {
+    split_path = std::string(full_path.begin(), full_path.begin() + split_pos);
+    full_path.erase(full_path.begin(), full_path.begin() + split_pos + 1);
+  }
   return flag;
 }
 
@@ -89,7 +95,11 @@ Status PrefixTree::doInsert(PrefixTreeNodePtr cur_node, std::string& path, bool 
             tmp_status = splitPath(tmp_path, tmp_split_path);
             status = splitPath(path, cur_path);
           }
-          auto child_node = createNode(common_prefix + "/" + cur_path + "/" + path, is_dir, cur_node);
+          auto gen_path = common_prefix + cur_path;
+          if(!path.empty()) {
+            gen_path += "/" + path;
+          }
+          auto child_node = createNode(gen_path, is_dir, nullptr);
           // earse last '/'
           common_prefix.pop_back();
           SplitFileNode(*insert_pos, child_node, common_prefix);
@@ -104,6 +114,50 @@ Status PrefixTree::doInsert(PrefixTreeNodePtr cur_node, std::string& path, bool 
         }
       }
     }
+  }
+}
+
+Status PrefixTree::Remove(std::string path) {
+  return doRemove(root_, path);
+}
+
+Status PrefixTree::doRemove(PrefixTreeNodePtr cur_node, std::string& path) {
+  if(!cur_node->IsDir()) {
+    return Status::PrefixTreeError();
+  }
+  auto list = cur_node->GetList();
+  std::string cur_path;
+  auto status = splitPath(path, cur_path);
+  auto pos = list.lower_bound(std::make_shared<PrefixTreeFileNode>(cur_path, nullptr));
+  if(pos == list.end()) {
+    return Status::PrefixTreeError();
+  }
+  auto target_dir = (*pos)->GetPath();
+  std::string tmp_str;
+  auto tmp_status = splitPath(target_dir, tmp_str);
+  if(tmp_str == cur_path) {
+    do {
+      if(tmp_status == false && status == false) {
+        cur_node->EraseNode(*pos);
+        list = cur_node->GetList();
+        if(list.size() == 1) {
+          MergeFileNodeToDirNode(*list.begin(), cur_node);
+        }
+        return Status::OK();
+      }
+      if(tmp_status == false) {
+        return doRemove(*pos, path);
+      }
+      if(status == false) {
+        return Status::PrefixTreeError();
+      }
+      status = splitPath(path, cur_path);
+      tmp_status = splitPath(path, cur_path);
+    }while(tmp_str == cur_path);
+    return Status::PrefixTreeError();
+  }
+  else {
+    return Status::PrefixTreeError();
   }
 }
 
@@ -124,9 +178,12 @@ PrefixTreeNodePtr PrefixTree::createNode(const std::string& path, bool is_dir, P
 }
 
 void PrefixTree::pushUp(PrefixTreeNodePtr node) {
-
+  
 }
 
+void PrefixTree::pushDown(PrefixTreeNodePtr node) {
+
+}
 
 } // namespace prefix_tree
 } // namespace ctgfs

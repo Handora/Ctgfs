@@ -1,7 +1,7 @@
 /*
 ** author: fftlover(ltang970618@gmail.com)
 */
-
+#pragma once
 #include <master/prefix_tree_node.h>
 #include <util/status.h>
 #include <memory>
@@ -15,6 +15,7 @@ using PrefixTreeNodePtr = std::shared_ptr<PrefixTreeNode>;
 
 class PrefixTree {
  public:
+  PrefixTree();
   PrefixTreeNodePtr GetRoot() const;
   // absolute path
   // create a new dir or file node
@@ -35,9 +36,11 @@ class PrefixTree {
   // create a new tree node and link to parent
   PrefixTreeNodePtr createNode(const std::string& path, bool is_dir, PrefixTreeNodePtr parent = nullptr);
   Status doInsert(PrefixTreeNodePtr node, std::string& path, bool is_dir);
-  Status doRemove(std::string& path);
+  Status doRemove(PrefixTreeNodePtr node, std::string& path);
   // update info from bottom to top
   void pushUp(PrefixTreeNodePtr node);
+  // update the domain of node
+  void pushDown(PrefixTreeNodePtr node);
 };
 
 

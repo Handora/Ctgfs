@@ -1,7 +1,7 @@
 /*
  * author: fftlover(ltang970618@gmail.com)
 **/
-
+#pragma once
 #include <string>
 #include <vector>
 #include <set>
@@ -30,15 +30,15 @@ void SplitFileNode(PrefixTreeNodePtr origin_file_node, PrefixTreeNodePtr cur_fil
 // abstract base class of tree node
 class PrefixTreeNode { 
  public:
-  PrefixTreeNode() = default;
+  PrefixTreeNode(){};
   PrefixTreeNode(const PrefixTreeNodePtr);
-  virtual ~PrefixTreeNode() = 0;
+  virtual ~PrefixTreeNode() { };
   // overwrite to determin if the node is a dir
   virtual bool IsDir() = 0;
-  virtual std::set<std::shared_ptr<PrefixTreeNode>, decltype(TreeNodeComp)*> GetList();
   virtual PrefixTreeNodePtr InsertNode(PrefixTreeNodePtr);
   virtual PrefixTreeNodePtr EraseNode(PrefixTreeNodePtr);
   virtual unsigned int GetFileAndDirCount() const;
+  virtual std::set<PrefixTreeNodePtr, decltype(TreeNodeComp)*> GetList();
   std::string GetPath() const;
   void SetPath(const std::string&);
   std::shared_ptr<PrefixTreeNode> GetParent() const;

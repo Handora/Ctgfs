@@ -24,8 +24,9 @@ void MergeFileNodeToDirNode(PrefixTreeNodePtr file_node, PrefixTreeNodePtr dir_n
   auto fa = dir_node->GetParent();
   fa->EraseNode(dir_node);
   auto dir_path = dir_node->GetPath();
-  file_node->SetPath(std::move(dir_path + file_node->GetPath()));
+  file_node->SetPath(std::move(dir_path + "/" + file_node->GetPath()));
   file_node->SetParent(fa); 
+  fa->InsertNode(file_node);
 }
 
 // insert A\D
@@ -60,6 +61,27 @@ void SplitFileNode(PrefixTreeNodePtr origin_file_node, PrefixTreeNodePtr cur_fil
 PrefixTreeNode::PrefixTreeNode(const PrefixTreeNodePtr node){
   path_ = node->GetPath();
   parent_ = node->GetParent(); 
+}
+
+PrefixTreeNodePtr PrefixTreeNode::InsertNode(PrefixTreeNodePtr node) {
+  PrefixTreeNodePtr ptr;
+  ptr.reset();
+  return ptr;
+}
+
+PrefixTreeNodePtr PrefixTreeNode::EraseNode(PrefixTreeNodePtr node) {
+  PrefixTreeNodePtr ptr;
+  ptr.reset();
+  return ptr;
+}
+
+unsigned int PrefixTreeNode::GetFileAndDirCount() const {
+  return 0;
+}
+
+std::set<PrefixTreeNodePtr, decltype(TreeNodeComp)*> PrefixTreeNode::GetList() {
+  std::set<PrefixTreeNodePtr, decltype(TreeNodeComp)*> s;
+  return s;
 }
 
 std::string PrefixTreeNode::GetPath() const{
@@ -103,7 +125,7 @@ auto PrefixTreeDirNode::GetList()->decltype(list_) {
 
 PrefixTreeNodePtr PrefixTreeDirNode::InsertNode(PrefixTreeNodePtr node) {
   auto pos = list_.find(node);
-  if(pos != list_.end()) {
+  if(pos == list_.end()) {
     list_.insert(node);
     return node;
   }
@@ -115,6 +137,7 @@ PrefixTreeNodePtr PrefixTreeDirNode::EraseNode(PrefixTreeNodePtr node) {
   auto pos = list_.find(node);
   if(pos == list_.end()) {
     PrefixTreeNodePtr p;
+    p.reset();
     return p;
   }
   list_.erase(pos);
