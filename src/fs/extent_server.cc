@@ -13,6 +13,7 @@
 #include <fcntl.h>
 #include <thread>
 #include <memory>
+#include <unordered_set>
 // #include <brpc/server.h>
 // #include <brpc/stream.h>
 // #include <brpc/channel.h>
@@ -165,7 +166,17 @@ int extent_server::remove(extent_protocol::extentid_t id, int &)
 
 int extent_server::move(const std::vector<extent_protocol::extentid_t>& ids, std::string dst)
 {
-  ScopedLock lm(&server_mu_);
+  std::map<extent_protocol::extentid_t, extent*> extents;
+  /* Since we cannot lock during rpc, we should take extents out. */
+  {
+    ScopedLock lm_1(&server_mu_);
+    for (extent_protocol::extentid_t eid : ids) {
+      std::map<extent_protocol::extentid_t, extent*>::iterator it = extent_map_.find(eid);
+      if (it != extent_map_.end()) {
+        extents.insert(*it);
+      }
+    }
+  }
 
   /* parse the dst, ip:port */
   size_t pos_ = dst.find_last_of(":");
@@ -185,23 +196,33 @@ int extent_server::move(const std::vector<extent_protocol::extentid_t>& ids, std
     return extent_protocol::RPCERR;
   }
 
-  for (extent_protocol::extentid_t eid : ids) {
-    std::map<extent_protocol::extentid_t, extent*>::iterator it = extent_map_.find(eid);
+  std::unordered_set<extent_protocol::extentid_t> deleted_ok;
+  /* to put extents to the target server via rpc. */
+  for (const std::pair<extent_protocol::extentid_t, extent*> extent : extents) {
+    extent_protocol::status ret = extent_protocol::OK;
+    int r;
+    ret = ptr_rpc_cl->call(extent_protocol::put, extent.first, (extent.second)->content, r);
 
-    if (it != extent_map_.end()) {
-      extent_protocol::status ret = extent_protocol::OK;
-      int r;
-      ret = ptr_rpc_cl->call(extent_protocol::put, eid, it->second->content, r);
-
-      /* if it does need to check the status of r here? */
-      
-      if (ret == extent_protocol::OK) {
-        /* move succeeded, remove extent from this server. */
-        delete it->second;
-        extent_map_.erase(it);
-      }
+    /* if it does need to check the status of r here? */
+    
+    if (ret == extent_protocol::OK) {
+      /* move succeeded, mark this extent deleted. */
+      deleted_ok.insert(extent.first);
     }
   }
+
+  /* remove those extents which were moved successfully from current server. */
+  {
+    ScopedLock lm_2(&server_mu_);
+    for (const std::pair<extent_protocol::extentid_t, extent*> extent : extents) {
+      if (deleted_ok.find(extent.first) != deleted_ok.end()) {
+        delete extent_map_[extent.first];
+        extent_map_[extent.first] = nullptr;
+
+        extent_map_.erase(extent.first);
+      } 
+    }
+  } 
 
   return extent_protocol::OK;
 }
