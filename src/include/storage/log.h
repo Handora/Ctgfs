@@ -32,7 +32,7 @@ struct Log {
   }
   Log() {}
   virtual ~Log() {};
-  Status Encode(std::string &bytes) {
+  Status Encode(std::string &bytes) const {
     Status ret = Status::OK();
     bytes.clear();
     bytes += uint64_to_str(lsn);
