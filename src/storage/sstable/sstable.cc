@@ -60,7 +60,8 @@ Status SStable::Append(const Log& log) {
   if (!(ret = log.Encode(tmp)).IsOK()) {
     printf("encode log error\n");
   } else {
-    buf_ += uint64_to_str(tmp.size() + sizeof(uint64_t));
+    uint64_t num = tmp.size() + sizeof(uint64_t);
+    buf_ += std::string((char *)(&num), sizeof(uint64_t));
     buf_ += tmp;
     meta_.data_size_ += tmp.size();
   }
@@ -101,7 +102,6 @@ Status SStable::Flush() {
     printf("fail write file when flush\n");
   } else {
     close(fd);
-    printf("fail write file when flush\n");
   }
 
   return ret;
@@ -122,6 +122,7 @@ Status SSTIterator::Init(const std::string &dir, const std::string &filename, ui
   struct stat st;
 
   fd_ = open((dir + "/" + filename).c_str(), O_RDONLY);
+  lseek(fd_, offset, SEEK_SET);
   if (fd_ < 0) {
     ret = Status::Corruption("can't open file");
     printf("can't open file\n");
