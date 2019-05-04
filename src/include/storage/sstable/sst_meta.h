@@ -31,6 +31,10 @@ class SSTMeta {
   }
   Status Encode(std::string& meta);
   Status Decode(const std::string& meta);
+  Status Read(int fd, uint64_t &readed);
+  Status Read(int fd);
+  Status Write(int fd, uint64_t &writed);
+  Status Write(int fd);
  public:
   Log last_log_;
   uint64_t data_offset_;

@@ -5,6 +5,12 @@
 #include <util/status.h>
 #include <vector>
 #include <iostream>
+#include <sys/types.h>
+#include <unistd.h>
+#include <stdio.h> 
+#include <fcntl.h> 
+#include <assert.h>
+
 
 namespace ctgfs {
 namespace storage {
@@ -26,7 +32,7 @@ struct Log {
   }
   Log() {}
   virtual ~Log() {};
-  Status Encode(std::string &bytes) {
+  Status Encode(std::string &bytes) const {
     Status ret = Status::OK();
     bytes.clear();
     bytes += uint64_to_str(lsn);
@@ -49,12 +55,97 @@ struct Log {
     key = bytes.substr(2 * sizeof(uint64_t) + sizeof(int), size1);
     size2 = str_to_uint64(bytep + 2 * sizeof(uint64_t) + sizeof(int) + size1);
     value = bytes.substr(3 * sizeof(uint64_t) + sizeof(int) + size1, size2);
-    size = 3 * sizeof(uint64_t) + key.size() + value.size() + sizeof(Op);
+    size = size1 + size2 + sizeof(op) + 3 * sizeof(uint64_t);
+    return ret;
+  }
+
+  Status Write(int fd) {
+    Status ret = Status::OK();
+    uint64_t tmp_size = size + sizeof(uint64_t);
+
+    if (write(fd, &tmp_size, sizeof(uint64_t)) < 0) {
+      printf("write fail when write log");
+      ret = Status::Corruption("write fail when write log");
+    } else {
+      std::string tmp_str;
+
+      if (!(ret = Encode(tmp_str)).IsOK()) {
+        printf("Encode fail when write log");
+      } else if (write(fd, tmp_str.c_str(), size) < 0) {
+        printf("write fail when write log");
+        ret = Status::Corruption("write fail when write log");
+      }
+    }
+
+    return ret;
+  }
+
+  Status Write(int fd, uint64_t &writed) {
+    Status ret = Status::OK();
+    writed = size + sizeof(uint64_t);
+
+    if (write(fd, &writed, sizeof(uint64_t)) < 0) {
+      printf("write fail when write log");
+      ret = Status::Corruption("write fail when write log");
+    } else {
+      std::string tmp_str;
+
+      if (!(ret = Encode(tmp_str)).IsOK()) {
+        printf("Encode fail when write log");
+      } else if (write(fd, tmp_str.c_str(), size) < 0) {
+        printf("write fail when write log");
+        ret = Status::Corruption("write fail when write log");
+      }
+    }
+
+    return ret;
+  }
+
+  Status Read(int fd) {
+    Status ret = Status::OK();
+    uint64_t readed = 0;
+
+    if (read(fd, &readed, sizeof(uint64_t)) < 0) {
+      printf("read fail when read log");
+      ret = Status::Corruption("read fail when read log");
+    } else {
+      char *buf = new char[readed - sizeof(uint64_t)];
+      if (read(fd, buf, readed - sizeof(uint64_t)) < 0) {
+        printf("read fail when read log");
+        ret = Status::Corruption("read fail when read log");
+      } else if (!(ret = Decode(std::string(buf, readed - sizeof(uint64_t)))).IsOK()) {
+        printf("decode fail when read log");
+      } else {
+        assert(size == readed - sizeof(uint64_t));
+      }
+    }
+
+    return ret;
+  }
+
+  Status Read(int fd, uint64_t &readed) {
+    Status ret = Status::OK();
+
+    if (read(fd, &readed, sizeof(uint64_t)) < 0) {
+      printf("read fail when read log");
+      ret = Status::Corruption("read fail when read log");
+    } else {
+      char *buf = new char[readed - sizeof(uint64_t)];
+      if (read(fd, buf, readed - sizeof(uint64_t)) < 0) {
+        printf("read fail when read log");
+        ret = Status::Corruption("read fail when read log");
+      } else if (!(ret = Decode(std::string(buf, readed - sizeof(uint64_t)))).IsOK()) {
+        printf("decode fail when read log");
+      } else {
+        assert(size == readed - sizeof(uint64_t));
+      }
+    }
+
     return ret;
   }
 
   uint64_t Size() const {
-    return 3 * sizeof(uint64_t) + key.size() + value.size() + sizeof(Op);
+    return size;
   }
 
   uint64_t lsn;
