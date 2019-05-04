@@ -15,7 +15,7 @@ namespace sstable {
 
 using util::Status;
 using namespace util;
-using namespace storage;;
+using namespace storage;
 
 // TODO: add bloom filter
 class SSTMeta {
