@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <arpa/inet.h>
 
-TEST(MOVETest, Move) {
+TEST(MOVETest, MoveInside) {
 
   int count = 0;
   char* count_env = getenv("RPC_COUNT");
@@ -19,10 +19,9 @@ TEST(MOVETest, Move) {
   extent_server dst; 
 
   server.reg(extent_protocol::get, &dst, &extent_server::get);
-  server.reg(extent_protocol::getattr, &dst, &extent_server::getattr);
   server.reg(extent_protocol::put, &dst, &extent_server::put);
-  server.reg(extent_protocol::remove, &dst, &extent_server::remove);
-  server.reg(extent_protocol::setattr, &dst, &extent_server::setattr);
+  server.reg(extent_protocol::move, &dst, &extent_server::move);
+
 
   extent_server src; 
   int r;
@@ -43,7 +42,7 @@ TEST(MOVETest, Move) {
   std::vector<extent_protocol::extentid_t> to_be_moved{1, 2};
 
   /* test move semantics */
-  EXPECT_EQ(extent_protocol::OK, src.move(to_be_moved, "127.0.0.1:57123"));
+  EXPECT_EQ(extent_protocol::OK, src.move(std::move(to_be_moved), std::move("127.0.0.1:57123"), r));
 
   /* check */
   EXPECT_EQ(extent_protocol::OK, dst.get(1, content));
