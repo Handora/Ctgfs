@@ -7,9 +7,17 @@
 #include <storage/log.h>
 
 namespace ctgfs {
+
+namespace sstable {
+
+class SStable;
+
+} //namespace sstable
+
 namespace storage {
 
 using util::Status;
+using sstable::SStable;
 using namespace util;
 using namespace std;
 
@@ -29,7 +37,8 @@ class Compactor {
 
 class Flusher {
  public:
-  virtual Status Flush(Iterator<Log> &it) = 0;
+  virtual Status Flush(const std::string &dir, const std::string &filename,
+               Iterator<Log> &mem_iter, const Log &last_log, SStable &sst) = 0;
 };
 
 class Store {

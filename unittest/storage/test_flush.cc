@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 #include <storage/sstable/sst_meta.h>
 #include <storage/sstable/sstable.h>
+#include <storage/sstable/flusher.h>
 #include <storage/log.h>
 #include <util/util.h>
 
@@ -11,7 +12,7 @@ namespace sstable {
 
 using namespace storage;
 
-TEST(SSTableTest, DiskIO) {
+TEST(FlushTest, DiskIO) {
   util::MyRemoveDirectoryRecursively("./tmp");
   mkdir("./tmp", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
   Log l = Log(10, storage::Log::PUT, "key", "value");
@@ -25,46 +26,35 @@ TEST(SSTableTest, DiskIO) {
 
   SSTIterator iter;
   sst.CreateIterator(iter);
+
+  SSTFlusher *flusher = new SSTFlusher();
+  flusher->Init();
+  SStable tmp_sst;
+  flusher->Flush("tmp", "test2", iter, l, tmp_sst);
+
+  
+  SSTIterator iter2;
+  tmp_sst.CreateIterator(iter2);
+
   Log log;
-  EXPECT_TRUE(iter.HasNext());
-  iter.Next(log);
+  EXPECT_TRUE(iter2.HasNext());
+  iter2.Next(log);
   EXPECT_EQ("kea", log.key);
 
-  EXPECT_TRUE(iter.HasNext());
-  iter.Next(log);
+  EXPECT_TRUE(iter2.HasNext());
+  iter2.Next(log);
   EXPECT_EQ("keb", log.key);
 
-  EXPECT_TRUE(iter.HasNext());
-  iter.Next(log);
+  EXPECT_TRUE(iter2.HasNext());
+  iter2.Next(log);
   EXPECT_EQ("kec", log.key);
 
-  EXPECT_TRUE(iter.HasNext());
-  iter.Next(log);
+  EXPECT_TRUE(iter2.HasNext());
+  iter2.Next(log);
   EXPECT_EQ("key", log.key);
 
-  EXPECT_FALSE(iter.HasNext());
+  EXPECT_FALSE(iter2.HasNext());
 
-  SStable sst2;
-  sst2.Recover("tmp", "test");
-
-  sst2.CreateIterator(iter);
-  EXPECT_TRUE(iter.HasNext());
-  iter.Next(log);
-  EXPECT_EQ("kea", log.key);
-
-  EXPECT_TRUE(iter.HasNext());
-  iter.Next(log);
-  EXPECT_EQ("keb", log.key);
-
-  EXPECT_TRUE(iter.HasNext());
-  iter.Next(log);
-  EXPECT_EQ("kec", log.key);
-
-  EXPECT_TRUE(iter.HasNext());
-  iter.Next(log);
-  EXPECT_EQ("key", log.key);
-
-  EXPECT_FALSE(iter.HasNext());
 }
 
 }  // namespace sstable
