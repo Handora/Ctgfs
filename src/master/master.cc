@@ -5,6 +5,7 @@
 #include <fs/heart_beat_sender.h>
 #include <master/master.h>
 #include <brpc/server.h>
+#include "rpc/rpc.h"
 
 namespace ctgfs {
 namespace master {
@@ -202,6 +203,8 @@ std::string Master::getInfoByInum(unsigned long long inum) {
   return register_id_to_addr_[inum_to_register_id_[inum]];
 }
 
+int Master::move(std::vector<unsigned long long> inum, std::string src, std::string dst) {
+}
 
 }  // namespace master
 }  // namespace ctgfs

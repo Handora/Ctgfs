@@ -164,7 +164,7 @@ int extent_server::remove(extent_protocol::extentid_t id, int &)
 }
 
 
-int extent_server::move(std::vector<extent_protocol::extentid_t> ids, std::string dst, int& )
+int extent_server::move(std::vector<extent_protocol::extentid_t> ids, std::string dst, int&)
 {
   std::map<extent_protocol::extentid_t, extent*> extents;
   /* Since we cannot lock during rpc, we should take extents out. */
@@ -177,15 +177,6 @@ int extent_server::move(std::vector<extent_protocol::extentid_t> ids, std::strin
       }
     }
   }
-
-  /* parse the dst, ip:port */
-  size_t pos_ = dst.find_last_of(":");
-  if (pos_ == std::string::npos) {
-    /* the dst format is wrong. */
-    return extent_protocol::IOERR;
-  }
-  std::string dst_ip = dst.substr(0, pos_);
-  std::string dst_port = dst.substr(pos_ + 1);
 
   /* parse the dst, ip:port */
   size_t pos_ = dst.find_last_of(":");
@@ -235,4 +226,5 @@ int extent_server::move(std::vector<extent_protocol::extentid_t> ids, std::strin
 
   return extent_protocol::OK;
 }
+
 
