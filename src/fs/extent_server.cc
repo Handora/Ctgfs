@@ -201,7 +201,7 @@ int extent_server::move(std::vector<extent_protocol::extentid_t> ids, std::strin
   for (const std::pair<extent_protocol::extentid_t, extent*> extent : extents) {
     extent_protocol::status ret = extent_protocol::OK;
     int r;
-    ret = ptr_rpc_cl->call(extent_protocol::put, extent.first, (extent.second)->content, r);
+    ret = ptr_rpc_cl->call(extent_protocol::put, extent.first, std::move((extent.second)->content), r);
 
     /* if it does need to check the status of r here? */
     

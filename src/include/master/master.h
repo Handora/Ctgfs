@@ -106,7 +106,7 @@ class Master : public MasterService {
   /* @inum the vector of some inum, files to be moved. */
   /* @src the ip:port of source extent_server. */
   /* @dst the ip:port of target extent_server. */
-  int move(std::vector<unsigned long long> inum, std::string src, std::string dst);
+  int Move(std::vector<unsigned long long> inum, std::string src, std::string dst);
 };
 }  // namespace master
 }  // namespace ctgfs

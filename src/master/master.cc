@@ -6,6 +6,9 @@
 #include <master/master.h>
 #include <brpc/server.h>
 #include "rpc/rpc.h"
+#include "fs/extent_protocol.h"
+#include "client/lock_client.h"
+#include "client/lock_client_cache.h"
 
 namespace ctgfs {
 namespace master {
@@ -203,7 +206,27 @@ std::string Master::getInfoByInum(unsigned long long inum) {
   return register_id_to_addr_[inum_to_register_id_[inum]];
 }
 
-int Master::move(std::vector<unsigned long long> inum, std::string src, std::string dst) {
+int Master::Move(std::vector<unsigned long long> inum, std::string src, std::string dst) {
+  /* temp solution, rpc should be updated. */
+  src = src.substr(src.find_last_of(":") + 1);
+
+  /* Create a rpc client to connect the src extent_server. */
+  sockaddr_in src_sin;
+  make_sockaddr(src.c_str(), &src_sin);
+  std::unique_ptr<rpcc> ptr_rpc_cl(new rpcc(src_sin));
+  if (ptr_rpc_cl->bind() != 0) {
+    printf("Master/move failed: failed to bind the rpc client.\n");
+    return extent_protocol::RPCERR;
+  }
+
+
+  /* lock all the files. */
+  
+  extent_protocol::status ret = extent_protocol::OK;
+  int r;
+  ret = ptr_rpc_cl->call(extent_protocol::move, std::move(inum), std::move(src), r);
+
+  return ret;
 }
 
 }  // namespace master
