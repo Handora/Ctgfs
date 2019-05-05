@@ -9,6 +9,7 @@ namespace ctgfs {
 namespace prefix_tree {
 
 using PrefixTreeNodePtr = std::shared_ptr<PrefixTreeNode>;
+typedef unsigned long long file_sz_t;
 
 bool TreeNodeComp(PrefixTreeNodePtr lhs, PrefixTreeNodePtr rhs) {
   return lhs->GetPath() < rhs->GetPath();
@@ -42,7 +43,7 @@ void SplitFileNode(PrefixTreeNodePtr origin_file_node, PrefixTreeNodePtr cur_fil
  // split B\C
  auto fa = origin_file_node->GetParent();
  fa->EraseNode(origin_file_node);
- PrefixTreeNodePtr dir_ptr = std::make_shared<PrefixTreeDirNode>(common_prefix, origin_file_node->GetParent());
+ PrefixTreeNodePtr dir_ptr = std::make_shared<PrefixTreeDirNode>(common_prefix, -1, origin_file_node->GetParent());
  fa->InsertNode(dir_ptr);
  // generate new C D
  auto changed_origin_file_path = std::string(origin_file_path.begin() + common_prefix.size() + 1,origin_file_path.end()); 
@@ -100,15 +101,40 @@ void PrefixTreeNode::SetParent(PrefixTreeNodePtr parent) {
   parent_ = parent;
 }
 
+void PrefixTreeNode::SetSZ(file_sz_t sz) {
+  sz_ = sz;
+}
+
+file_sz_t PrefixTreeNode::GetSZ() {
+  return sz_;
+}
+
+void PrefixTreeNode::SetDomainId(int id) {
+  domain_id_ = id;
+}
+
+int PrefixTreeNode::GetDomainId() {
+  return domain_id_;
+}
+
+void PrefixTreeNode::clearDomainTag() {
+  domain_id_ = -1;
+}
+
+unsigned long long PrefixTreeNode::GetIno() {
+  return ino_;
+}
+
 // Dir Node
 PrefixTreeDirNode::PrefixTreeDirNode(const PrefixTreeDirNode& node): list_(TreeNodeComp) { 
   path_ = node.GetPath();
   parent_ = node.GetParent();
 }
 
-PrefixTreeDirNode::PrefixTreeDirNode(const std::string& path, const PrefixTreeNodePtr parent ): list_(TreeNodeComp) {
+PrefixTreeDirNode::PrefixTreeDirNode(const std::string& path, const unsigned long long ino, const PrefixTreeNodePtr parent ): list_(TreeNodeComp) {
   path_ = path;
   parent_ = parent;
+  ino_ = ino;
 }
 
 unsigned int PrefixTreeDirNode::GetFileAndDirCount() const {
@@ -117,6 +143,15 @@ unsigned int PrefixTreeDirNode::GetFileAndDirCount() const {
 
 bool PrefixTreeDirNode::IsDir() {
   return true;
+}
+
+void PrefixTreeDirNode::PushDownDomainTag() {
+  if(domain_id_ == -1)
+    return;
+  for(auto node : list_) {
+    node->SetDomainId(domain_id_);
+  }
+  clearDomainTag();
 }
 
 auto PrefixTreeDirNode::GetList()->decltype(list_) {
@@ -150,13 +185,18 @@ PrefixTreeFileNode::PrefixTreeFileNode(const PrefixTreeFileNode& node) {
   parent_ = node.GetParent();
 }
 
-PrefixTreeFileNode::PrefixTreeFileNode(const std::string& path, const PrefixTreeNodePtr parent) {
+PrefixTreeFileNode::PrefixTreeFileNode(const std::string& path, const unsigned long long ino, const PrefixTreeNodePtr parent) {
   path_ = path;
   parent_ = parent;
+  ino_ = ino;
 }
 
 bool PrefixTreeFileNode::IsDir() {
   return false;
+}
+
+void PrefixTreeFileNode::PushDownDomainTag() {
+  return;
 }
 
 } // prefix_tree
