@@ -16,8 +16,8 @@ class SSTFlusher : public Flusher {
  public:
   SSTFlusher() : init_(false) {};
   virtual ~SSTFlusher() {};
-  Status Init();
-  Status Stop();
+  Status Init() override;
+  Status Stop() override;
   Status Flush(const std::string &dir, const std::string &filename,
                Iterator<Log> &mem_iter, const Log &last_log, SStable &sst) override;
  private:

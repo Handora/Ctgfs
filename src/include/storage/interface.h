@@ -37,6 +37,9 @@ class Compactor {
 
 class Flusher {
  public:
+  virtual ~Flusher() {};
+  virtual Status Init() = 0;
+  virtual Status Stop() = 0;
   virtual Status Flush(const std::string &dir, const std::string &filename,
                Iterator<Log> &mem_iter, const Log &last_log, SStable &sst) = 0;
 };

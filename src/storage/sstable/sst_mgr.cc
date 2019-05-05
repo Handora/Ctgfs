@@ -18,7 +18,6 @@ Status SSTMgr::getFilesFromDir_(std::vector<std::string> &files) {
   d = opendir(dir_.c_str());
   if (d) {
     while ((dir = readdir(d)) != NULL) {
-      printf("%s\n", dir->d_name);
       if (dir -> d_type == DT_REG && strcmp(dir->d_name, ".") != 0 && strcmp(dir->d_name, "..") != 0) {
         if (std::string(dir->d_name).find(SST_PREFIX) == 0) {
           files.push_back(std::string(dir->d_name));
@@ -37,6 +36,7 @@ Status SSTMgr::getFilesFromDir_(std::vector<std::string> &files) {
 Status SSTMgr::Init() {
   Status ret = Status::OK();
   std::vector<std::string> files;
+  flusher_ = new SSTFlusher();
   if (!(ret = getFilesFromDir_(files)).IsOK()) {
     printf("get files from dir\n");
   } else if (!(ret = Recover(files)).IsOK()) {
@@ -73,6 +73,9 @@ Status SSTMgr::Flush(Iterator<Log> &iter, const Log& last_log) {
 
   if (!(ret = flusher_->Flush(dir_, nextFileName(), iter, last_log, sst)).IsOK()) {
     printf("flusher flush error\n");
+  } else {
+    std::lock_guard<std::mutex> guard(ssts_mu_);
+    ssts_.push_back(sst);
   }
 
   return ret;
@@ -92,6 +95,7 @@ std::string SSTMgr::nextFileName() {
 Status SSTMgr::Stop() {
   Status ret = Status::OK();
   flusher_->Stop();
+  delete flusher_;
   init_ = false;
   return ret;
 }

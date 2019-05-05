@@ -5,6 +5,7 @@
 #include <storage/interface.h>
 #include <storage/sstable/sst_mgr.h>
 #include <storage/sstable/sstable.h>
+#include <storage/sstable/flusher.h>
 #include <vector>
 #include <string>
 #include <cstring>
