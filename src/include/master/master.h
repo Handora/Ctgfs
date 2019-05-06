@@ -42,6 +42,12 @@ class Master : public MasterService {
                      ::ctgfs::HeartBeatMessageResponse* response,
                      ::google::protobuf::Closure* done);
 
+  /* move is used to achieve load balancing. */
+  /* @inum the vector of some inum, files to be moved. */
+  /* @src the ip:port of source extent_server. */
+  /* @dst the ip:port of target extent_server. */
+  int Move(std::string lock_server_addr, std::vector<unsigned long long> inum, std::string src, std::string dst);
+
  private:
   // char set need hash
   std::string VALID_CHAR_SET;
@@ -101,12 +107,6 @@ class Master : public MasterService {
   // for debug
   void debugRegisterKV(bool, const std::string&);
   void debugRegisterKV(bool, const char*);
-
-  /* move is used to achieve load balancing. */
-  /* @inum the vector of some inum, files to be moved. */
-  /* @src the ip:port of source extent_server. */
-  /* @dst the ip:port of target extent_server. */
-  int Move(std::vector<unsigned long long> inum, std::string src, std::string dst);
 };
 }  // namespace master
 }  // namespace ctgfs
