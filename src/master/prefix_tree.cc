@@ -357,5 +357,31 @@ void PrefixTree::doMove(PrefixTreeNodePtr node, move_t addr, std::vector<std::pa
   }
 }
 
+void PrefixTree::RegistNewKV(int id, unsigned long long sum_memory) {
+  KVInfo info;
+  info.id = id;
+  info.sum_memory = sum_memory;
+  if(kv_list_.size() == 1) {
+    kv_list_.push_back(info);
+    return;
+  }
+  auto nxt_pos = kv_list_.begin();
+  int max_res = 0;
+  decltype(nxt_pos) solve_pos;
+  for(auto it = kv_list_.begin(); it != kv_list_.end(); it ++) {
+    nxt_pos ++;
+    if(nxt_pos->overweighed_tag_cnt > max_res) {
+      max_res = nxt_pos->overweighed_tag_cnt;
+      solve_pos = it;
+    }
+  }
+  if(max_res != 0) {
+    kv_list_.insert(solve_pos, info);
+  }
+  else {
+    kv_list_.push_back(info);
+  }
+}
+
 } // namespace prefix_tree
 } // namespace ctgfs

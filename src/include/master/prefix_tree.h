@@ -28,7 +28,6 @@ struct KVInfo{
   unsigned long long sum_memory;
   // tag
   int overweighed_tag_cnt = 0;
-  int lessweighed_tag_cnt = 0;
   std::list<PrefixTreeNodePtr> domain_node_list;
 };
 
@@ -55,6 +54,8 @@ class PrefixTree {
   // Remove recursively
   Status RemoveTree(std::string path);
   std::vector<std::pair<unsigned long long, move_t> > Adjust(int );
+  // regist the kv to prefix tree
+  void RegistNewKV(int id, unsigned long long sum_memory);
  private:
   PrefixTreeNodePtr root_;
   std::list<KVInfo> kv_list_; 
