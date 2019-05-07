@@ -9,7 +9,7 @@ using util::Status;
 using sstable::SStable;
 using namespace util;
 
-MultiIter::MultiIter(std::vector<Iterator> &iters) {
+MultiIter::MultiIter(std::vector<Iterator*> &iters) {
   Status ret = Status::OK();
   iters_.resize(iters.size());
   logs_.resize(iters.size());
@@ -18,12 +18,10 @@ MultiIter::MultiIter(std::vector<Iterator> &iters) {
   for (auto it = iters.begin(); ret.IsOK() 
       && it != iters.end(); it++, i++) {
     iters_[i] = iters[i];
-    if (iters_[i].HasNext()) {
-      if (!(ret = iters_[i].Next(logs_[i])).IsOK()) {
+    if (iters_[i]->HasNext()) {
+      if (!(ret = iters_[i]->Next(logs_[i])).IsOK()) {
         printf("next iterator error\n");
-      } else {
-        logs_[i].Reset();
-      }
+      } 
     } else {
       logs_[i].Reset();
     }
@@ -32,7 +30,7 @@ MultiIter::MultiIter(std::vector<Iterator> &iters) {
 
 bool MultiIter::HasNext() {
   bool bool_ret = false;
-  for (auto it = logs_.begin(); true == bool_ret 
+  for (auto it = logs_.begin(); false == bool_ret 
       && it != logs_.end(); it++) {
     if (it->IsValid()) {
       bool_ret = true;
@@ -69,11 +67,9 @@ Status MultiIter::Next(Log &log) {
     if (it->IsValid()) {
       if (it->key == choosen.key) {
         while (logs_[i].IsValid() && logs_[i].key == choosen.key) {
-          if (iters_[i].HasNext()) {
-            if (!(ret = iters_[i].Next(logs_[i])).IsOK()) {
+          if (iters_[i]->HasNext()) {
+            if (!(ret = iters_[i]->Next(logs_[i])).IsOK()) {
               printf("next iter error\n");
-            } else {
-              logs_[i].Reset();
             }
           } else {
             logs_[i].Reset();
@@ -85,6 +81,8 @@ Status MultiIter::Next(Log &log) {
 
   if (ret.IsOK() && !exist) {
     ret = Status::InvalidArgument("not exist next");
+  } else if (ret.IsOK()) {
+    log = choosen;
   }
 
   return ret;

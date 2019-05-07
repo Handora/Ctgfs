@@ -18,12 +18,12 @@ using namespace util;
 class MultiIter final : public Iterator {
  public:
   // TODO: use Init 
-  MultiIter(std::vector<Iterator> &ssts);
+  MultiIter(std::vector<Iterator*> &ssts);
   ~MultiIter() {}
   bool HasNext() override;
   Status Next(Log &log) override;
  private: 
-  std::vector<Iterator> iters_;
+  std::vector<Iterator*> iters_;
   std::vector<Log> logs_;
 };
 } // namespace storage
