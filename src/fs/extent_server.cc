@@ -164,7 +164,7 @@ int extent_server::remove(extent_protocol::extentid_t id, int &)
 }
 
 
-int extent_server::move(const std::vector<extent_protocol::extentid_t>& ids, std::string dst)
+int extent_server::move(std::vector<extent_protocol::extentid_t> ids, std::string dst, int&)
 {
   std::map<extent_protocol::extentid_t, extent*> extents;
   /* Since we cannot lock during rpc, we should take extents out. */
@@ -201,7 +201,7 @@ int extent_server::move(const std::vector<extent_protocol::extentid_t>& ids, std
   for (const std::pair<extent_protocol::extentid_t, extent*> extent : extents) {
     extent_protocol::status ret = extent_protocol::OK;
     int r;
-    ret = ptr_rpc_cl->call(extent_protocol::put, extent.first, (extent.second)->content, r);
+    ret = ptr_rpc_cl->call(extent_protocol::put, extent.first, std::move((extent.second)->content), r);
 
     /* if it does need to check the status of r here? */
     
@@ -226,4 +226,5 @@ int extent_server::move(const std::vector<extent_protocol::extentid_t>& ids, std
 
   return extent_protocol::OK;
 }
+
 

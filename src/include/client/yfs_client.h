@@ -18,7 +18,9 @@ class lock_release_user_impl : public lock_release_user {
  public:
   lock_release_user_impl(extent_client* c) : ec(c) {}
   void dorelease(lock_protocol::lockid_t id) {
-    ((extent_client_cache*)ec)->flush((extent_protocol::extentid_t)id);
+    if (ec != nullptr) {
+      ((extent_client_cache*)ec)->flush((extent_protocol::extentid_t)id);
+    }
   }
   ~lock_release_user_impl() { ec = NULL; };
 };
