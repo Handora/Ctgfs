@@ -19,7 +19,7 @@ class SSTFlusher : public Flusher {
   Status Init() override;
   Status Stop() override;
   Status Flush(const std::string &dir, const std::string &filename,
-               Iterator<Log> &mem_iter, const Log &last_log, SStable &sst) override;
+               Iterator &mem_iter, const Log &last_log, SStable &sst) override;
  private:
   bool init_;
 };

@@ -28,7 +28,7 @@ bool operator<(const Log& left, const Log& right) {
   } else if (left.key > right.key) {
     ret = false;
   } else {
-    ret = left.lsn < right.lsn;
+    ret = left.lsn > right.lsn;
   }
 
   return ret;

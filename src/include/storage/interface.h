@@ -7,7 +7,6 @@
 #include <storage/log.h>
 
 namespace ctgfs {
-
 namespace sstable {
 
 class SStable;
@@ -21,13 +20,12 @@ using sstable::SStable;
 using namespace util;
 using namespace std;
 
-template<typename KeyValue>
 class Iterator {
  public:
   Iterator() {};
   virtual ~Iterator() {};
-  virtual bool HasNext() = 0;
-  virtual Status Next(KeyValue &key) = 0;
+  virtual bool HasNext() { return false; }
+  virtual Status Next(Log &key) { return Status::OK(); }
 };
 
 class Compactor {
@@ -41,7 +39,7 @@ class Flusher {
   virtual Status Init() = 0;
   virtual Status Stop() = 0;
   virtual Status Flush(const std::string &dir, const std::string &filename,
-               Iterator<Log> &mem_iter, const Log &last_log, SStable &sst) = 0;
+               Iterator &mem_iter, const Log &last_log, SStable &sst) = 0;
 };
 
 class Store {
