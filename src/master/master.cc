@@ -46,6 +46,10 @@ void Master::AskForIno(::google::protobuf::RpcController* controller,
   return;
 }
 
+void Master::AskForKV() {
+
+}
+
 void Master::AskForKV(::google::protobuf::RpcController* controller,
                       const ::ctgfs::ClientAskForKVByInoRequest* request,
                       ::ctgfs::ClientAskForKVByInoResponse* response,

@@ -9,6 +9,7 @@
 #include <util/status.h>
 #include <memory>
 #include <string>
+include "rpc/rpc.h"
 
 namespace ctgfs {
 namespace heart_beat {
@@ -16,7 +17,8 @@ namespace heart_beat {
 // and use this struct to construct heart_beat_sender
 // the info is as same as heart_beat_proto
 struct HeartBeatInfo {
-  HeartBeatMessageRequest_HeartBeatType type;
+  int type;
+  // HeartBeatMessageRequest_HeartBeatType type; 
   std::string addr;
   unsigned int file_num;
   unsigned int disk_usage;
