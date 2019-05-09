@@ -41,9 +41,10 @@ class SStable {
   std::string buf_;
 };
 
-class SSTIterator : public Iterator<storage::Log> {
+class SSTIterator : public Iterator {
  public:
-  SSTIterator() : init_(false), fd_(-1), pos_(0), size_(0) {};
+  SSTIterator() :
+    init_(false), fd_(-1), pos_(0), size_(0) {};
   virtual ~SSTIterator() {};
   Status Init(const std::string &dir, const std::string &filename, uint64_t offset);
   Status Stop();

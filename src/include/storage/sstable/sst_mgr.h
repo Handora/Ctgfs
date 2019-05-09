@@ -26,7 +26,7 @@ class SSTMgr {
   Status Init();
   Status Recover(const std::vector<std::string> &files);
   Status Stop();
-  Status Flush(Iterator<Log> &iter, const Log& log);
+  Status Flush(Iterator &iter, const Log& log);
  public:
   const std::string SST_PREFIX = std::string("CtgSST");
  private:

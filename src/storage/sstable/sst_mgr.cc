@@ -67,7 +67,7 @@ Status SSTMgr::Recover(const std::vector<std::string> &files) {
   return ret;
 }
 
-Status SSTMgr::Flush(Iterator<Log> &iter, const Log& last_log) {
+Status SSTMgr::Flush(Iterator &iter, const Log& last_log) {
   Status ret = Status::OK();
   SStable sst;
 

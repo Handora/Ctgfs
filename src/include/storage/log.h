@@ -10,7 +10,7 @@
 #include <stdio.h> 
 #include <fcntl.h> 
 #include <assert.h>
-
+#include <limits>
 
 namespace ctgfs {
 namespace storage {
@@ -30,8 +30,10 @@ struct Log {
     : lsn(l), size(0), key(k), value(v), op(o) {
     size = 3 * sizeof(uint64_t) + key.size() + value.size() + sizeof(Op);
   }
-  Log() {}
+  Log() :lsn(std::numeric_limits<uint64_t>::max()), size(0), key(""), value("") {}
   virtual ~Log() {};
+  bool IsValid() { return lsn != std::numeric_limits<uint64_t>::max(); }
+  void Reset() { lsn = std::numeric_limits<uint64_t>::max(); }
   Status Encode(std::string &bytes) const {
     Status ret = Status::OK();
     bytes.clear();

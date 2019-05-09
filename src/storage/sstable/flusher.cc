@@ -23,7 +23,7 @@ Status SSTFlusher::Stop() {
 }
 
 Status SSTFlusher::Flush(const std::string &dir, const std::string &filename,
-               Iterator<Log> &mem_iter, const Log &last_log, SStable &sst) {
+               Iterator &mem_iter, const Log &last_log, SStable &sst) {
   Status ret = Status::OK();
   if (!(ret = sst.Init(dir, filename, last_log)).IsOK()) {
     printf("init sst error\n");
