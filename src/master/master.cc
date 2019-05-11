@@ -11,6 +11,7 @@
 #include "client/extent_client_cache.h"
 #include "client/lock_client.h"
 #include "client/lock_client_cache.h"
+#include <iostream>
 
 namespace ctgfs {
 namespace master {
@@ -44,10 +45,6 @@ void Master::AskForIno(::google::protobuf::RpcController* controller,
   response->set_addr(getInfoByInum(ino));
   // TODO: need add more options
   return;
-}
-
-void Master::AskForKV() {
-
 }
 
 void Master::AskForKV(::google::protobuf::RpcController* controller,
@@ -94,6 +91,13 @@ void Master::updateKVInfo(
     int id = addr_to_register_id_[info->addr];
     kv_info_[id] = info;
   }
+}
+
+void Master::UpdateKVInfo(HeartBeatInfo hbi, int&) {
+  /* when this function is called by rpc, the latest info of extent_server will be passed. */
+
+  std::cout << "type: " << hbi.type << std::endl;
+  std::cout << "addr: " << hbi.addr << std::endl;
 }
 
 bool Master::registerKV(const std::string& ip, const int& port) {

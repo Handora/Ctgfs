@@ -47,6 +47,7 @@ class Master : public MasterService {
   /* @src the ip:port of source extent_server. */
   /* @dst the ip:port of target extent_server. */
   int Move(std::string lock_server_addr, std::vector<unsigned long long> inum, std::string src, std::string dst);
+  void UpdateKVInfo(HeartBeatInfo info, int&);
 
  private:
   // char set need hash
