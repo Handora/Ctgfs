@@ -5,6 +5,12 @@
 #include <fs/heart_beat_sender.h>
 #include <master/master.h>
 #include <brpc/server.h>
+#include "rpc/rpc.h"
+#include "fs/extent_protocol.h"
+#include "client/extent_client.h"
+#include "client/extent_client_cache.h"
+#include "client/lock_client.h"
+#include "client/lock_client_cache.h"
 
 namespace ctgfs {
 namespace master {
@@ -202,6 +208,68 @@ std::string Master::getInfoByInum(unsigned long long inum) {
   return register_id_to_addr_[inum_to_register_id_[inum]];
 }
 
+int Master::Move(std::string lock_server_addr, std::vector<unsigned long long> inum, std::string src, std::string dst) {
+  /* OK is always the first state. */
+  int status = 0;
+
+  auto pos = src.find_last_of(":");
+  /* temp solution, rpc should be updated. */
+  std::string src_ip = src.substr(0, pos);
+  std::string src_port = src.substr(pos + 1);
+
+  /* the same for lock_server */
+  pos = lock_server_addr.find_last_of(":");
+  std::string ls_ip = lock_server_addr.substr(0, pos);
+  std::string ls_port = lock_server_addr.substr(pos + 1);
+
+  /* Create a rpc client to connect the src extent_server. */
+  sockaddr_in src_sin;
+  make_sockaddr(src_port.c_str(), &src_sin);
+  std::unique_ptr<rpcc> ptr_rpc_cl(new rpcc(src_sin));
+  if (ptr_rpc_cl->bind() != 0) {
+    printf("Master/move failed: failed to bind the rpc client.\n");
+    return extent_protocol::RPCERR;
+  }
+
+  /* create a rpc client for lock server. */
+  std::unique_ptr<lock_client> lc(new lock_client_cache(ls_port, nullptr));
+
+  /* lock all the files. */
+  lock_protocol::status s_lock = lock_protocol::OK;
+  bool go_on = true;
+  for (int i = 0; i < (int)inum.size(); ++i) {
+    s_lock = lc->acquire(inum[i]);
+    if (s_lock != lock_protocol::OK) {
+      go_on = false;
+      status = s_lock;
+
+      /* release all locked file. */
+      for (int j = i - 1; j >= 0; --j) {
+        lc->release(inum[j]);
+      }
+    }
+  }
+  
+  /* ERROR occurred when lock files to be moved. */ 
+  if (!go_on) {
+    printf("error: lock file error in master!\n");
+    return status;
+  }
+
+  extent_protocol::status ret = extent_protocol::OK; /* status for rpc call */
+  int r; /* status for move func */
+  ret = ptr_rpc_cl->call(extent_protocol::move, std::move(inum), std::move(dst), r);
+  if (ret != extent_protocol::OK) {
+    printf("error: move operation called by master!\n");
+  }
+
+  /* release all the lock. */
+  for (auto i : inum) {
+    lc->release(i);
+  }
+
+  return ret;
+}
 
 }  // namespace master
 }  // namespace ctgfs

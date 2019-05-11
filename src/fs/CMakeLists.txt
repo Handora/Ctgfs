@@ -10,3 +10,6 @@ target_link_libraries(extent_server rpc brpc proto)
 
 add_executable(heart_beat_sender_main heart_beat_sender_main.cc)
 target_link_libraries(heart_beat_sender_main brpc proto heart_beat_sender master)
+
+add_library(extent_server_for_test extent_server.cc)
+target_link_libraries(extent_server_for_test rpc)

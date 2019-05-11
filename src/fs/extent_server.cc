@@ -3,6 +3,7 @@
 #include "fs/extent_server.h"
 #include "fs/info_detector.h"
 #include "fs/heart_beat_sender.h"
+#include "rpc/rpc.h"
 #include "master.pb.h"
 #include <sstream>
 #include <stdio.h>
@@ -11,9 +12,11 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <thread>
-#include <brpc/server.h>
-#include <brpc/stream.h>
-#include <brpc/channel.h>
+#include <memory>
+#include <unordered_set>
+// #include <brpc/server.h>
+// #include <brpc/stream.h>
+// #include <brpc/channel.h>
 
 extent_server::extent_server() {
   VERIFY(pthread_mutex_init(&server_mu_, 0) == 0);
@@ -159,4 +162,69 @@ int extent_server::remove(extent_protocol::extentid_t id, int &)
 
   return extent_protocol::OK;
 }
+
+
+int extent_server::move(std::vector<extent_protocol::extentid_t> ids, std::string dst, int&)
+{
+  std::map<extent_protocol::extentid_t, extent*> extents;
+  /* Since we cannot lock during rpc, we should take extents out. */
+  {
+    ScopedLock lm_1(&server_mu_);
+    for (extent_protocol::extentid_t eid : ids) {
+      std::map<extent_protocol::extentid_t, extent*>::iterator it = extent_map_.find(eid);
+      if (it != extent_map_.end()) {
+        extents.insert(*it);
+      }
+    }
+  }
+
+  /* parse the dst, ip:port */
+  size_t pos_ = dst.find_last_of(":");
+  if (pos_ == std::string::npos) {
+    /* the dst format is wrong. */
+    return extent_protocol::IOERR;
+  }
+  std::string dst_ip = dst.substr(0, pos_);
+  std::string dst_port = dst.substr(pos_ + 1);
+
+  /* Create a rpc client to connect the dst. */
+  sockaddr_in dst_sin;
+  make_sockaddr(dst_port.c_str(), &dst_sin);
+  std::unique_ptr<rpcc> ptr_rpc_cl(new rpcc(dst_sin));
+  if (ptr_rpc_cl->bind() != 0) {
+    printf("Move failed: failed to bind the rpc client.\n");
+    return extent_protocol::RPCERR;
+  }
+
+  std::unordered_set<extent_protocol::extentid_t> deleted_ok;
+  /* to put extents to the target server via rpc. */
+  for (const std::pair<extent_protocol::extentid_t, extent*> extent : extents) {
+    extent_protocol::status ret = extent_protocol::OK;
+    int r;
+    ret = ptr_rpc_cl->call(extent_protocol::put, extent.first, std::move((extent.second)->content), r);
+
+    /* if it does need to check the status of r here? */
+    
+    if (ret == extent_protocol::OK) {
+      /* move succeeded, mark this extent deleted. */
+      deleted_ok.insert(extent.first);
+    }
+  }
+
+  /* remove those extents which were moved successfully from current server. */
+  {
+    ScopedLock lm_2(&server_mu_);
+    for (const std::pair<extent_protocol::extentid_t, extent*> extent : extents) {
+      if (deleted_ok.find(extent.first) != deleted_ok.end()) {
+        delete extent_map_[extent.first];
+        extent_map_[extent.first] = nullptr;
+
+        extent_map_.erase(extent.first);
+      } 
+    }
+  } 
+
+  return extent_protocol::OK;
+}
+
 
