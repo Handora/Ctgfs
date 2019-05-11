@@ -18,15 +18,6 @@ using PrefixTreeNodePtr = std::shared_ptr<PrefixTreeNode>;
 // for comp two tree node ptr  using their path
 bool TreeNodeComp(PrefixTreeNodePtr lhs, PrefixTreeNodePtr rhs);
 
-// this function will be called
-// when a dir only has one file
-// it will be merged from the bottom to the top
-void MergeFileNodeToDirNode(PrefixTreeNodePtr file_node, PrefixTreeNodePtr dir_node);
-
-// this function will be called
-// when a dir has two or more file
-void SplitFileNode(PrefixTreeNodePtr origin_file_node, PrefixTreeNodePtr cur_file_node, const std::string& prefix);
-
 // abstract base class of tree node
 class PrefixTreeNode { 
  public:
