@@ -15,7 +15,8 @@ class extent_protocol {
     get,
     getattr,
     remove,
-    setattr
+    setattr,
+    move
   };
 
   struct attr {
