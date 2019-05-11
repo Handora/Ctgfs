@@ -1,7 +1,7 @@
 // the extent server implementation
 
 #include "fs/extent_server.h"
-#include "fs/info_detector.h"
+#include "fs/info_collector.h"
 #include "fs/heart_beat_sender.h"
 #include "rpc/rpc.h"
 #include "master.pb.h"
@@ -14,43 +14,37 @@
 #include <thread>
 #include <memory>
 #include <unordered_set>
-// #include <brpc/server.h>
-// #include <brpc/stream.h>
-// #include <brpc/channel.h>
+#include <iostream> /* print debug messae. */
+
+using namespace ctgfs::info_collector;
 
 extent_server::extent_server() {
   VERIFY(pthread_mutex_init(&server_mu_, 0) == 0);
   int res;
   VERIFY(put(0x00000001, "", res) == extent_protocol::OK);
 
+  InfoCollector* collector = InfoCollector::GetInstance();
+  ServerInfo i = collector->Get();
+      std::cout << "consturctor#,  nums: " << i.file_num << ",\t"
+                << "size: " << i.disk_usage << std::endl;
+
+  /* Sender is used to send the heart beat package. */
+  std::thread t_heart_beat([&]() {
+    /* the instance to get the file system info, it likes a global pointer. */
+    InfoCollector* collector = InfoCollector::GetInstance();
   
-  /* the instance to get the file system info, it likes a global pointer. */
- // InfoCollector* info = InfoCollector::GetInstance();
+    while (true) {
+      std::cout << "This is for testing heart_beat: \n";
+      ServerInfo i = collector->Get();
+      std::cout << "nums: " << i.file_num << ",\t"
+                << "size: " << i.disk_usage << std::endl;
+      /* do this loop every 3s. */
+      std::this_thread::sleep_for(std::chrono::seconds(3));
+    }
+  });
 
- // /* a shared_ptr to the HeartBeatInfo. */
- // auto p_heart_beat_info = std::make_shared<ctgfs::heart_beat::HeartBeatInfo>();
-
- // std::string addr = std::string("127.0.0.1:1235");
-
- // /* Sender is used to send the heart beat package. */
- // ctgfs::heart_beat::HeartBeatSender sender(addr, p_heart_beat_info);
- // std::thread t_heart_beat([&]() {
- //   while (true) {
- //     auto p_heart_beat_info = std::make_shared<ctgfs::heart_beat::HeartBeatInfo>(
- //       (ctgfs::heart_beat::HeartBeatInfo){
- //         ctgfs::HeartBeatMessageRequest_HeartBeatType::HeartBeatMessageRequest_HeartBeatType_kInfoUpdate,
- //         std::string("127.0.0.1:1235"),
- //         info->get().file_num, 
- //         info->get().disk_usage
- //       });
- //     sender.SetHeartBeatInfo(p_heart_beat_info);
- //     sender.SendHeartBeat();
- //     std::this_thread::sleep_for(std::chrono::seconds(3));
- //   }
- // });
-
- // /* detach this thread for it should run till the main thread is off. */
- // t_heart_beat.detach();
+ /* detach this thread for it should run till the main thread is off. */
+ t_heart_beat.detach();
 }
 
 extent_server::~extent_server() {}
@@ -60,7 +54,14 @@ int extent_server::put(extent_protocol::extentid_t id, std::string buf, int &)
   ScopedLock lm(&server_mu_);
   std::map<extent_protocol::extentid_t, extent*>::iterator it = extent_map_.find(id);
   unsigned int now = (unsigned int)time(NULL);
+  InfoCollector* collector = InfoCollector::GetInstance();
+  ServerInfo i = collector->Get();
   if (it != extent_map_.end()) {
+    /* update the extent_server info for the file update. */
+    i.disk_usage -= it->second->content.size();
+    i.disk_usage += buf.size();
+    collector->Set(i);
+
     it->second->ctime = now;
     it->second->mtime = now;
     it->second->content = buf;
@@ -71,11 +72,10 @@ int extent_server::put(extent_protocol::extentid_t id, std::string buf, int &)
   extent *value = new extent(now, now, now, buf);
   extent_map_.insert(std::pair<extent_protocol::extentid_t, extent*>(id, value));
 
-  // InfoCollector* info = InfoCollector::GetInstance();
-  // fs_info attr = info->get();
-  // attr.file_num++;
-  // attr.disk_usage += buf.size();
-  // info->set(attr);
+  /* update the extent_server info for the file insertion. */
+  ++i.file_num;
+  i.disk_usage += value->content.size();
+  collector->Set(i);
 
   return extent_protocol::OK;
 }
@@ -130,10 +130,11 @@ int extent_server::setattr(extent_protocol::extentid_t id, extent_protocol::attr
       it->second->content.resize(new_size);
     }
 
-    // InfoCollector* info = InfoCollector::GetInstance();
-    // fs_info attr = info->get();
-    // attr.disk_usage += new_size - old_size;
-    // info->set(attr);
+    /* update the extent_server info for the file size change. */
+    InfoCollector* collector = InfoCollector::GetInstance();
+    ServerInfo i = collector->Get();
+    i.disk_usage += 1LL * new_size - old_size;
+    collector->Set(i);
 
     return extent_protocol::OK;
   }
@@ -151,11 +152,12 @@ int extent_server::remove(extent_protocol::extentid_t id, int &)
     delete it->second;
     extent_map_.erase(it);
 
-    // InfoCollector* info = InfoCollector::GetInstance();
-    // fs_info attr = info->get();
-    // attr.file_num--;
-    // attr.disk_usage -= file_size;
-    // info->set(attr);
+    /* update the extent_server info for the file delete. */
+    InfoCollector* collector = InfoCollector::GetInstance();
+    ServerInfo i = collector->Get();
+    i.file_num--;
+    i.disk_usage -= file_size;
+    collector->Set(i);
 
     return extent_protocol::OK;
   }
@@ -214,13 +216,23 @@ int extent_server::move(std::vector<extent_protocol::extentid_t> ids, std::strin
   /* remove those extents which were moved successfully from current server. */
   {
     ScopedLock lm_2(&server_mu_);
+    unsigned long long file_size = 0;
     for (const std::pair<extent_protocol::extentid_t, extent*> extent : extents) {
       if (deleted_ok.find(extent.first) != deleted_ok.end()) {
         delete extent_map_[extent.first];
         extent_map_[extent.first] = nullptr;
 
         extent_map_.erase(extent.first);
+
+        file_size += extent.second->content.size();
       } 
+
+      /* update the extent_server info for the file move. */
+      InfoCollector* collector = InfoCollector::GetInstance();
+      ServerInfo i = collector->Get();
+      i.file_num -= deleted_ok.size();
+      i.disk_usage -= file_size;
+      collector->Set(i);
     }
   } 
 

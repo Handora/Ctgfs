@@ -1,38 +1,38 @@
 #pragma once
 
-#ifndef __INFO_DETECTOR_H
-#define __INFO_DETECTOR_H
+namespace ctgfs {
+namespace info_collector {
 
-struct fs_info {
-  unsigned int file_num = 0;
-  unsigned int disk_usage = 0;
+struct ServerInfo {
+  unsigned long long file_num = 0;
+  unsigned long long disk_usage = 0;
+  // unsigned long long disk_volume = 0;
 };
 
-class InfoDetector {
+class InfoCollector {
  public:
-  static InfoDetector* GetInstance();
+  static InfoCollector* GetInstance();
 
-  ~InfoDetector() {
-    delete detector_;
-    detector_ = nullptr;
-
+  ~InfoCollector() {
+    delete instance_;
+    instance_ = nullptr;
   }
 
  private:
-  static InfoDetector* detector_;
+  InfoCollector() { i_.file_num = i_.disk_usage = 0; }
+  InfoCollector(const InfoCollector&);
+  InfoCollector& operator=(const InfoCollector&);
 
-  InfoDetector() { }
-  InfoDetector(const InfoDetector&);
-  InfoDetector& operator=(const InfoDetector&);
+  static InfoCollector* instance_;
 
  public:
-  friend class extent_server;
-
-  fs_info get() const;
+  /* setter, getter for i_ */
+  ServerInfo Get() const;
+  void Set(const ServerInfo& atrr);
 
  private:
-  void set(const fs_info& atrr);
-  fs_info attr;
+  /* i_ saves the information of extene_server. */
+  ServerInfo i_;
 };
 
-#endif
+}}
