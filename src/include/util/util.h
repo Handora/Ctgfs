@@ -87,6 +87,8 @@ static int MyRemoveDirectoryRecursively(const char *path) {
 #include <stdio.h>
 
 /* CTGWARN: a simple log utility. by weifeng */
+/* there is 4 log level: error < warn < info < debug*/
+/* Usage: CTG_WARN("write your log here %c", '!') */
 
 /* get the timestamp */
 static inline char *timenow() {
