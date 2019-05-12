@@ -2,7 +2,7 @@
 
 #include "fs/extent_server.h"
 #include "fs/info_collector.h"
-#include "fs/heart_beat_sender.h"
+#include "master/master_protocol.h"
 #include "rpc/rpc.h"
 #include "master.pb.h"
 #include <sstream>
@@ -24,27 +24,7 @@ extent_server::extent_server() {
   VERIFY(put(0x00000001, "", res) == extent_protocol::OK);
 
   InfoCollector* collector = InfoCollector::GetInstance();
-  ServerInfo i = collector->Get();
-      std::cout << "consturctor#,  nums: " << i.file_num << ",\t"
-                << "size: " << i.disk_usage << std::endl;
-
-  /* Sender is used to send the heart beat package. */
-  std::thread t_heart_beat([&]() {
-    /* the instance to get the file system info, it likes a global pointer. */
-    InfoCollector* collector = InfoCollector::GetInstance();
-  
-    while (true) {
-      std::cout << "This is for testing heart_beat: \n";
-      ServerInfo i = collector->Get();
-      std::cout << "nums: " << i.file_num << ",\t"
-                << "size: " << i.disk_usage << std::endl;
-      /* do this loop every 3s. */
-      std::this_thread::sleep_for(std::chrono::seconds(3));
-    }
-  });
-
- /* detach this thread for it should run till the main thread is off. */
- t_heart_beat.detach();
+  collector->SendHeartBeat("62232");
 }
 
 extent_server::~extent_server() {}
@@ -55,7 +35,7 @@ int extent_server::put(extent_protocol::extentid_t id, std::string buf, int &)
   std::map<extent_protocol::extentid_t, extent*>::iterator it = extent_map_.find(id);
   unsigned int now = (unsigned int)time(NULL);
   InfoCollector* collector = InfoCollector::GetInstance();
-  ServerInfo i = collector->Get();
+  InfoCollector::ServerInfo i = collector->Get();
   if (it != extent_map_.end()) {
     /* update the extent_server info for the file update. */
     i.disk_usage -= it->second->content.size();
@@ -132,7 +112,7 @@ int extent_server::setattr(extent_protocol::extentid_t id, extent_protocol::attr
 
     /* update the extent_server info for the file size change. */
     InfoCollector* collector = InfoCollector::GetInstance();
-    ServerInfo i = collector->Get();
+    InfoCollector::ServerInfo i = collector->Get();
     i.disk_usage += 1LL * new_size - old_size;
     collector->Set(i);
 
@@ -154,7 +134,7 @@ int extent_server::remove(extent_protocol::extentid_t id, int &)
 
     /* update the extent_server info for the file delete. */
     InfoCollector* collector = InfoCollector::GetInstance();
-    ServerInfo i = collector->Get();
+    InfoCollector::ServerInfo i = collector->Get();
     i.file_num--;
     i.disk_usage -= file_size;
     collector->Set(i);
@@ -229,7 +209,7 @@ int extent_server::move(std::vector<extent_protocol::extentid_t> ids, std::strin
 
       /* update the extent_server info for the file move. */
       InfoCollector* collector = InfoCollector::GetInstance();
-      ServerInfo i = collector->Get();
+      InfoCollector::ServerInfo i = collector->Get();
       i.file_num -= deleted_ok.size();
       i.disk_usage -= file_size;
       collector->Set(i);

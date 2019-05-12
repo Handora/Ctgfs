@@ -5,13 +5,13 @@
 #include <brpc/channel.h>
 #include <butil/time.h>
 #include <fs.pb.h>
-#include <fs/heart_beat_sender.h>
 #include <master.pb.h>
 #include <map>
 #include <memory>
 #include <queue>
 #include <string>
 #include <vector>
+#include "fs/info_collector.h"
 
 // as a server
 // several part :
@@ -24,7 +24,7 @@
 // (TODO) 6. add redis to help kv write file
 namespace ctgfs {
 namespace master {
-using namespace heart_beat;
+using namespace info_collector;
 class Master : public MasterService {
  public:
   Master();
@@ -37,17 +37,17 @@ class Master : public MasterService {
                       const ::ctgfs::ClientAskForKVByInoRequest* request,
                       ::ctgfs::ClientAskForKVByInoResponse* response,
                       ::google::protobuf::Closure* done);
-  void SendHeartBeat(::google::protobuf::RpcController* controller,
-                     const ::ctgfs::HeartBeatMessageRequest* request,
-                     ::ctgfs::HeartBeatMessageResponse* response,
-                     ::google::protobuf::Closure* done);
+  // void SendHeartBeat(::google::protobuf::RpcController* controller,
+  //                    const ::ctgfs::HeartBeatMessageRequest* request,
+  //                    ::ctgfs::HeartBeatMessageResponse* response,
+  //                    ::google::protobuf::Closure* done);
 
   /* move is used to achieve load balancing. */
   /* @inum the vector of some inum, files to be moved. */
   /* @src the ip:port of source extent_server. */
   /* @dst the ip:port of target extent_server. */
   int Move(std::string lock_server_addr, std::vector<unsigned long long> inum, std::string src, std::string dst);
-  void UpdateKVInfo(HeartBeatInfo info, int&);
+  int UpdateKVInfo(InfoCollector::ServerInfo i, int&);
 
  private:
   // char set need hash
@@ -64,14 +64,14 @@ class Master : public MasterService {
   std::map<int, std::string> inum_to_path_;
   // get register id by addr
   std::map<std::string, int> addr_to_register_id_;
-  std::vector<std::shared_ptr<heart_beat::HeartBeatInfo> > kv_info_;
+  // std::vector<std::shared_ptr<heart_beat::HeartBeatInfo> > kv_info_;
   // every kv connect to master will get a distinct id
   int cur_register_kv_id_ = 0;
   // collect disconnect kv's id
   // to make hash space closer
   std::queue<int> reused_queue_;
   // called when kv info update
-  void updateKVInfo(const std::shared_ptr<ctgfs::heart_beat::HeartBeatInfo>);
+  // void updateKVInfo(const std::shared_ptr<ctgfs::heart_beat::HeartBeatInfo>);
   // fill the info of resp
   // PROBLEM: if a kv disconnect it's file will lose
   // should have a dynamic method to track a kv's connect and disconnect
