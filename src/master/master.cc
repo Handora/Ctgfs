@@ -15,15 +15,51 @@
 
 namespace ctgfs {
 namespace master {
-
+using namespace ::ctgfs::prefix_tree;
 Master::Master() {
   for (int i = 0; i < 26; i++) {
     VALID_CHAR_SET.push_back('a' + i);
     VALID_CHAR_SET.push_back('A' + i);
   }
+  t_ = std::make_shared<PrefixTree>();
+  adjust_thread_ = std::thread([&](){
+    while(!stop_) {
+      auto score = calculateScore(t_->GetAdjustContext());
+      auto move_op = t_->Adjust(score);
+      sort(move_op.begin(), move_op.end(), [](std::pair<unsigned long long, std::pair<int, int> > a, std::pair<unsigned long long, std::pair<int, int> > b) {
+        return a.second < b.second;
+      });
+      if(move_op.empty()) {
+        continue;
+      }
+      std::vector<unsigned long long> pip_line;
+      pip_line.push_back(move_op[0].first);
+      std::pair<int, int> op_addr = move_op[0].second;
+      for(auto i = 1; i < move_op.size(); i ++) {
+        if(move_op[i].second == op_addr) {
+          pip_line.push_back(move_op[i].first);
+        }
+        else {
+          auto lock_addr = "";
+          Move(lock_addr, pip_line, register_id_to_addr_[op_addr.first], register_id_to_addr_[op_addr.second]);
+          pip_line.clear();
+          pip_line.push_back(move_op[i].first);
+          op_addr = move_op[i].second;
+        }
+      }
+      if(!pip_line.empty()) {
+        auto lock_addr = "";
+        Move(lock_addr, pip_line, register_id_to_addr_[op_addr.first], register_id_to_addr_[op_addr.second]);
+      }
+      std::this_thread::sleep_for(std::chrono::seconds(3));
+    }
+  });
 }
 
-Master::~Master() {}
+Master::~Master() {
+  stop_ = true;
+  adjust_thread_.join();
+}
 
 void Master::AskForIno(::google::protobuf::RpcController* controller,
                        const ::ctgfs::ClientAskForInoRequest* request,
@@ -282,6 +318,16 @@ int Master::Move(std::string lock_server_addr, std::vector<unsigned long long> i
   }
 
   return ret;
+}
+
+int Master::calculateScore(std::vector<std::shared_ptr<AdjustContext> >* context_vec) {
+  unsigned long long sum;
+  unsigned long long cur_sum;
+  for(auto context : (*context_vec)) {
+    cur_sum += context->cur_memory;
+    sum += context->info->sum_memory;
+  }
+  return (1.0 * cur_sum) / (sum);
 }
 
 }  // namespace master

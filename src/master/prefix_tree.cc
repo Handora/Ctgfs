@@ -100,11 +100,19 @@ void SplitFileNode(PrefixTree* t, PrefixTreeNodePtr origin_file_node, PrefixTree
 
 
 PrefixTree::PrefixTree() {
-  root_ = createNode("", 0, true);
+  int kv = -1;
+  root_ = createNode("", 0, true, kv);
 }
 
 PrefixTreeNodePtr PrefixTree::GetRoot() const {
   return root_;
+}
+
+std::vector<std::shared_ptr<AdjustContext> >* PrefixTree::GetAdjustContext() {
+  if(has_get_context_)
+    return &adjust_context_vec_;
+  calculateAdjustContext();
+  return &adjust_context_vec_;
 }
 
 bool PrefixTree::splitPath(std::string& full_path, std::string& split_path) {
@@ -122,11 +130,12 @@ bool PrefixTree::splitPath(std::string& full_path, std::string& split_path) {
   return flag;
 }
 
-Status PrefixTree::Create(std::string path, unsigned long long ino, bool is_dir, unsigned long long node_sz) {
-  return doInsert(root_, ino, path, is_dir, node_sz, -1);
+Status PrefixTree::Create(std::string path, unsigned long long ino, bool is_dir, unsigned long long node_sz, int& kv_id) {
+  kv_id = -1;
+  return doInsert(root_, ino, path, is_dir, node_sz, kv_id);
 }
 
-Status PrefixTree::doInsert(PrefixTreeNodePtr cur_node, unsigned long long ino, std::string& path, bool is_dir, unsigned long long node_sz, int domain_id) {
+Status PrefixTree::doInsert(PrefixTreeNodePtr cur_node, unsigned long long ino, std::string& path, bool is_dir, unsigned long long node_sz, int& domain_id) {
   // if node isn't a dir
   // and need visit its child
   // error
@@ -140,7 +149,7 @@ Status PrefixTree::doInsert(PrefixTreeNodePtr cur_node, unsigned long long ino, 
   // no child 
   // insert directly
   if(sz == 0) {
-    auto child_node = createNode(path, ino, is_dir, cur_node, node_sz, domain_id);
+    auto child_node = createNode(path, ino, is_dir, domain_id, cur_node, node_sz);
     pushUp(cur_node);
     return Status::OK();
   }
@@ -154,7 +163,7 @@ Status PrefixTree::doInsert(PrefixTreeNodePtr cur_node, unsigned long long ino, 
     auto gen_path = cur_path;
     if(!path.empty())
       gen_path += "/" + path;
-    auto child_node = createNode(gen_path, ino, is_dir, cur_node, node_sz, domain_id);
+    auto child_node = createNode(gen_path, ino, is_dir, domain_id, cur_node, node_sz);
     pushUp(cur_node);
     return Status::OK();
   }
@@ -168,7 +177,7 @@ Status PrefixTree::doInsert(PrefixTreeNodePtr cur_node, unsigned long long ino, 
     else {
       // can't be split
       if(!status) {
-        auto child_node = createNode(cur_path, ino, is_dir, cur_node, node_sz, domain_id);
+        auto child_node = createNode(cur_path, ino, is_dir, domain_id, cur_node, node_sz);
         pushUp(cur_node);
         return Status::OK();
       }
@@ -198,17 +207,19 @@ Status PrefixTree::doInsert(PrefixTreeNodePtr cur_node, unsigned long long ino, 
           if(!path.empty()) {
             gen_path += "/" + path;
           }
-          auto child_node = createNode(gen_path, ino, is_dir, nullptr, node_sz, domain_id);
+          auto child_node = createNode(gen_path, ino, is_dir, domain_id, nullptr, node_sz);
+          if(domain_id == -1)
+            domain_id = (*insert_pos)->GetDomainId();
           // earse last '/'
           common_prefix.pop_back();
           SplitFileNode(this, *insert_pos, child_node, common_prefix);
-          std::string p(cur_path + "/" + path);
+          // std::string p(cur_path + "/" + path);
           // auto res = doInsert(*insert_pos, p, is_dir);
           pushUp(cur_node);
           return Status::OK();
         }
         else {
-          createNode(cur_path + "/" + path, ino, is_dir, cur_node, node_sz, domain_id);
+          createNode(cur_path + "/" + path, ino, is_dir, domain_id, cur_node, node_sz);
           pushUp(cur_node);
           return Status::OK();
         }
@@ -263,7 +274,7 @@ Status PrefixTree::doRemove(PrefixTreeNodePtr cur_node, std::string& path) {
   }
 }
 
-PrefixTreeNodePtr PrefixTree::createNode(const std::string& path, unsigned long long ino, bool is_dir, PrefixTreeNodePtr parent, unsigned long long sz, int domain_id) {
+PrefixTreeNodePtr PrefixTree::createNode(const std::string& path, unsigned long long ino, bool is_dir, int& domain_id, PrefixTreeNodePtr parent, unsigned long long sz) {
   PrefixTreeNodePtr new_node;
   if(is_dir) {
     new_node = std::make_shared<PrefixTreeDirNode>(path, ino, parent);
@@ -271,45 +282,57 @@ PrefixTreeNodePtr PrefixTree::createNode(const std::string& path, unsigned long 
   else {
     new_node = std::make_shared<PrefixTreeFileNode>(path, ino, parent);
   }
+  new_node->SetSZ(sz);
+  PrefixTreeNodePtr ptr;
   if(parent != nullptr) {
     if(parent->IsDir()) {
-      parent->InsertNode(new_node);
       if(domain_id == -1) {
         const auto& list = parent->GetList();
-        auto pos = list.lower_bound(new_node);
-        if(pos == list.end()) {
-          domain_id = (*(list.rbegin()))->GetDomainId();
-        }
-        else {
-          domain_id = (*pos)->GetDomainId();
-        }
-      }
-    }
-  }
-  new_node->SetSZ(sz);
-  if(domain_id == -1) {
-    new_node->SetDomainId(domain_id);
-    for(auto& ele : kv_list_) {
-      if(ele.id == domain_id) {
-        auto& node_list = ele.domain_node_list;
-        auto pos = node_list.end();
-        for(auto it = node_list.begin(); it != node_list.end(); it ++) {
-          if((*it)->GetPath() > path) {
+        auto pos = list.end();
+        for(auto it = list.begin();it != list.end(); it++) {
+          if((*pos)->GetPath() >= path) {
             break;
           }
           pos = it;
         }
-        if(pos == node_list.end()) {
-          node_list.push_front(new_node);
+        // auto pos = list.lower_bound(new_node);
+        std::pair<int, PrefixTreeNode*> domain_info;
+        if(pos == list.end()) {
+          // domain_id = (*(list.rbegin()))->GetDomainId();
+          domain_info = (*(list.begin()))->FindNearestDomainId(true);
         }
         else {
-          node_list.insert(pos, new_node);
+          // domain_id = (*pos)->GetDomainId();
+          domain_info = (*(list.rbegin()))->FindNearestDomainId(false);
         }
-        break;
+        domain_id = domain_info.first;
+        auto domain_ptr = domain_info.second;
+        new_node->SetDomainId(domain_id);
+        for(auto& ele : kv_list_) {
+          if(ele.id == domain_id) {
+            auto& node_list = ele.domain_node_list;
+            auto pos = node_list.end();
+            for(auto it = node_list.begin(); it != node_list.end(); it ++) {
+              // if((*it)->GetPath() > path) {
+              if((*it).get() == domain_ptr) {
+                break;
+              }
+              pos = it;
+            }
+            if(pos == node_list.end()) {
+              node_list.push_front(new_node);
+            }
+            else {
+              node_list.insert(pos, new_node);
+            }
+            break;
+          }
+        }
       }
+      parent->InsertNode(new_node);
     }
   }
-  return new_node;
+    return new_node;
 }
 
 void PrefixTree::pushUp(PrefixTreeNodePtr node) {
@@ -325,16 +348,22 @@ void PrefixTree::pushDown(PrefixTreeNodePtr node) {
 
 }
 
-std::vector<std::pair<unsigned long long, PrefixTree::move_t> > PrefixTree::Adjust(int target_score) {
-  std::vector<std::shared_ptr<AdjustContext> > context_list;
+void PrefixTree::calculateAdjustContext() {
+  if(has_get_context_ == false)
+    return;
   for(auto& ele : kv_list_) {
     auto ptr = std::make_shared<AdjustContext>();
     ptr->info = &ele;
     ptr->has_been_push_front = false;
     ptr->cur_memory = calculateSum(ptr->info);
     ptr->score = calculateScore(ptr->cur_memory, (ptr->info)->sum_memory);
-    context_list.push_back(ptr);
+    adjust_context_vec_.push_back(ptr);
   }
+  has_get_context_ = true;
+}
+
+std::vector<std::pair<unsigned long long, PrefixTree::move_t> > PrefixTree::Adjust(int target_score) {
+  std::vector<std::shared_ptr<AdjustContext> > context_list = *GetAdjustContext();
   std::vector<std::pair<unsigned long long, move_t> >op_res;
   for(int i = 0;i < (int)context_list.size(); i ++) {
     auto context = context_list[i];
@@ -442,6 +471,7 @@ push:
       }
     }
   }
+  has_get_context_ = false;
   std::reverse(op_res.begin(), op_res.end());
   return op_res;
 }

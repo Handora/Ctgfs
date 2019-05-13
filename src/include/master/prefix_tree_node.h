@@ -28,6 +28,7 @@ class PrefixTreeNode {
   // overwrite to determin if the node is a dir
   virtual bool IsDir() = 0;
   virtual void PushDownDomainTag() = 0;
+  virtual std::pair<int, PrefixTreeNode*> FindNearestDomainId(bool left = true) = 0;
   virtual PrefixTreeNodePtr InsertNode(PrefixTreeNodePtr);
   virtual PrefixTreeNodePtr EraseNode(PrefixTreeNodePtr);
   virtual unsigned int GetFileAndDirCount() const;
@@ -67,6 +68,7 @@ class PrefixTreeDirNode: public PrefixTreeNode {
   ~PrefixTreeDirNode() {}
   bool IsDir();
   void PushDownDomainTag();
+  std::pair<int, PrefixTreeNode*> FindNearestDomainId(bool left);
   unsigned int GetFileAndDirCount() const;
   std::set<PrefixTreeNodePtr, decltype(TreeNodeComp)*> GetList();
   PrefixTreeNodePtr InsertNode(PrefixTreeNodePtr node);
@@ -83,6 +85,7 @@ class PrefixTreeFileNode: public PrefixTreeNode {
   ~PrefixTreeFileNode() {}
   bool IsDir();
   void PushDownDomainTag();
+  std::pair<int, PrefixTreeNode*> FindNearestDomainId(bool left);
 };
 
 } // namespace prefix_tree
