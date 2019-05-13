@@ -2,7 +2,6 @@
 * author: OneDay_(ltang970618@gmail.com)
 **/
 #include <butil/logging.h>
-#include <fs/heart_beat_sender.h>
 #include <master/master.h>
 #include <brpc/server.h>
 #include "rpc/rpc.h"
@@ -11,11 +10,11 @@
 #include "client/extent_client_cache.h"
 #include "client/lock_client.h"
 #include "client/lock_client_cache.h"
+#include <iostream>
+#include "master/master_protocol.h"
 
 namespace ctgfs {
 namespace master {
-
-using namespace heart_beat;
 
 Master::Master() {
   for (int i = 0; i < 26; i++) {
@@ -61,7 +60,7 @@ void Master::AskForKV(::google::protobuf::RpcController* controller,
   response->set_addr(getInfoByInum(ino));
   return;
 }
-
+/*
 void Master::SendHeartBeat(::google::protobuf::RpcController* controller,
                            const ::ctgfs::HeartBeatMessageRequest* request,
                            ::ctgfs::HeartBeatMessageResponse* response,
@@ -91,14 +90,26 @@ void Master::updateKVInfo(
     kv_info_[id] = info;
   }
 }
+*/
 
+int Master::UpdateKVInfo(InfoCollector::ServerInfo i, int&) {
+  /* when this function is called by rpc, the latest info of extent_server will be passed. */
+  std::cout << "called by rpc:\n" << "num: " << i.file_num <<  ", size: " << i.disk_usage
+  << std::endl;
+
+  return master_protocol::OK;
+}
+
+/*
 bool Master::registerKV(const std::string& ip, const int& port) {
   std::string addr(ip.begin(), ip.end());
   std::string port_str = std::to_string(port);
   addr += std::string(":") + port_str;
   return registerKV(addr);
 }
+*/
 
+/*
 bool Master::registerKV(const std::string& addr) {
   if (addr_to_register_id_.find(addr) != addr_to_register_id_.end()) {
     debugRegisterKV(true, "Duplicated Regist KV\n");
@@ -113,7 +124,9 @@ bool Master::registerKV(const std::string& addr) {
   doRegister(addr, nxt_id);
   return true;
 }
+*/
 
+/*
 int Master::getNewRegisterID() {
   // LOG(INFO) << "generating regist ID" << std::endl;
   if (!reused_queue_.empty()) {
@@ -125,7 +138,7 @@ int Master::getNewRegisterID() {
   kv_info_.push_back(std::make_shared<heart_beat::HeartBeatInfo>());
   return cur_register_kv_id_++;
 }
-
+*/
 void Master::doRegister(const std::string& addr, const int& register_id) {
   register_id_to_addr_[register_id] = addr;
   addr_to_register_id_[addr] = register_id;

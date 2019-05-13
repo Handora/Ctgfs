@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 namespace ctgfs {
@@ -80,3 +81,82 @@ static int MyRemoveDirectoryRecursively(const char *path) {
 
 }  // namespace util
 }  // namespace ctgfs
+
+#include <time.h>
+#include <string.h>
+#include <stdio.h>
+
+/* CTGWARN: a simple log utility. by weifeng */
+/* there is 4 log level: error < warn < info < debug*/
+/* Usage: CTG_WARN("write your log here %c", '!') */
+
+/* get the timestamp */
+static inline char *timenow() {
+    static char buffer[64];
+    time_t rawtime;
+    struct tm *timeinfo;
+    
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
+    
+    strftime(buffer, 64, "%Y-%m-%d %H:%M:%S", timeinfo);
+    
+    return buffer;
+}
+
+#define ERROR_TAG       "ERROR"
+#define WARN_TAG        "WARN"
+#define INFO_TAG        "INFO"
+#define DEBUG_TAG       "DEBUG"
+
+/* cut the directory like 'util/' */
+#define _FILE strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__
+
+/* the format of the log. */
+#define LOG_FMT             "%s:| %-6s | %-18s | %s:%d | "
+
+#define LOG_ARGS(LOG_TAG)   timenow(), LOG_TAG, _FILE, __FUNCTION__, __LINE__
+
+/* add \n for each log. */
+#define NEWLINE     "\n"
+
+/* the print function */
+#define PRINTFUNCTION(format, ...)      fprintf(stderr, format, __VA_ARGS__)
+
+/* the higher the log level is, the more details you will get. */
+#define ERROR_LEVEL     0x01
+#define WARN_LEVEL      0x02
+#define INFO_LEVEL      0x03
+#define DEBUG_LEVEL     0x04
+
+#ifndef LOG_LEVEL
+#define LOG_LEVEL   DEBUG_LEVEL
+#endif
+
+/* the log is DEBUG level, 0x04. */
+#if LOG_LEVEL >= DEBUG_LEVEL
+#define CTG_DEBUG(message, args...)    PRINTFUNCTION(LOG_FMT message NEWLINE, LOG_ARGS(DEBUG_TAG), ## args)
+#else
+#define CTG_DEBUG(message, args...)
+#endif
+
+/* the log is INFO level, 0x03. */
+#if LOG_LEVEL >= INFO_LEVEL
+#define CTG_INFO(message, args...)     PRINTFUNCTION(LOG_FMT message NEWLINE, LOG_ARGS(INFO_TAG), ## args)
+#else
+#define CTG_INFO(message, args...)
+#endif
+
+/* the log is WARN level, 0x02. */
+#if LOG_LEVEL >= WARN_LEVEL
+#define CTG_WARN(message, args...)     PRINTFUNCTION(LOG_FMT message NEWLINE, LOG_ARGS(WARN_TAG), ## args)
+#else
+#define CTG_WARN(message, args...)
+#endif
+
+/* the log ERROR level, 0x01. */
+#if LOG_LEVEL >= ERROR_LEVEL
+#define CTG_ERROR(message, args...)    PRINTFUNCTION(LOG_FMT message NEWLINE, LOG_ARGS(ERROR_TAG), ## args)
+#else
+#define CTG_ERROR(message, args...)
+#endif
