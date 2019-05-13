@@ -330,6 +330,39 @@ PrefixTreeNodePtr PrefixTree::createNode(const std::string& path, unsigned long 
         }
       }
       parent->InsertNode(new_node);
+      if(domain_id == -1) {
+        const auto& list = parent->GetList();
+        auto pos = list.lower_bound(new_node);
+        if(pos == list.end()) {
+          domain_id = (*(list.rbegin()))->GetDomainId();
+        }
+        else {
+          domain_id = (*pos)->GetDomainId();
+        }
+      }
+    }
+  }
+  new_node->SetSZ(sz);
+  if(domain_id == -1) {
+    new_node->SetDomainId(domain_id);
+    for(auto& ele : kv_list_) {
+      if(ele.id == domain_id) {
+        auto& node_list = ele.domain_node_list;
+        auto pos = node_list.end();
+        for(auto it = node_list.begin(); it != node_list.end(); it ++) {
+          if((*it)->GetPath() > path) {
+            break;
+          }
+          pos = it;
+        }
+        if(pos == node_list.end()) {
+          node_list.push_front(new_node);
+        }
+        else {
+          node_list.insert(pos, new_node);
+        }
+        break;
+      }
     }
   }
     return new_node;

@@ -57,6 +57,7 @@ TEST(PrefixTreeTest, PrefixTree) {
 
   t->Create("a/z/b/d", 4, false, 1, kv_id);
   EXPECT_EQ(kv_id, 1);
+
   list = (t->GetRoot())->GetList();
   EXPECT_EQ(list.size(), 1);
   for(auto ele : list) {

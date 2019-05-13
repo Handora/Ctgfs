@@ -85,6 +85,7 @@ class PrefixTree {
   // else return false
   bool splitPath(std::string& full_path, std::string& split_path);
   // create a new tree node and link to parent
+
   PrefixTreeNodePtr createNode(const std::string& path, unsigned long long ino, bool is_dir, int& domain_id, PrefixTreeNodePtr parent = nullptr, unsigned long long sz = 0);
   Status doInsert(PrefixTreeNodePtr node, unsigned long long ino, std::string& path, bool is_dir, unsigned long long sz, int& domain_id);
   Status doRemove(PrefixTreeNodePtr node, std::string& path);
