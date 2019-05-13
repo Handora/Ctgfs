@@ -2,16 +2,36 @@
  * author: fftlover(ltang970618@gmail.com)
 **/
 
-#include <fs/heart_beat_sender.h>
-#include <master/master.h>
-#include <brpc/server.h>
+#include "master/master.h"
+#include "master/master_protocol.h"
+#include "rpc/rpc.h"
 
-int main() {
-  brpc::Server server;
-  ::ctgfs::master::Master master;
-  server.AddService(&master, brpc::SERVER_DOESNT_OWN_SERVICE);
-  brpc::ServerOptions options;
-  std::string addr = std::string("127.0.0.1:1234");
-  server.Start(addr.c_str(), &options);
-  server.RunUntilAskedToQuit();
+using namespace ctgfs::master;
+
+int
+main(int argc, char *argv[])
+{
+  int count = 0;
+
+  if(argc != 2){
+    fprintf(stderr, "Usage: %s port\n", argv[0]);
+    exit(1);
+  }
+
+  setvbuf(stdout, NULL, _IONBF, 0);
+
+  char *count_env = getenv("RPC_COUNT");
+  if(count_env != NULL){
+    count = atoi(count_env);
+  }
+
+  rpcs server(atoi(argv[1]), count);
+
+  Master ms;
+
+  server.reg(master_protocol::heart_beat, &ms, &Master::UpdateKVInfo);
+
+  while(1)
+    sleep(1000);
 }
+

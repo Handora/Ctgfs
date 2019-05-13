@@ -5,7 +5,7 @@
 
 #include <string>
 #include <map>
-#include "extent_protocol.h"
+#include "fs/extent_protocol.h"
 #include "rpc/rpc.h"
 
 class extent_client {

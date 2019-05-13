@@ -1,4 +1,6 @@
-// Authors: Chen Qian(qcdsr970209@gmail.com)
+/*
+ * author: wfgu(peter.wfgu@gmail.com)
+ * */
 
 #include <gtest/gtest.h>
 #include <mvcc/mvcc.h>

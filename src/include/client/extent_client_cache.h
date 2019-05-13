@@ -5,7 +5,7 @@
 
 #include <string>
 #include <map>
-#include "client/extent_protocol.h"
+#include "fs/extent_protocol.h"
 #include "client/extent_client.h"
 #include "client/lock_client_cache.h"
 
