@@ -30,6 +30,7 @@ main(int argc, char *argv[])
   Master ms;
 
   server.reg(master_protocol::heart_beat, &ms, &Master::UpdateKVInfo);
+  server.reg(master_protocol::regist, &ms, &Master::Regist);
 
   while(1)
     sleep(1000);

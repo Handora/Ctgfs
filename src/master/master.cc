@@ -35,7 +35,7 @@ Master::Master() {
       std::vector<unsigned long long> pip_line;
       pip_line.push_back(move_op[0].first);
       std::pair<int, int> op_addr = move_op[0].second;
-      for(auto i = 1; i < move_op.size(); i ++) {
+      for(auto i = 1; i < (int)move_op.size(); i ++) {
         if(move_op[i].second == op_addr) {
           pip_line.push_back(move_op[i].first);
         }
@@ -96,6 +96,12 @@ void Master::AskForKV(::google::protobuf::RpcController* controller,
   response->set_addr(getInfoByInum(ino));
   return;
 }
+
+void Master::Regist(const std::string& addr) {
+  auto id = getNewRegisterID();
+  doRegister(addr, id);
+}
+
 /*
 void Master::SendHeartBeat(::google::protobuf::RpcController* controller,
                            const ::ctgfs::HeartBeatMessageRequest* request,
@@ -162,19 +168,19 @@ bool Master::registerKV(const std::string& addr) {
 }
 */
 
-/*
 int Master::getNewRegisterID() {
   // LOG(INFO) << "generating regist ID" << std::endl;
+  std::unique_lock<std::mutex> lck(regist_lock_);
   if (!reused_queue_.empty()) {
     auto id = reused_queue_.front();
     reused_queue_.pop();
-    kv_info_[id] = std::make_shared<heart_beat::HeartBeatInfo>();
+    // kv_info_[id] = std::make_shared<heart_beat::HeartBeatInfo>();
     return id;
   }
-  kv_info_.push_back(std::make_shared<heart_beat::HeartBeatInfo>());
+  // kv_info_.push_back(std::make_shared<heart_beat::HeartBeatInfo>());
   return cur_register_kv_id_++;
 }
-*/
+
 void Master::doRegister(const std::string& addr, const int& register_id) {
   register_id_to_addr_[register_id] = addr;
   addr_to_register_id_[addr] = register_id;
@@ -220,6 +226,7 @@ void Master::hashValueToRegisterID(int& val) {
 }
 
 void Master::unregisterKV(const int& regist_id) { doUnregister(regist_id); }
+
 
 void Master::doUnregister(const int& register_id) {
   if (register_id_to_addr_.find(register_id) == register_id_to_addr_.end())
