@@ -56,9 +56,11 @@ class PrefixTree {
   typedef std::pair<int,int> move_t;
   PrefixTree();
   PrefixTreeNodePtr GetRoot() const;
+  // get context
+  std::vector<std::shared_ptr<AdjustContext> >* GetAdjustContext();
   // absolute path
   // create a new dir or file node
-  Status Create(std::string path, unsigned long long inum, bool is_dir, unsigned long long sz);
+  Status Create(std::string path, unsigned long long inum, bool is_dir, unsigned long long sz,int& kv_id);
   // Remove a file or dir
   // is dir has sub things will failed
   Status Remove(std::string path);
@@ -69,9 +71,13 @@ class PrefixTree {
   void RegistNewKV(int id, unsigned long long sum_memory);
   friend void MergeFileNodeToDirNode(PrefixTree*, PrefixTreeNodePtr file_node, PrefixTreeNodePtr dir_node);
   friend void SplitFileNode(PrefixTree*, PrefixTreeNodePtr, PrefixTreeNodePtr, const std::string& prefix);
-// private:
+ private:
+  // current adjust has caculated context
+  bool has_get_context_ = false;
   PrefixTreeNodePtr root_;
   std::list<KVInfo> kv_list_; 
+  // stored the context temp
+  std::vector<std::shared_ptr<AdjustContext> > adjust_context_vec_;
   // will split param full_path 
   // if full path is A/B/C
   // after split full path will be B/C and split path will be filled with A
@@ -79,8 +85,9 @@ class PrefixTree {
   // else return false
   bool splitPath(std::string& full_path, std::string& split_path);
   // create a new tree node and link to parent
-  PrefixTreeNodePtr createNode(const std::string& path, unsigned long long ino, bool is_dir, PrefixTreeNodePtr parent = nullptr, unsigned long long sz = 0, int domain_id = -1);
-  Status doInsert(PrefixTreeNodePtr node, unsigned long long ino, std::string& path, bool is_dir, unsigned long long sz, int domain_id);
+
+  PrefixTreeNodePtr createNode(const std::string& path, unsigned long long ino, bool is_dir, int& domain_id, PrefixTreeNodePtr parent = nullptr, unsigned long long sz = 0);
+  Status doInsert(PrefixTreeNodePtr node, unsigned long long ino, std::string& path, bool is_dir, unsigned long long sz, int& domain_id);
   Status doRemove(PrefixTreeNodePtr node, std::string& path);
   // update info from bottom to top
   void pushUp(PrefixTreeNodePtr node);
@@ -89,6 +96,7 @@ class PrefixTree {
   int calculateScore(KVInfo* info);
   int calculateScore(unsigned long long, unsigned long long);
   unsigned long long calculateSum(KVInfo* info);
+  void calculateAdjustContext();
   bool splitFileNode(std::list<PrefixTreeNodePtr>& li, PrefixTreeNodePtr node);
   void moveSubTree(PrefixTreeNodePtr node, move_t addr, std::vector<std::pair<unsigned long long, move_t> >& vec);
   void doMove(PrefixTreeNodePtr node, move_t addr, std::vector<std::pair<unsigned long long, move_t> >& vec);

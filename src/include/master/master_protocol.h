@@ -8,5 +8,6 @@ class master_protocol {
   enum xxstatus { OK, RPCERR, NOENT, IOERR };
   enum rpc_numbers {
     heart_beat = 0x7001,
+    regist = 0x7002,
   };
 };

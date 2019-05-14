@@ -111,6 +111,16 @@ void PrefixTreeDirNode::PushDownDomainTag() {
   clearDomainTag();
 }
 
+std::pair<int, PrefixTreeNode*> PrefixTreeDirNode::FindNearestDomainId(bool left) {
+  if(domain_id_ != -1)
+    return std::make_pair(domain_id_, this);
+  if(list_.empty())
+    return std::make_pair(-1, this);
+  if(left)
+    return (*(list_.begin()))->FindNearestDomainId();
+  else return (*(list_.rbegin()))->FindNearestDomainId();
+}
+
 auto PrefixTreeDirNode::GetList()->decltype(list_) {
   return list_;
 }
@@ -154,6 +164,10 @@ bool PrefixTreeFileNode::IsDir() {
 
 void PrefixTreeFileNode::PushDownDomainTag() {
   return;
+}
+
+std::pair<int, PrefixTreeNode*> PrefixTreeFileNode::FindNearestDomainId(bool left) {
+  return std::make_pair(domain_id_, this);
 }
 
 } // prefix_tree

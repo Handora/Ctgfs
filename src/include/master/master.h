@@ -3,6 +3,7 @@
  **/
 #pragma once
 #include <brpc/channel.h>
+#include <master/prefix_tree.h>
 #include <butil/time.h>
 #include <fs.pb.h>
 #include <master.pb.h>
@@ -11,7 +12,9 @@
 #include <queue>
 #include <string>
 #include <vector>
+#include <thread>
 #include "fs/info_collector.h"
+#include <mutex>
 
 // as a server
 // several part :
@@ -25,8 +28,11 @@
 namespace ctgfs {
 namespace master {
 using namespace info_collector;
+using namespace ::ctgfs::prefix_tree;
 class Master : public MasterService {
  public:
+  // src kv id, dst kv id
+  typedef std::pair<int, int> kv_info_t;
   Master();
   ~Master();
   void AskForIno(::google::protobuf::RpcController* controller,
@@ -48,10 +54,16 @@ class Master : public MasterService {
   /* @dst the ip:port of target extent_server. */
   int Move(std::string lock_server_addr, std::vector<unsigned long long> inum, std::string src, std::string dst);
   int UpdateKVInfo(InfoCollector::ServerInfo i, int&);
-
+  int Regist(const std::string&, cosnt int&);
  private:
   // char set need hash
   std::string VALID_CHAR_SET;
+  // lock of regist id
+  std::mutex regist_lock_;
+  // master is stop
+  bool stop_ = false;
+  // adjust thread
+  std::thread adjust_thread_;
   // record the kv's id on master and kv's addr
   // int -> id
   // addr -> ip:port
@@ -70,6 +82,8 @@ class Master : public MasterService {
   // collect disconnect kv's id
   // to make hash space closer
   std::queue<int> reused_queue_;
+  // prefix tree
+  std::shared_ptr<PrefixTree> t_;
   // called when kv info update
   // void updateKVInfo(const std::shared_ptr<ctgfs::heart_beat::HeartBeatInfo>);
   // fill the info of resp
@@ -105,6 +119,8 @@ class Master : public MasterService {
   unsigned long long genInum(const std::string& path, bool is_dir);
   // get kv info by inum
   std::string getInfoByInum(unsigned long long inum);
+  // calculate the score of current situation
+  int calculateScore(std::vector<std::shared_ptr<AdjustContext> >* context_vec);
   // for debug
   void debugRegisterKV(bool, const std::string&);
   void debugRegisterKV(bool, const char*);

@@ -13,12 +13,13 @@ namespace prefix_tree {
 TEST(PrefixTreeTest, PrefixTree) {
   PrefixTree* t = new PrefixTree(); 
   EXPECT_TRUE(t->GetRoot()->IsDir());
-  auto status = t->Create("A/B", 1, false, 0);
+  int kv_id;
+  auto status = t->Create("A/B", 1, false, 0, kv_id);
   EXPECT_TRUE(status.IsOK());
   EXPECT_EQ(1, (t->GetRoot()->GetList()).size());
   EXPECT_FALSE((*((t->GetRoot()->GetList()).begin()))->IsDir());
   EXPECT_EQ("A/B", (*(t->GetRoot()->GetList()).begin())->GetPath());
-  t->Create("A/C", 2, true, 0);
+  t->Create("A/C", 2, true, 0, kv_id);
   auto list = t->GetRoot()->GetList();
   EXPECT_EQ(1, list.size());
   ASSERT_TRUE(t->GetRoot()->IsDir());

@@ -36,22 +36,28 @@ void debugTree(std::shared_ptr<PrefixTreeNode> node, std::string prefix = "-") {
 // create file path: a/z/a/b inum: 5 sz: 5
 TEST(PrefixTreeTest, PrefixTree) {
   PrefixTree* t = new PrefixTree();
+  int kv_id;
 
   t->RegistNewKV(1, 10);
   t->RegistNewKV(2, 10);
   
-  t->Create("a/z/a/a", 1, false, 1);
+  t->Create("a/z/a/a", 1, false, 1, kv_id);
 
   EXPECT_EQ((t->GetRoot())->GetDomainId(), 1);
+  EXPECT_EQ(kv_id, 1);
   auto list = (t->GetRoot())->GetList();
   EXPECT_EQ(list.size(), 1);
-  t->Create("a/z/b/b", 2, false, 5);
+  t->Create("a/z/b/b", 2, false, 5, kv_id);
   EXPECT_EQ((t->GetRoot())->GetDomainId(), 1);
+  EXPECT_EQ(kv_id, 1);
   list = (t->GetRoot())->GetList();
 
-  t->Create("a/z/b/c", 3, false, 1);
+  t->Create("a/z/b/c", 3, false, 1, kv_id);
+  EXPECT_EQ(kv_id, 1);
 
-  t->Create("a/z/b/d", 4, false, 1);
+  t->Create("a/z/b/d", 4, false, 1, kv_id);
+  EXPECT_EQ(kv_id, 1);
+
   list = (t->GetRoot())->GetList();
   EXPECT_EQ(list.size(), 1);
   for(auto ele : list) {
@@ -75,7 +81,8 @@ TEST(PrefixTreeTest, PrefixTree) {
   EXPECT_EQ(node3->GetDomainId(), 2);
   EXPECT_EQ(node4->GetDomainId(), 2);
   t->RegistNewKV(3, 10);
-  t->Create("a/z/a/b", 5, false, 4);
+  t->Create("a/z/a/b", 5, false, 4, kv_id);
+  EXPECT_EQ(1, kv_id);
   // layer 0
   auto node_0_0 = t->GetRoot();
   auto temp_list = node_0_0->GetList();
