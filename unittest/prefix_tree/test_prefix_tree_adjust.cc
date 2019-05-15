@@ -40,13 +40,20 @@ TEST(PrefixTreeTest, PrefixTree) {
 
   t->RegistNewKV(1, 10);
   t->RegistNewKV(2, 10);
-  
+  auto status = t->Create("a", 11, true, 0, kv_id);
+  EXPECT_TRUE(status.IsOK());
+  status = t->Create("a/z", 12, true, 0, kv_id); 
+  EXPECT_TRUE(status.IsOK());
+  status = t->Create("a/z/a", 13, true, 0, kv_id);
+  EXPECT_TRUE(status.IsOK());
   t->Create("a/z/a/a", 1, false, 1, kv_id);
 
   EXPECT_EQ((t->GetRoot())->GetDomainId(), 1);
   EXPECT_EQ(kv_id, 1);
   auto list = (t->GetRoot())->GetList();
   EXPECT_EQ(list.size(), 1);
+  status = t->Create("a/z/b", 14, true, 0, kv_id);
+  EXPECT_TRUE(status.IsOK());
   t->Create("a/z/b/b", 2, false, 5, kv_id);
   EXPECT_EQ((t->GetRoot())->GetDomainId(), 1);
   EXPECT_EQ(kv_id, 1);
@@ -66,17 +73,21 @@ TEST(PrefixTreeTest, PrefixTree) {
   t->Adjust(40);
   list = t->GetRoot()->GetList();
   EXPECT_EQ(t->GetRoot()->GetDomainId(), -1);
+  auto a_node = *list.begin();
+  list = a_node->GetList();
   auto a_z_node = *list.begin();
   list = a_z_node->GetList();
+  auto a_z_a_node = *list.begin();
+  auto a_z_b_node = *list.rbegin();
+  list = a_z_a_node->GetList();
   auto node1 = *list.begin();
-  auto tmp_node = *list.rbegin();
-  auto tmp_list = tmp_node->GetList();
+  auto tmp_list = a_z_b_node->GetList();
   auto node2 = *tmp_list.begin();
   auto pos = tmp_list.begin();
   pos ++;
   auto node3 = *pos;
   auto node4 = *tmp_list.rbegin();
-  EXPECT_EQ(node1->GetDomainId(), 1);
+  EXPECT_EQ(node1->GetDomainId(), -1);
   EXPECT_EQ(node2->GetDomainId(), 2);
   EXPECT_EQ(node3->GetDomainId(), 2);
   EXPECT_EQ(node4->GetDomainId(), 2);
@@ -89,6 +100,7 @@ TEST(PrefixTreeTest, PrefixTree) {
   node_0_0 = *temp_list.begin();
   // layer 1
   auto layer_1 = node_0_0->GetList();
+  layer_1 = (*layer_1.begin())->GetList();
   ASSERT_EQ(2, layer_1.size());
   auto node_1_0 = *layer_1.begin();
   auto node_1_1 = *layer_1.rbegin();
