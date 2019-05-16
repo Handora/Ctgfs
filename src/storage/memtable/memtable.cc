@@ -55,13 +55,35 @@ Status Memtable::MinorFreeze() {
   i_mem_map_ = mem_map_;
   mem_map_ = std::make_shared<std::set<Log>>();
   data_size_ = 0;
-  Log log = *(i_mem_map_->end());
-  MemIterator mem_iter(i_mem_map_);
-  ret = sst_mgr_.Flush(mem_iter, log);
-  i_mem_map_ = nullptr;
+  Log log = *(i_mem_map_->rbegin());
+  MemIterator mem_iter;
+  if (!(ret = mem_iter.Init(i_mem_map_)).IsOK()) {
+    printf("init memiter error\n");
+  } else if (!(ret = sst_mgr_.Flush(mem_iter, log)).IsOK()) {
+    printf("flush sst_mgr error\n");
+  } else {
+    i_mem_map_ = nullptr;
+  }
   return ret;
 }
 
+Status Memtable::CreateIterator(MemIterator &iter) {
+  Status ret = Status::OK();
+  std::lock_guard<std::mutex> guard(mu_);
+
+  if (!(ret = iter.Init(mem_map_)).IsOK()) {
+    printf("error init iterator for memtable\n");
+  }
+
+  return ret;
+}
+
+Status MemIterator::Init(const std::shared_ptr<std::set<Log>> &mt) {
+  Status ret = Status::OK();
+  mt_ = mt;
+  iter_ = mt_->begin(); 
+  return ret;
+};
 
 bool MemIterator::HasNext() {
   bool bool_ret = false;
