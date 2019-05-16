@@ -97,10 +97,12 @@ void Master::AskForKV(::google::protobuf::RpcController* controller,
   return;
 }
 
-void Master::Regist(const std::string& addr, unsigned long long sum_memory) {
+int Master::Regist(std::string addr, unsigned long long sum_memory, int& r) {
   auto id = getNewRegisterID();
   doRegister(addr, id);
   t_->RegistNewKV(id, sum_memory);
+  r = id;
+  return master_protocol::OK;
 }
 
 /*

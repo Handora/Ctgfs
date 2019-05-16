@@ -54,7 +54,7 @@ class Master : public MasterService {
   /* @dst the ip:port of target extent_server. */
   int Move(std::string lock_server_addr, std::vector<unsigned long long> inum, std::string src, std::string dst);
   int UpdateKVInfo(InfoCollector::ServerInfo i, int&);
-  int Regist(const std::string&, cosnt int&);
+  int Regist(std::string, unsigned long long, int&);
  private:
   // char set need hash
   std::string VALID_CHAR_SET;
