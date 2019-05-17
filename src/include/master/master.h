@@ -2,11 +2,7 @@
  * author: OneDay_(ltang970618@gmail.com)
  **/
 #pragma once
-#include <brpc/channel.h>
 #include <master/prefix_tree.h>
-#include <butil/time.h>
-#include <fs.pb.h>
-#include <master.pb.h>
 #include <map>
 #include <memory>
 #include <queue>
@@ -29,24 +25,14 @@ namespace ctgfs {
 namespace master {
 using namespace info_collector;
 using namespace ::ctgfs::prefix_tree;
-class Master : public MasterService {
+class Master {
  public:
   // src kv id, dst kv id
   typedef std::pair<int, int> kv_info_t;
   Master();
   ~Master();
-  void AskForIno(::google::protobuf::RpcController* controller,
-                      const ::ctgfs::ClientAskForInoRequest* request,
-                      ::ctgfs::ClientAskForInoResponse* response,
-                      ::google::protobuf::Closure* done);
-  void AskForKV(::google::protobuf::RpcController* controller,
-                      const ::ctgfs::ClientAskForKVByInoRequest* request,
-                      ::ctgfs::ClientAskForKVByInoResponse* response,
-                      ::google::protobuf::Closure* done);
-  // void SendHeartBeat(::google::protobuf::RpcController* controller,
-  //                    const ::ctgfs::HeartBeatMessageRequest* request,
-  //                    ::ctgfs::HeartBeatMessageResponse* response,
-  //                    ::google::protobuf::Closure* done);
+  int AskForIno(std::string path, bool is_dir, unsigned long long node_sz, std::pair<unsigned long long, std::string>& r);
+  int AskForKV(unsigned long long ino, std::string&);
 
   /* move is used to achieve load balancing. */
   /* @inum the vector of some inum, files to be moved. */
@@ -56,6 +42,10 @@ class Master : public MasterService {
   int UpdateKVInfo(InfoCollector::ServerInfo i, int&);
   int Regist(std::string, unsigned long long, int&);
  private:
+  // ino count mutex
+  std::mutex ino_count_mutex_;
+  // file ino count
+  unsigned long long ino_count_ = 0;
   // char set need hash
   std::string VALID_CHAR_SET;
   // lock of regist id
@@ -116,7 +106,7 @@ class Master : public MasterService {
   // do unregist
   void doUnregister(const int& regist_id);
   // generate inum
-  unsigned long long genInum(const std::string& path, bool is_dir);
+  unsigned long long genInum(const std::string& path, bool is_dir, unsigned long long node_sz);
   // get kv info by inum
   std::string getInfoByInum(unsigned long long inum);
   // calculate the score of current situation

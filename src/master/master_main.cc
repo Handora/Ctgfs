@@ -5,6 +5,7 @@
 #include "master/master.h"
 #include "master/master_protocol.h"
 #include "rpc/rpc.h"
+#include <unistd.h>
 
 using namespace ctgfs::master;
 
@@ -31,6 +32,8 @@ main(int argc, char *argv[])
 
   server.reg(master_protocol::heart_beat, &ms, &Master::UpdateKVInfo);
   server.reg(master_protocol::regist, &ms, &Master::Regist);
+  server.reg(master_protocol::ask_for_ino, &ms, &Master::AskForIno);
+  server.reg(master_protocol::ask_for_kv, &ms, &Master::AskForKV);
 
   while(1)
     sleep(1000);

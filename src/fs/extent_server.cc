@@ -4,7 +4,6 @@
 #include "fs/info_collector.h"
 #include "master/master_protocol.h"
 #include "rpc/rpc.h"
-#include "master.pb.h"
 #include <sstream>
 #include <stdio.h>
 #include <unistd.h>
