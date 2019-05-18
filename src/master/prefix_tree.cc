@@ -215,7 +215,7 @@ PrefixTreeNodePtr PrefixTree::createNode(const std::string& path, unsigned long 
         const auto& list = parent->GetList();
         auto pos = list.end();
         for(auto it = list.begin();it != list.end(); it++) {
-          if((*pos)->GetPath() >= path) {
+          if((*it)->GetPath() >= path) {
             break;
           }
           pos = it;

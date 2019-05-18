@@ -35,6 +35,7 @@ Master::Master() {
       pip_line.push_back(move_op[0].first);
       std::pair<int, int> op_addr = move_op[0].second;
       for(auto i = 1; i < (int)move_op.size(); i ++) {
+        inum_to_register_id_[move_op[i].first] = move_op[i].second.second;
         if(move_op[i].second == op_addr) {
           pip_line.push_back(move_op[i].first);
         }
@@ -72,7 +73,7 @@ master_protocol::status Master::AskForKV(unsigned long long ino, std::string& r)
   // unsigned long long ino = request->ino();
   // response->set_addr(getInfoByInum(ino));
   r = getInfoByInum(ino);
-  printf("ask for kv: %016llx %s\n", ino, r.c_str());
+  printf("ask for kv: %016llu, resp %s\n",ino, r.c_str());
   return master_protocol::OK;
 }
 
@@ -240,6 +241,7 @@ unsigned long long Master::genInum(const std::string& path, bool is_dir, unsigne
   t_->Create(path, id, is_dir, node_sz, kv_id);
   inum_to_path_[id] = path;
   inum_to_register_id_[id] = kv_id;
+  printf("gen new inum: %016x, path: %s, kv_id: %d, sz: %llu\n", id, path.c_str(), kv_id, node_sz);
   return id;
 }
 
@@ -248,6 +250,9 @@ std::string Master::getInfoByInum(unsigned long long inum) {
 }
 
 int Master::Move(std::string lock_server_addr, std::vector<unsigned long long> inum, std::string src, std::string dst) {
+  for(auto id : inum) {
+    printf("do move %016x from src %s to dst %s\n",id, src.c_str(), dst.c_str());
+  }
   /* OK is always the first state. */
   int status = 0;
 

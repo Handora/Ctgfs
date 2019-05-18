@@ -36,6 +36,8 @@ void Client::FailCache(inum ino) {
   kv_addr_connect_status_[ino] = 1;
   auto id = kv_addr_index_list_[ino];
   auto& ele = kv_addr_list_[id];
+  if(ele.second == 0)
+    return;
   ele.second --;
   if(ele.second == 0) {
     ele.first = "";
