@@ -1,7 +1,6 @@
 // Authors: Chen Qian(qcdsr970209@gmail.com)
 
 #include <gtest/gtest.h>
-#define private public
 #include <storage/memtable/memtable.h>
 #include <storage/sstable/sstable.h>
 #include <storage/multi_iter.h>
@@ -24,11 +23,11 @@ TEST(MemTableTest, Memtable) {
   mt.Add(Log(1, storage::Log::PUT, "kea", "a"));
   mt.Add(l);
   mt.Add(Log(2, storage::Log::PUT, "keb", "b"));
-  SSTMgr &mgr = mt.sst_mgr_;
+  SSTMgr &mgr = mt.GetSSTMgr();
 
   Log log;
-  for (uint64_t i = 0; i < mgr.ssts_.size(); i++) {
-    SStable &sst = mgr.ssts_[i];
+  for (uint64_t i = 0; i < mgr.GetSSTs().size(); i++) {
+    SStable &sst = mgr.GetSSTs()[i];
 
     SSTIterator iter;
     sst.CreateIterator(iter);
@@ -38,8 +37,8 @@ TEST(MemTableTest, Memtable) {
     EXPECT_FALSE(iter.HasNext());
   }
   std::vector<Iterator*> piters;
-  for (uint64_t i = 0; i < mgr.ssts_.size(); i++) {
-    SStable &sst = mgr.ssts_[i];
+  for (uint64_t i = 0; i < mgr.GetSSTs().size(); i++) {
+    SStable &sst = mgr.GetSSTs()[i];
 
     SSTIterator *iter = new SSTIterator();
     sst.CreateIterator(*iter);

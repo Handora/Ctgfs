@@ -3,7 +3,6 @@
 #include <gtest/gtest.h>
 #include <util/util.h>
 #include <sys/stat.h>
-#define private public 
 #include <storage/memtable/wal.h>
 
 namespace ctgfs {

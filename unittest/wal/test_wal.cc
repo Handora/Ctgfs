@@ -3,7 +3,6 @@
 #include <gtest/gtest.h>
 #include <util/util.h>
 #include <sys/stat.h>
-#define private public 
 #include <wal/wal.h>
 
 namespace ctgfs {
@@ -31,11 +30,12 @@ TEST(WalTest, Basic) {
   s = wal.Stop();
   EXPECT_TRUE(s.IsOK());
   s = wal.Init("./tmp/");
-  EXPECT_EQ(4, wal.mlog_.size());
-  EXPECT_EQ(a, wal.mlog_[0]);
-  EXPECT_EQ(c, wal.mlog_[1]);
-  EXPECT_EQ(b, wal.mlog_[2]);
-  EXPECT_EQ(d, wal.mlog_[3]);
+  std::vector<Log> &mlog = wal.GetMLog();
+  EXPECT_EQ(4, mlog.size());
+  EXPECT_EQ(a, mlog[0]);
+  EXPECT_EQ(c, mlog[1]);
+  EXPECT_EQ(b, mlog[2]);
+  EXPECT_EQ(d, mlog[3]);
 }
 }  // namespace kv
 }  // namespace ctgfs

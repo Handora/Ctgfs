@@ -30,6 +30,9 @@ class Memtable {
   Status Add(const Log& log);
   // Status Get(const std::string &key, std::string &value);
   Status CreateIterator(MemIterator &iter);
+ public:
+  // test only
+  SSTMgr &GetSSTMgr() { return sst_mgr_; }
  private:
   Status MinorFreeze();
   bool init_;
