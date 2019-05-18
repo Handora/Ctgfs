@@ -1,6 +1,6 @@
 add_subdirectory(client)
 add_subdirectory(master)
-add_subdirectory(raft)
+# add_subdirectory(raft)
 add_subdirectory(kv)
 add_subdirectory(fs)
 add_subdirectory(util)
