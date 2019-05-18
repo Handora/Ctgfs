@@ -17,7 +17,7 @@ class InfoCollector {
   }
 
  private:
-  InfoCollector() { i_.file_num = i_.disk_usage = 0; }
+  InfoCollector() {  }
   InfoCollector(const InfoCollector&);
   InfoCollector& operator=(const InfoCollector&);
 
@@ -25,23 +25,32 @@ class InfoCollector {
 
  public:
   struct ServerInfo {
-    unsigned long long file_num = 0;
-    unsigned long long disk_usage = 0;
+    std::vector< unsigned long long > inum, sz;
+    std::vector< int> type;        /* 0: delete */
+                                   /* 1: add */
+                                   /* 2: update */
+    void clear() {
+      inum.clear();
+      sz.clear();
+      type.clear();
+    }
   };
+
   struct KVInfo{
     std::string addr;
     unsigned long long sz;
   };
 
   /* setter, getter for i_ */
-  ServerInfo Get() const;
-  void Set(const ServerInfo& atrr);
+  ServerInfo Get();
+  void AddDirtyData(unsigned long long, unsigned long long, int);
   
   void Set(const KVInfo& info);
   /* send extent_server info via rpc */
   void SendHeartBeat(std::string addr) const;
   
   void Regist(const std::string& addr);
+
  private:
   /* i_ saves the information of extene_server. */
   ServerInfo i_;
