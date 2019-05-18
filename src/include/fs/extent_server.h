@@ -7,6 +7,9 @@
 #include <map>
 #include "fs/extent_protocol.h"
 
+namespace ctgfs {
+namespace server {
+
 class extent_server {
 
  public:
@@ -35,5 +38,7 @@ class extent_server {
   pthread_mutex_t server_mu_;
   std::map<extent_protocol::extentid_t, extent*> extent_map_; 
 };
+}
+}
 
 #endif 
