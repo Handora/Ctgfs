@@ -5,6 +5,9 @@
 
 #include "rpc/rpc.h"
 
+namespace ctgfs {
+namespace server {
+
 class extent_protocol {
  public:
   typedef int status;
@@ -46,5 +49,7 @@ operator<<(marshall &m, extent_protocol::attr a)
   m << a.size;
   return m;
 }
+
+}}
 
 #endif 

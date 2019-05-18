@@ -8,6 +8,8 @@
 #include "fs/extent_protocol.h"
 #include "rpc/rpc.h"
 
+using namespace ::ctgfs::server;
+
 class extent_client {
  protected:
   rpcc* cl;

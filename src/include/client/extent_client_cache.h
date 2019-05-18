@@ -9,7 +9,9 @@
 #include "client/extent_client.h"
 #include "client/lock_client_cache.h"
 #include <client/client.h>
+
 using namespace ::ctgfs::client;
+using namespace ::ctgfs::server;
 
 class extent_client_cache : public extent_client {
 

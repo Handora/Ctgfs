@@ -8,6 +8,8 @@
 
 // Main loop of extent server
 
+using namespace ::ctgfs::server;
+
 int
 main(int argc, char *argv[])
 {

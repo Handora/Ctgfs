@@ -12,6 +12,8 @@
 #include "../master/lock_server.h"
 #include "../master/lock_server_cache.h"
 
+using namespace ::ctgfs::server;
+
 TEST(MOVETest, MoveInside) {
 
   int count = 0;
