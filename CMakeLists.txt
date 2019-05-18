@@ -15,8 +15,7 @@ set(CMAKE_CXX_FLAGS "-ggdb3 -std=c++11 -pthread ${CMAKE_CXX_FLAGS} -lprotobuf -l
 set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS)
 set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS)
 
-include_directories(${PROJECT_SOURCE_DIR}/src/include
-                    ${PROJECT_SOURCE_DIR}/src/proto)
+include_directories(${PROJECT_SOURCE_DIR}/src/include)
 
 include_directories(${PROJECT_SOURCE_DIR}/third_party/gtest/googletest/include)
 link_directories(/usr/local/lib)

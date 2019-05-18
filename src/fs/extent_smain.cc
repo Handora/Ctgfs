@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "fs/extent_server.h"
+#include <fs/info_collector.h>
 
 // Main loop of extent server
 
@@ -12,7 +13,7 @@ main(int argc, char *argv[])
 {
   int count = 0;
 
-  if(argc != 2){
+  if(argc != 3){
     fprintf(stderr, "Usage: %s port\n", argv[0]);
     exit(1);
   }
@@ -33,7 +34,13 @@ main(int argc, char *argv[])
   server.reg(extent_protocol::remove, &ls, &extent_server::remove);
   server.reg(extent_protocol::setattr, &ls, &extent_server::setattr);
   server.reg(extent_protocol::move, &ls, &extent_server::move);
-
+  
+  auto ins = ::ctgfs::info_collector::InfoCollector::GetInstance();
+  ::ctgfs::info_collector::InfoCollector::KVInfo info;
+  info.addr = std::string(argv[1]);
+  info.sz = 10000;
+  ins->Set(info);
+  ins->Regist(argv[2]);
   while(1)
     sleep(1000);
 }

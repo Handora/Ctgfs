@@ -1,9 +1,7 @@
 /*
 * author: OneDay_(ltang970618@gmail.com)
 **/
-#include <butil/logging.h>
 #include <master/master.h>
-#include <brpc/server.h>
 #include "rpc/rpc.h"
 #include "fs/extent_protocol.h"
 #include "client/extent_client.h"
@@ -12,6 +10,7 @@
 #include "client/lock_client_cache.h"
 #include <iostream>
 #include "master/master_protocol.h"
+#include <algorithm>
 
 namespace ctgfs {
 namespace master {
@@ -61,43 +60,23 @@ Master::~Master() {
   adjust_thread_.join();
 }
 
-void Master::AskForIno(::google::protobuf::RpcController* controller,
-                       const ::ctgfs::ClientAskForInoRequest* request,
-                       ::ctgfs::ClientAskForInoResponse* response,
-                       ::google::protobuf::Closure* done) {
-  brpc::ClosureGuard done_guard(done);
-  if (cur_register_kv_id_ == 0) {
-    LOG(ERROR) << "NO FS CONNECT" << std::endl;
-    controller->SetFailed("NO FS CONNECT");
-    return;
-  }
-  // brpc::Controller* ctrl = static_cast<brpc::Controller*>(controller);
-  const std::string path = request->path();
-  bool is_dir = request->is_dir();
-  auto ino = genInum(path, is_dir);
-  response->set_ino(ino);
-  response->set_addr(getInfoByInum(ino));
+master_protocol::status Master::AskForIno(std::string path, bool is_dir, unsigned long long node_sz, std::pair<unsigned long long, std::string>& r) {
+  auto ino = genInum(path, is_dir, node_sz);
+  r.first = ino;
+  r.second = getInfoByInum(ino);
   // TODO: need add more options
-  return;
+  return master_protocol::OK;
 }
 
-void Master::AskForKV(::google::protobuf::RpcController* controller,
-                      const ::ctgfs::ClientAskForKVByInoRequest* request,
-                      ::ctgfs::ClientAskForKVByInoResponse* response,
-                      ::google::protobuf::Closure* done) {
-  brpc::ClosureGuard done_guard(done);
-  if (cur_register_kv_id_ == 0) {
-    LOG(ERROR) << "NO FS CONNECT" << std::endl;
-    controller->SetFailed("NO FS CONNECT");
-    return;
-  }
-
-  unsigned long long ino = request->ino();
-  response->set_addr(getInfoByInum(ino));
-  return;
+master_protocol::status Master::AskForKV(unsigned long long ino, std::string& r) {
+  // unsigned long long ino = request->ino();
+  // response->set_addr(getInfoByInum(ino));
+  r = getInfoByInum(ino);
+  printf("ask for kv: %016llx %s\n", ino, r.c_str());
+  return master_protocol::OK;
 }
 
-int Master::Regist(std::string addr, unsigned long long sum_memory, int& r) {
+master_protocol::status Master::Regist(std::string addr, unsigned long long sum_memory, int& r) {
   auto id = getNewRegisterID();
   doRegister(addr, id);
   t_->RegistNewKV(id, sum_memory);
@@ -137,7 +116,7 @@ void Master::updateKVInfo(
 }
 */
 
-int Master::UpdateKVInfo(InfoCollector::ServerInfo i, int&) {
+master_protocol::status Master::UpdateKVInfo(InfoCollector::ServerInfo i, int&) {
   /* when this function is called by rpc, the latest info of extent_server will be passed. */
   std::cout << "called by rpc:\n" << "num: " << i.file_num <<  ", size: " << i.disk_usage
   << std::endl;
@@ -252,14 +231,15 @@ void Master::debugRegisterKV(bool is_error, const char* str) {
   debugRegisterKV(is_error, std::string(str));
 }
 
-unsigned long long Master::genInum(const std::string& path, bool is_dir) {
-  unsigned long long id = 0;
-  id += random() % (2147483648);
+unsigned long long Master::genInum(const std::string& path, bool is_dir, unsigned long long node_sz) {
+  std::lock_guard<std::mutex> locker(ino_count_mutex_);
+  unsigned long long id = ino_count_ ++; 
+  // id += random() % (2147483648);
   if (!is_dir) id |= 0x80000000;
-  int sum = hashStr(path);
-  hashValueToRegisterID(sum);
+  int kv_id;
+  t_->Create(path, id, is_dir, node_sz, kv_id);
   inum_to_path_[id] = path;
-  inum_to_register_id_[id] = sum;
+  inum_to_register_id_[id] = kv_id;
   return id;
 }
 

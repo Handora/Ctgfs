@@ -301,7 +301,7 @@ yfs_client::create(inum parent, std::string name, inum& inum, fileinfo& info)
   }
 
   // inum = gen_inum(false);
-  auto res = client->GetInumByName(name, false);
+  auto res = client->GetInumByName(name, false, info.size);
   inum = res.first;
   std::string addr = res.second;
   initExtentClient(addr);
@@ -658,7 +658,7 @@ yfs_client::mkdir(inum parent, std::string name, inum& inum, dirinfo& info)
   }
 
   // inum = gen_inum(true);
-  auto res = client->GetInumByName(name, true);
+  auto res = client->GetInumByName(name, true, 0);
   inum = res.first;
   initExtentClient(res.second);
   s = lc->acquire(inum);
@@ -806,6 +806,7 @@ yfs_client::unlink(inum parent, std::string name)
 }
 
 void yfs_client::initExtentClient(inum ino) {
+  printf("start get kv addr\n");
   const std::string& addr = client->GetKVAddrByInum(ino);
   initExtentClient(addr);
 }
@@ -819,7 +820,7 @@ void yfs_client::initExtentClient(const std::string& addr) {
     }
   }
   if(ec == nullptr) {
-    ec = new extent_client_cache(addr);
+    ec = new extent_client_cache(addr, client);
     printf("start lock real\n");
     lock_release = new lock_release_user_impl(ec);
     printf("start lc\n");

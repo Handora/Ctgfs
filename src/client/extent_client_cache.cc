@@ -8,8 +8,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-extent_client_cache::extent_client_cache(std::string dst)
-  : extent_client(dst) {
+extent_client_cache::extent_client_cache(std::string dst, Client* client)
+  : extent_client(dst), client_(client) {
   VERIFY(pthread_mutex_init(&cache_mu_, 0) == 0);
 }
 
@@ -54,13 +54,14 @@ extent_protocol::status extent_client_cache::get(extent_protocol::extentid_t id,
   if (it == cache_map_.end()) {
     pthread_mutex_unlock(&cache_mu_);
 
+    // ret = cl->call(extent_protocol::get, id, buf);
+    ret = callGet(id, buf);
+    if (ret != extent_protocol::OK) 
+        return ret;
 
-    ret = cl->call(extent_protocol::get, id, buf);
-    if (ret != extent_protocol::OK)
-      return ret;
-
-    ret = cl->call(extent_protocol::getattr, id, attr);
-    if (ret != extent_protocol::OK)
+    // ret = cl->call(extent_protocol::getattr, id, attr);
+    ret = callGetAttr(id, attr);
+    if (ret != extent_protocol::OK) 
       return ret;
 
     pthread_mutex_lock(&cache_mu_);
@@ -92,11 +93,13 @@ extent_protocol::status extent_client_cache::getattr(extent_protocol::extentid_t
   if (it == cache_map_.end()) {
     pthread_mutex_unlock(&cache_mu_);
 
-    ret = cl->call(extent_protocol::getattr, id, attr);
+    // ret = cl->call(extent_protocol::getattr, id, attr);
+    ret = callGetAttr(id, attr);
     if (ret != extent_protocol::OK)
       return ret;
 
-    ret = cl->call(extent_protocol::get, id, buf);
+    // ret = cl->call(extent_protocol::get, id, buf);
+    ret = callGet(id, buf);
     if (ret != extent_protocol::OK)
       return ret;
 
@@ -136,7 +139,8 @@ extent_protocol::status extent_client_cache::setattr(extent_protocol::extentid_t
   } else {
     pthread_mutex_unlock(&cache_mu_);
 
-    ret = cl->call(extent_protocol::get, id, buf);
+    // ret = cl->call(extent_protocol::get, id, buf);
+    ret = callGet(id, buf);
     if (ret != extent_protocol::OK) {
       return ret;
     }
@@ -200,7 +204,8 @@ extent_protocol::status extent_client_cache::flush(extent_protocol::extentid_t i
       if (value->deleted) {
         pthread_mutex_unlock(&cache_mu_);
 
-        ret = cl->call(extent_protocol::remove, id, r);
+        // ret = cl->call(extent_protocol::remove, id, r);
+        ret = callRemove(id, r);
         if (ret != extent_protocol::OK && ret != extent_protocol::NOENT)
           return ret;
 
@@ -208,7 +213,8 @@ extent_protocol::status extent_client_cache::flush(extent_protocol::extentid_t i
       } else {
         pthread_mutex_unlock(&cache_mu_);
 
-        ret = cl->call(extent_protocol::put, id, value->content, r);
+        // ret = cl->call(extent_protocol::put, id, value->content, r);
+        ret = callPut(id, value->content, r);
         if (ret != extent_protocol::OK && ret != extent_protocol::NOENT)
           return ret;
 
@@ -219,7 +225,8 @@ extent_protocol::status extent_client_cache::flush(extent_protocol::extentid_t i
         attr.ctime = value->ctime;
 
         int r;
-        ret = cl->call(extent_protocol::setattr, id, attr, r);
+        // ret = cl->call(extent_protocol::setattr, id, attr, r);
+        ret = callSetAttr(id, attr, r);
         if (ret != extent_protocol::OK && ret != extent_protocol::NOENT)
           return ret;
         pthread_mutex_lock(&cache_mu_);
@@ -229,5 +236,58 @@ extent_protocol::status extent_client_cache::flush(extent_protocol::extentid_t i
 
   cache_map_.erase(id);
   pthread_mutex_unlock(&cache_mu_);
+  return ret;
+}
+
+void extent_client_cache::retry(extent_protocol::extentid_t id) {
+  client_->FailCache(id);
+  const auto& addr = client_->GetKVAddrByInum(id);
+  ConnectTo(addr);
+}
+
+extent_protocol::status extent_client_cache::callGet(extent_protocol::extentid_t id, std::string& buf) {
+  auto ret = cl->call(extent_protocol::get, id, buf);
+  if (ret != extent_protocol::OK) {
+    retry(id);
+    // ? need clear?
+    buf.clear();
+    ret = cl->call(extent_protocol::get, id, buf);
+  }
+  return ret;
+}
+
+extent_protocol::status extent_client_cache::callGetAttr(extent_protocol::extentid_t id, extent_protocol::attr& attr) {
+  auto ret = cl->call(extent_protocol::getattr, id, attr);
+  if(ret != extent_protocol::OK) {
+    retry(id);
+    ret = cl->call(extent_protocol::getattr, id, attr);
+  }
+  return ret;
+}
+
+extent_protocol::status extent_client_cache::callRemove(extent_protocol::extentid_t id, int& r) {
+  auto ret = cl->call(extent_protocol::remove, id, r);
+  if (ret != extent_protocol::OK && ret != extent_protocol::NOENT) {
+    retry(id);
+    ret = cl->call(extent_protocol::remove, id, r);
+  }
+  return ret;
+}
+
+extent_protocol::status extent_client_cache::callPut(extent_protocol::extentid_t id, std::string& content, int& r) {
+  auto ret = cl->call(extent_protocol::put, id, content, r);
+  if (ret != extent_protocol::OK && ret != extent_protocol::NOENT) {
+    retry(id);
+    ret = cl->call(extent_protocol::put, id, content, r);
+  }
+  return ret;
+}
+
+extent_protocol::status extent_client_cache::callSetAttr(extent_protocol::extentid_t id, extent_protocol::attr& attr, int& r) {
+  auto ret = cl->call(extent_protocol::setattr, id, attr, r);
+  if (ret != extent_protocol::OK && ret != extent_protocol::NOENT) {
+    retry(id);
+    ret = cl->call(extent_protocol::setattr, id, attr, r);
+  }
   return ret;
 }

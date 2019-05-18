@@ -258,4 +258,16 @@ operator>>(unmarshall &u, std::map<A,B> &d) {
 	return u;
 }
 
+template <class A, class B> unmarshall&
+operator>>(unmarshall &u, std::pair<A ,B>& d) {
+  u >> d.first >> d.second;
+  return u;
+}
+
+template <class A, class B> marshall&
+operator<<(marshall& m, const std::pair<A ,B>& d) {
+  m << d.first << d.second;
+  return m;
+}
+
 #endif
