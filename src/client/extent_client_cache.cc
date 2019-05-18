@@ -275,6 +275,7 @@ extent_protocol::status extent_client_cache::callRemove(extent_protocol::extenti
 }
 
 extent_protocol::status extent_client_cache::callPut(extent_protocol::extentid_t id, std::string& content, int& r) {
+  retry(id);
   auto ret = cl->call(extent_protocol::put, id, content, r);
   if (ret != extent_protocol::OK && ret != extent_protocol::NOENT) {
     retry(id);
@@ -284,6 +285,7 @@ extent_protocol::status extent_client_cache::callPut(extent_protocol::extentid_t
 }
 
 extent_protocol::status extent_client_cache::callSetAttr(extent_protocol::extentid_t id, extent_protocol::attr& attr, int& r) {
+  retry(id);
   auto ret = cl->call(extent_protocol::setattr, id, attr, r);
   if (ret != extent_protocol::OK && ret != extent_protocol::NOENT) {
     retry(id);
