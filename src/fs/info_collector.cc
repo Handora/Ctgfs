@@ -2,6 +2,8 @@
 #include "master/master_protocol.h"
 #include <mutex>
 #include <thread>
+#include <map>
+#include <algorithm>
 
 namespace ctgfs {
 namespace info_collector {
@@ -16,14 +18,34 @@ InfoCollector* InfoCollector::GetInstance() {
 /* Get, Set should be a thread-safe operation. */
 std::mutex info_mu;
 
-InfoCollector::ServerInfo InfoCollector::Get() const {
+InfoCollector::ServerInfo InfoCollector::Get() {
   std::lock_guard<std::mutex> locker(info_mu);
+
+  std::map< unsigned long long, std::pair<unsigned long long, int> > m;
+  for (int i = 0; i < (int)i_.inum.size(); ++i) {
+    m.insert(std::make_pair(i_.inum[i], std::make_pair(i_.sz[i], i_.type[i])));
+  }
+
+  std::vector< unsigned long long > temp_inum, temp_sz;
+  std::vector< int> temp_type;
+
+  for (auto p : m) {
+    temp_inum.push_back(p.first);
+    temp_sz.push_back(p.second.first);
+    temp_type.push_back(p.second.second);
+  }
+
+  i_.inum = std::move(temp_inum);
+  i_.sz = std::move(temp_sz);
+  i_.type = std::move(temp_type);
   return i_;
 }
 
-void InfoCollector::Set(const InfoCollector::ServerInfo& i) {
+void InfoCollector::AddDirtyData(unsigned long long inum, unsigned long long size, int type) {
   std::lock_guard<std::mutex> locker(info_mu);
-  i_ = i;
+  i_.inum.push_back(inum);
+  i_.sz.push_back(size);
+  i_.type.push_back(type);
 }
 
 void InfoCollector::Set(const InfoCollector::KVInfo& i) {
@@ -47,6 +69,10 @@ void InfoCollector::SendHeartBeat(std::string addr) const {
       /* send heart beat to master */
       int r;
       cl->call(master_protocol::heart_beat, instance_->Get(), r);
+
+      /* clear the dirty collection. */
+      instance_->i_.clear();
+
       /* do this loop every 3s. */
       std::this_thread::sleep_for(std::chrono::seconds(3));
     }
@@ -73,14 +99,16 @@ void InfoCollector::Regist(const std::string& addr) {
 /* type : int, addr: string */ 
 /* file_num: uint64 , disk_usage: uint64 */
 marshall& operator<<(marshall &m, const InfoCollector::ServerInfo& i) {
-  m << i.file_num;
-  m << i.disk_usage;
+  m << i.inum;
+  m << i.sz;
+  m << i.type;
   return m;
 }
 
 unmarshall& operator>>(unmarshall &u, InfoCollector::ServerInfo& i) {
-  u >> i.file_num;
-  u >> i.disk_usage;
+  u >> i.inum;
+  u >> i.sz;
+  u >> i.type;
   return u;
 }
 
