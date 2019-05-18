@@ -1,2 +1,2 @@
-add_library(memtable wal.cc)
-target_link_libraries(memtable log)
+add_library(memtable wal.cc memtable.cc)
+target_link_libraries(memtable log sstable)

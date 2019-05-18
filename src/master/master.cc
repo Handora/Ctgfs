@@ -119,8 +119,24 @@ void Master::updateKVInfo(
 
 master_protocol::status Master::UpdateKVInfo(InfoCollector::ServerInfo i, int&) {
   /* when this function is called by rpc, the latest info of extent_server will be passed. */
-  std::cout << "called by rpc:\n" << "num: " << i.file_num <<  ", size: " << i.disk_usage
-  << std::endl;
+
+  std::cout << "inum:";
+  for (auto x : i.inum) {
+    std::cout << " " << x;
+  }
+  std::cout << "\n";
+
+  std::cout << "size:";
+  for (auto x : i.sz) {
+    std::cout << " " << x;
+  }
+  std::cout << "\n";
+
+  std::cout << "type:";
+  for (auto x : i.type) {
+    std::cout << " " << x;
+  }
+  std::cout << "\n";
 
   return master_protocol::OK;
 }

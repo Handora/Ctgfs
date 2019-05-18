@@ -3,6 +3,7 @@
 #include "fs/extent_server.h"
 #include "fs/info_collector.h"
 #include "master/master_protocol.h"
+#include "master/master.h"
 #include "rpc/rpc.h"
 #include <sstream>
 #include <stdio.h>
@@ -13,7 +14,9 @@
 #include <thread>
 #include <memory>
 #include <unordered_set>
-#include <iostream> /* print debug messae. */
+
+namespace ctgfs {
+namespace server {
 
 using namespace ctgfs::info_collector;
 
@@ -23,7 +26,8 @@ extent_server::extent_server() {
   VERIFY(put(0x00000001, "", res) == extent_protocol::OK);
 
   InfoCollector* collector = InfoCollector::GetInstance();
-  collector->SendHeartBeat("62232");
+
+  collector->SendHeartBeat("1234");
 }
 
 extent_server::~extent_server() {}
@@ -34,12 +38,9 @@ int extent_server::put(extent_protocol::extentid_t id, std::string buf, int &)
   std::map<extent_protocol::extentid_t, extent*>::iterator it = extent_map_.find(id);
   unsigned int now = (unsigned int)time(NULL);
   InfoCollector* collector = InfoCollector::GetInstance();
-  InfoCollector::ServerInfo i = collector->Get();
   if (it != extent_map_.end()) {
     /* update the extent_server info for the file update. */
-    i.disk_usage -= it->second->content.size();
-    i.disk_usage += buf.size();
-    collector->Set(i);
+    collector->AddDirtyData(id, buf.size(), 2);
 
     it->second->ctime = now;
     it->second->mtime = now;
@@ -52,9 +53,7 @@ int extent_server::put(extent_protocol::extentid_t id, std::string buf, int &)
   extent_map_.insert(std::pair<extent_protocol::extentid_t, extent*>(id, value));
 
   /* update the extent_server info for the file insertion. */
-  ++i.file_num;
-  i.disk_usage += value->content.size();
-  collector->Set(i);
+  collector->AddDirtyData(id, value->content.size(), 1);
 
   return extent_protocol::OK;
 }
@@ -111,9 +110,7 @@ int extent_server::setattr(extent_protocol::extentid_t id, extent_protocol::attr
 
     /* update the extent_server info for the file size change. */
     InfoCollector* collector = InfoCollector::GetInstance();
-    InfoCollector::ServerInfo i = collector->Get();
-    i.disk_usage += 1LL * new_size - old_size;
-    collector->Set(i);
+    collector->AddDirtyData(id, new_size, 2);
 
     return extent_protocol::OK;
   }
@@ -126,17 +123,12 @@ int extent_server::remove(extent_protocol::extentid_t id, int &)
   ScopedLock lm(&server_mu_);
   std::map<extent_protocol::extentid_t, extent*>::iterator it = extent_map_.find(id);
   if (it != extent_map_.end()) {
-    int file_size = it->second->content.size();
-
     delete it->second;
     extent_map_.erase(it);
 
     /* update the extent_server info for the file delete. */
     InfoCollector* collector = InfoCollector::GetInstance();
-    InfoCollector::ServerInfo i = collector->Get();
-    i.file_num--;
-    i.disk_usage -= file_size;
-    collector->Set(i);
+    collector->AddDirtyData(id, 0, 0);
 
     return extent_protocol::OK;
   }
@@ -195,27 +187,17 @@ int extent_server::move(std::vector<extent_protocol::extentid_t> ids, std::strin
   /* remove those extents which were moved successfully from current server. */
   {
     ScopedLock lm_2(&server_mu_);
-    unsigned long long file_size = 0;
     for (const std::pair<extent_protocol::extentid_t, extent*> extent : extents) {
       if (deleted_ok.find(extent.first) != deleted_ok.end()) {
         delete extent_map_[extent.first];
         extent_map_[extent.first] = nullptr;
 
         extent_map_.erase(extent.first);
-
-        file_size += extent.second->content.size();
       } 
-
-      /* update the extent_server info for the file move. */
-      InfoCollector* collector = InfoCollector::GetInstance();
-      InfoCollector::ServerInfo i = collector->Get();
-      i.file_num -= deleted_ok.size();
-      i.disk_usage -= file_size;
-      collector->Set(i);
     }
   } 
 
   return extent_protocol::OK;
 }
-
-
+  
+}}

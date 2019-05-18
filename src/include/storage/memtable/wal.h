@@ -8,6 +8,7 @@
 #include <mutex>
 #include <storage/log.h>
 #include <vector>
+#include <functional>
 
 namespace ctgfs {
 namespace memtable {

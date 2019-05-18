@@ -21,7 +21,7 @@ TEST(COLLECTORTest, Basic) {
     count = atoi(count_env);
   }
 
-  rpcs server(atoi("62232"), count);
+  rpcs server(atoi("1234"), count);
   using ctgfs::master::Master;
   Master ms;
   server.reg(master_protocol::heart_beat, &ms, &Master::UpdateKVInfo);
@@ -34,6 +34,12 @@ TEST(COLLECTORTest, Basic) {
   EXPECT_EQ(extent_protocol::OK, src.put(21, "content_2", r));
   std::this_thread::sleep_for(std::chrono::seconds(5));
   EXPECT_EQ(extent_protocol::OK, src.put(31, "content_3", r));
+
+  EXPECT_EQ(extent_protocol::OK, src.put(1231, "content_1231", r));
+  EXPECT_EQ(extent_protocol::OK, src.put(1232, "content_1232", r));
+  EXPECT_EQ(extent_protocol::OK, src.put(1233, "content_1233", r));
+  EXPECT_EQ(extent_protocol::OK, src.put(1234, "content_1234", r));
+  EXPECT_EQ(extent_protocol::OK, src.put(1235, "content_1235", r));
 
   /* check  */
   std::string content;
