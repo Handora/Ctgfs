@@ -15,6 +15,9 @@
 #include <unordered_set>
 #include <iostream> /* print debug messae. */
 
+namespace ctgfs {
+namespace server {
+
 using namespace ctgfs::info_collector;
 
 extent_server::extent_server() {
@@ -217,5 +220,4 @@ int extent_server::move(std::vector<extent_protocol::extentid_t> ids, std::strin
 
   return extent_protocol::OK;
 }
-
-
+}}
