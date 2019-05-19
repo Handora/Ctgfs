@@ -3,8 +3,8 @@
 #ifndef extent_client_h
 #define extent_client_h
 
-#include <string>
 #include <map>
+#include <string>
 #include "fs/extent_protocol.h"
 #include "rpc/rpc.h"
 
@@ -36,7 +36,7 @@ class extent_client {
                                           extent_protocol::attr& a);
 };
 
-} // namespace ctgfs
-} // namespace client
+}  // namespace ctgfs
+}  // namespace client
 
 #endif

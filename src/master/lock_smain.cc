@@ -1,10 +1,10 @@
-#include "rpc/rpc.h"
 #include <arpa/inet.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <master/lock_server_cache.h>
-#include <unistd.h>
 #include <master/lock_server.h>
+#include <master/lock_server_cache.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include "rpc/rpc.h"
 
 #include "rpc/jsl_log.h"
 
@@ -12,9 +12,7 @@
 
 using namespace ctgfs::lock_server;
 
-int
-main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
   int count = 0;
 
   setvbuf(stdout, NULL, _IONBF, 0);
@@ -22,17 +20,17 @@ main(int argc, char *argv[])
 
   srandom(getpid());
 
-  if(argc != 2){
+  if (argc != 2) {
     fprintf(stderr, "Usage: %s port\n", argv[0]);
     exit(1);
   }
 
   char *count_env = getenv("RPC_COUNT");
-  if(count_env != NULL){
+  if (count_env != NULL) {
     count = atoi(count_env);
   }
 
-  //jsl_set_debug(2);
+// jsl_set_debug(2);
 
 #ifndef RSM
   lock_server_cache ls;
@@ -42,6 +40,5 @@ main(int argc, char *argv[])
   server.reg(lock_protocol::release, &ls, &lock_server_cache::release);
 #endif
 
-  while(1)
-    sleep(1000);
+  while (1) sleep(1000);
 }

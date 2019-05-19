@@ -13,7 +13,6 @@ struct stat;
 namespace ctgfs {
 namespace client {
 
-
 class lock_release_user_impl : public lock_release_user {
  private:
   extent_client* ec;
@@ -95,7 +94,7 @@ class yfs_client {
   int unlink(inum parent, std::string name);
 };
 
-} // namespace client
-} // namespace ctgfs
+}  // namespace client
+}  // namespace ctgfs
 
 #endif

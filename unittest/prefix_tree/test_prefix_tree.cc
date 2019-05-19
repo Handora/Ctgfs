@@ -2,28 +2,28 @@
 * author: fftlover(ltang970618@gmail.com)
 **/
 
+#include <gtest/gtest.h>
 #include <master/prefix_tree.h>
 #include <master/prefix_tree_node.h>
 #include <util/status.h>
-#include <gtest/gtest.h>
 #include <iostream>
 
 namespace ctgfs {
 namespace prefix_tree {
 
 void debugTree(std::shared_ptr<PrefixTreeNode> t, std::string pre = "") {
-  if(!t->IsDir()) {
+  if (!t->IsDir()) {
     return;
   }
   auto list = t->GetList();
   std::cout << pre << " " << t->GetPath() << std::endl;
-  for(auto ele : list) {
+  for (auto ele : list) {
     debugTree(ele, pre + "-");
   }
 }
 
 TEST(PrefixTreeTest, PrefixTree) {
-  PrefixTree* t = new PrefixTree(); 
+  PrefixTree* t = new PrefixTree();
   t->RegistNewKV(1, 1000);
   EXPECT_TRUE(t->GetRoot()->IsDir());
   int kv_id;
@@ -31,7 +31,7 @@ TEST(PrefixTreeTest, PrefixTree) {
   EXPECT_FALSE(status.IsOK());
   status = t->Create("A", 1, true, 0, kv_id);
   EXPECT_TRUE(status.IsOK());
-  status = t->Create("A/B", 2, false, 0, kv_id); 
+  status = t->Create("A/B", 2, false, 0, kv_id);
   auto list = t->GetRoot()->GetList();
   EXPECT_TRUE(status.IsOK());
   EXPECT_EQ(1, list.size());
@@ -47,13 +47,12 @@ TEST(PrefixTreeTest, PrefixTree) {
   ASSERT_TRUE(t->GetRoot()->IsDir());
   auto dir_list = (*list.begin())->GetList();
   int cnt = 0;
-  for(auto ele : dir_list) {
-    cnt ++;
-    if(cnt == 1) {
+  for (auto ele : dir_list) {
+    cnt++;
+    if (cnt == 1) {
       EXPECT_FALSE(ele->IsDir());
       EXPECT_EQ("B", (ele)->GetPath());
-    }
-    else {
+    } else {
       EXPECT_TRUE(ele->IsDir());
       EXPECT_EQ("C", ele->GetPath());
     }
@@ -70,5 +69,5 @@ TEST(PrefixTreeTest, PrefixTree) {
   EXPECT_EQ(1, list.size());
 }
 
-} // prefix_tree
-} // ctgfs
+}  // prefix_tree
+}  // ctgfs

@@ -2,15 +2,15 @@
 * author: OneDay_(ltang970618@gmail.com)
 **/
 #include <master/master.h>
-#include "rpc/rpc.h"
-#include "fs/extent_protocol.h"
+#include <algorithm>
+#include <iostream>
 #include "client/extent_client.h"
 #include "client/extent_client_cache.h"
 #include "client/lock_client.h"
 #include "client/lock_client_cache.h"
-#include <iostream>
+#include "fs/extent_protocol.h"
 #include "master/master_protocol.h"
-#include <algorithm>
+#include "rpc/rpc.h"
 
 namespace ctgfs {
 namespace master {
@@ -21,35 +21,38 @@ Master::Master() {
     VALID_CHAR_SET.push_back('A' + i);
   }
   t_ = std::make_shared<PrefixTree>();
-  adjust_thread_ = std::thread([&](){
-    while(!stop_) {
+  adjust_thread_ = std::thread([&]() {
+    while (!stop_) {
       auto score = calculateScore(t_->GetAdjustContext());
       auto move_op = t_->Adjust(score);
-      sort(move_op.begin(), move_op.end(), [](std::pair<unsigned long long, std::pair<int, int> > a, std::pair<unsigned long long, std::pair<int, int> > b) {
-        return a.second < b.second;
-      });
-      if(move_op.empty()) {
+      sort(move_op.begin(), move_op.end(),
+           [](std::pair<unsigned long long, std::pair<int, int> > a,
+              std::pair<unsigned long long, std::pair<int, int> > b) {
+             return a.second < b.second;
+           });
+      if (move_op.empty()) {
         continue;
       }
       std::vector<unsigned long long> pip_line;
       pip_line.push_back(move_op[0].first);
       std::pair<int, int> op_addr = move_op[0].second;
-      for(auto i = 1; i < (int)move_op.size(); i ++) {
+      for (auto i = 1; i < (int)move_op.size(); i++) {
         inum_to_register_id_[move_op[i].first] = move_op[i].second.second;
-        if(move_op[i].second == op_addr) {
+        if (move_op[i].second == op_addr) {
           pip_line.push_back(move_op[i].first);
-        }
-        else {
+        } else {
           auto lock_addr = "";
-          Move(lock_addr, pip_line, register_id_to_addr_[op_addr.first], register_id_to_addr_[op_addr.second]);
+          Move(lock_addr, pip_line, register_id_to_addr_[op_addr.first],
+               register_id_to_addr_[op_addr.second]);
           pip_line.clear();
           pip_line.push_back(move_op[i].first);
           op_addr = move_op[i].second;
         }
       }
-      if(!pip_line.empty()) {
+      if (!pip_line.empty()) {
         auto lock_addr = "";
-        Move(lock_addr, pip_line, register_id_to_addr_[op_addr.first], register_id_to_addr_[op_addr.second]);
+        Move(lock_addr, pip_line, register_id_to_addr_[op_addr.first],
+             register_id_to_addr_[op_addr.second]);
       }
       std::this_thread::sleep_for(std::chrono::seconds(3));
     }
@@ -61,7 +64,9 @@ Master::~Master() {
   adjust_thread_.join();
 }
 
-master_protocol::status Master::AskForIno(std::string path, bool is_dir, unsigned long long node_sz, std::pair<unsigned long long, std::string>& r) {
+master_protocol::status Master::AskForIno(
+    std::string path, bool is_dir, unsigned long long node_sz,
+    std::pair<unsigned long long, std::string>& r) {
   auto ino = genInum(path, is_dir, node_sz);
   r.first = ino;
   r.second = getInfoByInum(ino);
@@ -69,15 +74,17 @@ master_protocol::status Master::AskForIno(std::string path, bool is_dir, unsigne
   return master_protocol::OK;
 }
 
-master_protocol::status Master::AskForKV(unsigned long long ino, std::string& r) {
+master_protocol::status Master::AskForKV(unsigned long long ino,
+                                         std::string& r) {
   // unsigned long long ino = request->ino();
   // response->set_addr(getInfoByInum(ino));
   r = getInfoByInum(ino);
-  printf("ask for kv: %016llu, resp %s\n",ino, r.c_str());
+  printf("ask for kv: %016llu, resp %s\n", ino, r.c_str());
   return master_protocol::OK;
 }
 
-master_protocol::status Master::Regist(std::string addr, unsigned long long sum_memory, int& r) {
+master_protocol::status Master::Regist(std::string addr,
+                                       unsigned long long sum_memory, int& r) {
   auto id = getNewRegisterID();
   doRegister(addr, id);
   t_->RegistNewKV(id, sum_memory);
@@ -117,8 +124,10 @@ void Master::updateKVInfo(
 }
 */
 
-master_protocol::status Master::UpdateKVInfo(InfoCollector::ServerInfo i, int&) {
-  /* when this function is called by rpc, the latest info of extent_server will be passed. */
+master_protocol::status Master::UpdateKVInfo(InfoCollector::ServerInfo i,
+                                             int&) {
+  /* when this function is called by rpc, the latest info of extent_server will
+   * be passed. */
 
   std::cout << "inum:";
   for (auto x : i.inum) {
@@ -226,7 +235,6 @@ void Master::hashValueToRegisterID(int& val) {
 
 void Master::unregisterKV(const int& regist_id) { doUnregister(regist_id); }
 
-
 void Master::doUnregister(const int& register_id) {
   if (register_id_to_addr_.find(register_id) == register_id_to_addr_.end())
     return;
@@ -248,16 +256,18 @@ void Master::debugRegisterKV(bool is_error, const char* str) {
   debugRegisterKV(is_error, std::string(str));
 }
 
-unsigned long long Master::genInum(const std::string& path, bool is_dir, unsigned long long node_sz) {
+unsigned long long Master::genInum(const std::string& path, bool is_dir,
+                                   unsigned long long node_sz) {
   std::lock_guard<std::mutex> locker(ino_count_mutex_);
-  unsigned long long id = ino_count_ ++; 
+  unsigned long long id = ino_count_++;
   // id += random() % (2147483648);
   if (!is_dir) id |= 0x80000000;
   int kv_id;
   t_->Create(path, id, is_dir, node_sz, kv_id);
   inum_to_path_[id] = path;
   inum_to_register_id_[id] = kv_id;
-  printf("gen new inum: %016x, path: %s, kv_id: %d, sz: %llu\n", id, path.c_str(), kv_id, node_sz);
+  printf("gen new inum: %016x, path: %s, kv_id: %d, sz: %llu\n", id,
+         path.c_str(), kv_id, node_sz);
   return id;
 }
 
@@ -265,9 +275,12 @@ std::string Master::getInfoByInum(unsigned long long inum) {
   return register_id_to_addr_[inum_to_register_id_[inum]];
 }
 
-int Master::Move(std::string lock_server_addr, std::vector<unsigned long long> inum, std::string src, std::string dst) {
-  for(auto id : inum) {
-    printf("do move %016x from src %s to dst %s\n",id, src.c_str(), dst.c_str());
+int Master::Move(std::string lock_server_addr,
+                 std::vector<unsigned long long> inum, std::string src,
+                 std::string dst) {
+  for (auto id : inum) {
+    printf("do move %016x from src %s to dst %s\n", id, src.c_str(),
+           dst.c_str());
   }
   /* OK is always the first state. */
   int status = 0;
@@ -309,16 +322,17 @@ int Master::Move(std::string lock_server_addr, std::vector<unsigned long long> i
       }
     }
   }
-  
-  /* ERROR occurred when lock files to be moved. */ 
+
+  /* ERROR occurred when lock files to be moved. */
   if (!go_on) {
     printf("error: lock file error in master!\n");
     return status;
   }
 
   extent_protocol::status ret = extent_protocol::OK; /* status for rpc call */
-  int r; /* status for move func */
-  ret = ptr_rpc_cl->call(extent_protocol::move, std::move(inum), std::move(dst), r);
+  int r;                                             /* status for move func */
+  ret = ptr_rpc_cl->call(extent_protocol::move, std::move(inum), std::move(dst),
+                         r);
   if (ret != extent_protocol::OK) {
     printf("error: move operation called by master!\n");
   }
@@ -331,10 +345,11 @@ int Master::Move(std::string lock_server_addr, std::vector<unsigned long long> i
   return ret;
 }
 
-int Master::calculateScore(std::vector<std::shared_ptr<AdjustContext> >* context_vec) {
+int Master::calculateScore(
+    std::vector<std::shared_ptr<AdjustContext> >* context_vec) {
   unsigned long long sum;
   unsigned long long cur_sum;
-  for(auto context : (*context_vec)) {
+  for (auto context : (*context_vec)) {
     cur_sum += context->cur_memory;
     sum += context->info->sum_memory;
   }
@@ -343,4 +358,3 @@ int Master::calculateScore(std::vector<std::shared_ptr<AdjustContext> >* context
 
 }  // namespace master
 }  // namespace ctgfs
-
