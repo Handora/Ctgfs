@@ -4,10 +4,9 @@ compiler:
   - gcc
 addons:
   apt:
-    sources:
-    - libfuse-dev
     packages:
-    - g++-5.4.0
+    - g++
+    - libfuse-dev
 install:
   - "./build.sh"
 script:
