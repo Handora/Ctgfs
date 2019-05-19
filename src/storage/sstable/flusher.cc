@@ -23,7 +23,8 @@ Status SSTFlusher::Stop() {
 }
 
 Status SSTFlusher::Flush(const std::string &dir, const std::string &filename,
-               Iterator &mem_iter, const Log &last_log, SStable &sst) {
+                         Iterator &mem_iter, const Log &last_log,
+                         SStable &sst) {
   Status ret = Status::OK();
   if (!(ret = sst.Init(dir, filename, last_log)).IsOK()) {
     CTG_WARN("init sst error");
@@ -35,7 +36,7 @@ Status SSTFlusher::Flush(const std::string &dir, const std::string &filename,
       }
       sst.Append(log);
     }
-    
+
     if (ret.IsOK() && !(ret = sst.Flush()).IsOK()) {
       CTG_WARN("flush sst error");
     }

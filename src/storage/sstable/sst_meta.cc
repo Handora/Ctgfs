@@ -10,14 +10,12 @@ using util::Status;
 using namespace util;
 
 std::string uint64_to_str(uint64_t i) {
-  return std::string((char*)(&i), sizeof(i));
+  return std::string((char *)(&i), sizeof(i));
 }
 
-uint64_t str_to_uint64(const char *s) {
-  return *(uint64_t*)(s);
-}
+uint64_t str_to_uint64(const char *s) { return *(uint64_t *)(s); }
 
-Status SSTMeta::Encode(std::string& meta) {
+Status SSTMeta::Encode(std::string &meta) {
   Status ret = Status::OK();
   meta.clear();
 
@@ -104,7 +102,8 @@ Status SSTMeta::Read(int fd) {
     if (read(fd, buf, readed - sizeof(uint64_t)) < 0) {
       CTG_WARN("read fail when read meta");
       ret = Status::Corruption("read fail when read meta");
-    } else if (!(ret = Decode(std::string(buf, readed - sizeof(uint64_t)))).IsOK()) {
+    } else if (!(ret = Decode(std::string(buf, readed - sizeof(uint64_t))))
+                    .IsOK()) {
       CTG_WARN("decode fail when read meta");
     } else {
       assert(Size() == readed - sizeof(uint64_t));
@@ -125,7 +124,8 @@ Status SSTMeta::Read(int fd, uint64_t &readed) {
     if (read(fd, buf, readed - sizeof(uint64_t)) < 0) {
       CTG_WARN("read fail when read log");
       ret = Status::Corruption("read fail when read meta");
-    } else if (!(ret = Decode(std::string(buf, readed - sizeof(uint64_t)))).IsOK()) {
+    } else if (!(ret = Decode(std::string(buf, readed - sizeof(uint64_t))))
+                    .IsOK()) {
       CTG_WARN("decode fail when read meta");
     } else {
       assert(Size() == readed - sizeof(uint64_t));
@@ -135,7 +135,5 @@ Status SSTMeta::Read(int fd, uint64_t &readed) {
   return ret;
 }
 
-
 }  // namespace sstable
 }  // namespace ctgfs
-
