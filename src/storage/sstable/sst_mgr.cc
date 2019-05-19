@@ -1,8 +1,8 @@
 // Authors: Chen Qian(qcdsr970209@gmail.com)
 
+#include <dirent.h>
 #include <storage/sstable/sst_mgr.h>
-#include <dirent.h> 
-#include <util/util.h> 
+#include <util/util.h>
 
 namespace ctgfs {
 namespace sstable {
@@ -18,7 +18,8 @@ Status SSTMgr::getFilesFromDir_(std::vector<std::string> &files) {
   d = opendir(dir_.c_str());
   if (d) {
     while ((dir = readdir(d)) != NULL) {
-      if (dir -> d_type == DT_REG && strcmp(dir->d_name, ".") != 0 && strcmp(dir->d_name, "..") != 0) {
+      if (dir->d_type == DT_REG && strcmp(dir->d_name, ".") != 0 &&
+          strcmp(dir->d_name, "..") != 0) {
         if (std::string(dir->d_name).find(SST_PREFIX) == 0) {
           files.push_back(std::string(dir->d_name));
         }
@@ -53,8 +54,7 @@ Status SSTMgr::Init() {
 
 Status SSTMgr::Recover(const std::vector<std::string> &files) {
   Status ret = Status::OK();
-  for (auto it = files.begin();
-       ret.IsOK() && it != files.end(); ++it) {
+  for (auto it = files.begin(); ret.IsOK() && it != files.end(); ++it) {
     std::string file = *it;
     SStable sst;
     if (!(ret = sst.Recover(dir_, file)).IsOK()) {
@@ -67,11 +67,12 @@ Status SSTMgr::Recover(const std::vector<std::string> &files) {
   return ret;
 }
 
-Status SSTMgr::Flush(Iterator &iter, const Log& last_log) {
+Status SSTMgr::Flush(Iterator &iter, const Log &last_log) {
   Status ret = Status::OK();
   SStable sst;
 
-  if (!(ret = flusher_->Flush(dir_, nextFileName(), iter, last_log, sst)).IsOK()) {
+  if (!(ret = flusher_->Flush(dir_, nextFileName(), iter, last_log, sst))
+           .IsOK()) {
     CTG_WARN("flusher flush error");
   } else {
     std::lock_guard<std::mutex> guard(ssts_mu_);
@@ -100,5 +101,5 @@ Status SSTMgr::Stop() {
   return ret;
 }
 
-} // namespace sstable
-} // namespace ctgfs
+}  // namespace sstable
+}  // namespace ctgfs
