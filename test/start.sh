@@ -35,12 +35,12 @@ if [ $NUM_LS -gt 1 ]; then
     while [ $x -lt $NUM_LS ]; do
       port=$[LOCK_PORT+2*x]
       x=$[x+1]
-      echo "starting lock_server $LOCK_PORT $port > lock_server$x.log 2>&1 &"
+      # echo "starting lock_server $LOCK_PORT $port > lock_server$x.log 2>&1 &"
       build/src/master/lock_server $LOCK_PORT $port > lock_server$x.log 2>&1 &
       sleep 1
     done
 else
-    echo "starting lock_server $LOCK_PORT > lock_server.log 2>&1 &"
+    # echo "starting lock_server $LOCK_PORT > lock_server.log 2>&1 &"
     build/src/master/lock_server $LOCK_PORT > lock_server.log 2>&1 &
     sleep 1
 fi
@@ -54,7 +54,7 @@ unset RPC_LOSSY
 rm -rf $YFSDIR1
 mkdir $YFSDIR1 || exit 1
 sleep 1
-echo "starting yfs_client $YFSDIR1 $EXTENT_PORT $LOCK_PORT > yfs_client1.log 2>&1 &"
+# echo "starting yfs_client $YFSDIR1 $EXTENT_PORT $LOCK_PORT > yfs_client1.log 2>&1 &"
 
 build/src/client/yfs_client $YFSDIR1 $EXTENT_PORT $LOCK_PORT > yfs_client1.log 2>&1 &
 sleep 1
@@ -62,7 +62,7 @@ sleep 1
 rm -rf $YFSDIR2
 mkdir $YFSDIR2 || exit 1
 sleep 1
-echo "starting yfs_client $YFSDIR2 $EXTENT_PORT $LOCK_PORT > yfs_client2.log 2>&1 &"
+# echo "starting yfs_client $YFSDIR2 $EXTENT_PORT $LOCK_PORT > yfs_client2.log 2>&1 &"
 build/src/client/yfs_client $YFSDIR2 $EXTENT_PORT $LOCK_PORT > yfs_client2.log 2>&1 &
 
 sleep 2
@@ -81,18 +81,15 @@ if [ `mount | grep "$pwd/yfs2" | grep -v grep | wc -l` -ne 1 ]; then
     exit -1
 fi
 
-echo "start master > master.log 2>&1 &"
+# echo "start master > master.log 2>&1 &"
 ./build/src/master/master_main 1234 > master.log 2>&1 &
 
 sleep 2
 
 # echo "start heartbeat client > heart_beat.log 2>&1 &"
 # ./build/src/fs/heart_beat_sender_main > heart_beat.log 2>&1 &
-echo "start extent server > extent_server1.log 2>&1 &"
+# echo "start extent server > extent_server1.log 2>&1 &"
 ./build/src/fs/extent_server 1111 1234 > extent_server1.log 2>&1 &
 
-echo "start extent server > extent_server2.log 2>&1 &"
+# echo "start extent server > extent_server2.log 2>&1 &"
 ./build/src/fs/extent_server 1112 1234 > extent_server2.log 2>&1 &
-
-
-echo "done"
