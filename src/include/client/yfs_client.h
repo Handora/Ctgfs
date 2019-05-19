@@ -9,7 +9,10 @@
 #include "lock_client.h"
 #include "lock_protocol.h"
 
-using namespace ctgfs::client;
+struct stat;
+namespace ctgfs {
+namespace client {
+
 
 class lock_release_user_impl : public lock_release_user {
  private:
@@ -91,5 +94,8 @@ class yfs_client {
   int mkdir(inum parent, std::string name, inum& inum, dirinfo& info);
   int unlink(inum parent, std::string name);
 };
+
+} // namespace client
+} // namespace ctgfs
 
 #endif

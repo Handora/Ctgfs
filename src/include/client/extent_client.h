@@ -10,6 +10,9 @@
 
 using namespace ::ctgfs::server;
 
+namespace ctgfs {
+namespace client {
+
 class extent_client {
  protected:
   rpcc* cl;
@@ -32,5 +35,8 @@ class extent_client {
   virtual extent_protocol::status setattr(extent_protocol::extentid_t id,
                                           extent_protocol::attr& a);
 };
+
+} // namespace ctgfs
+} // namespace client
 
 #endif

@@ -8,6 +8,9 @@
 #include "rpc/rpc.h"
 #include <vector>
 
+namespace ctgfs {
+namespace client {
+
 // Client interface to the lock server
 class lock_client {
  protected:
@@ -21,5 +24,7 @@ class lock_client {
   virtual lock_protocol::status stat(lock_protocol::lockid_t);
 };
 
+} // namespace client
+} // namespace ctgfs
 
 #endif 

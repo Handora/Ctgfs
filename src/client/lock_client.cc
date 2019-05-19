@@ -8,6 +8,9 @@
 #include <iostream>
 #include <stdio.h>
 
+namespace ctgfs {
+namespace client {
+
 lock_client::lock_client(const std::string& dst) {
   cl = nullptr;
   ConnectTo(dst);
@@ -48,3 +51,5 @@ lock_client::release(lock_protocol::lockid_t lid)
   return cl->call(lock_protocol::release, cl->id(), lid, r);
 }
 
+} // client
+} // ctgfs

@@ -10,6 +10,9 @@
 #include "lock_client.h"
 #include "rpc/verify.h"
 
+namespace ctgfs {
+namespace client {
+
 // Classes that inherit lock_release_user can override dorelease so that 
 // that they will be called when lock_client releases a lock.
 // You will not need to do anything with this class until Lab 5.
@@ -40,6 +43,9 @@ class lock_client_cache : public lock_client {
   rlock_protocol::status retry_handler(lock_protocol::lockid_t, 
                                        int &);
 };
+
+} // namespace client
+} // namespace ctgfs
 
 
 #endif

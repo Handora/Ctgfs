@@ -5,6 +5,9 @@
 
 #include "rpc/rpc.h"
 
+namespace ctgfs {
+namespace client {
+
 class lock_protocol {
  public:
   enum xxstatus { OK, RETRY, RPCERR, NOENT, IOERR, RETIRE };
@@ -58,4 +61,9 @@ struct lock_serv_state {
   lock_serv_state()
     :holder(""), holded(false) {}
 };
+
+} // namespace client
+} // namespace ctgfs
+
 #endif 
+

@@ -8,6 +8,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+namespace ctgfs {
+namespace client {
+
 extent_client_cache::extent_client_cache(std::string dst, Client* client)
   : extent_client(dst), client_(client) {
   VERIFY(pthread_mutex_init(&cache_mu_, 0) == 0);
@@ -293,3 +296,6 @@ extent_protocol::status extent_client_cache::callSetAttr(extent_protocol::extent
   }
   return ret;
 }
+
+} // namespace client
+} // namespace ctgfs
