@@ -28,6 +28,9 @@ class SSTMgr {
   Status Stop();
   Status Flush(Iterator &iter, const Log& log);
  public:
+  // test only
+  std::vector<SStable> &GetSSTs() { return ssts_; }
+ public:
   const std::string SST_PREFIX = std::string("CtgSST");
  private:
   std::string nextFileName();

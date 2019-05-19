@@ -5,7 +5,6 @@
 #include <storage/sstable/sstable.h>
 #include <storage/log.h>
 #include <util/util.h>
-#define private public
 #include <storage/sstable/sst_mgr.h>
 
 namespace ctgfs {
@@ -33,12 +32,12 @@ TEST(SSTMgr, Basic) {
 
     mgr.Flush(iter, l);
   }
-  EXPECT_EQ(3, mgr.ssts_.size());
+  EXPECT_EQ(3, mgr.GetSSTs().size());
 
   Log log;
   
   for (int i = 0; i < 3; i++) { 
-    SStable sst = mgr.ssts_[i];
+    SStable sst = mgr.GetSSTs()[i];
     SSTIterator iter;
     sst.CreateIterator(iter);
 
@@ -63,10 +62,10 @@ TEST(SSTMgr, Basic) {
   SSTMgr mgr2("tmp");
   mgr2.Init();
 
-  EXPECT_EQ(3, mgr2.ssts_.size());
+  EXPECT_EQ(3, mgr2.GetSSTs().size());
 
   for (int i = 0; i < 3; i++) { 
-    SStable sst = mgr2.ssts_[i];
+    SStable sst = mgr2.GetSSTs()[i];
     SSTIterator iter;
     sst.CreateIterator(iter);
 

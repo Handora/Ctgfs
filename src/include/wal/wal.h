@@ -42,6 +42,9 @@ class Wal {
   Status LogToDisk(const Log& log);
   Status AppendToMLog(const Log& log);
   Status SyncToDLog();
+ public:
+  // test only
+  std::vector<Log> &GetMLog() { return mlog_; }
  private:
   Status LogToDiskWithoutLock(const Log& log);
  private:

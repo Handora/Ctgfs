@@ -1,0 +1,13 @@
+sudo: false
+language: cpp
+compiler:
+  - gcc
+addons:
+  apt:
+    packages:
+    - g++
+    - libfuse-dev
+install:
+  - "./build.sh"
+script:
+  - "./run_unittest.sh"
