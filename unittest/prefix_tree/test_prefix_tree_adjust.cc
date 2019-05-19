@@ -2,10 +2,10 @@
  * author: fftlover(ltang970618@gmail.com)
  */
 
+#include <gtest/gtest.h>
 #include <master/prefix_tree.h>
 #include <master/prefix_tree_node.h>
 #include <util/status.h>
-#include <gtest/gtest.h>
 #include <iostream>
 
 namespace ctgfs {
@@ -14,20 +14,21 @@ namespace prefix_tree {
 void travelTree(std::shared_ptr<PrefixTreeNode> node, int expect_value);
 
 void debugTree(std::shared_ptr<PrefixTreeNode> node, std::string prefix = "-") {
-  std::cout << prefix << " " << node->GetPath() << " sz: " << node->GetSZ() << " domain id: " << node->GetDomainId() << std::endl;
-  if(!node->IsDir()) {
+  std::cout << prefix << " " << node->GetPath() << " sz: " << node->GetSZ()
+            << " domain id: " << node->GetDomainId() << std::endl;
+  if (!node->IsDir()) {
     return;
   }
   auto list = node->GetList();
   prefix = "  " + prefix;
-  for(auto ele : list) {
+  for (auto ele : list) {
     debugTree(ele, prefix);
   }
 }
 
-// regist kv id: 1 memory: 10 
+// regist kv id: 1 memory: 10
 // regist kv id: 2 memory: 10
-// create file path: a/z/a/a inum: 1 sz: 1 
+// create file path: a/z/a/a inum: 1 sz: 1
 // create file path: a/z/b/b inum: 2 sz: 5
 // create file path: a/z/b/c inum: 3 sz: 1
 // create file path: a/z/b/d inum: 4 sz: 1
@@ -42,7 +43,7 @@ TEST(PrefixTreeTest, PrefixTree) {
   t->RegistNewKV(2, 10);
   auto status = t->Create("a", 11, true, 0, kv_id);
   EXPECT_TRUE(status.IsOK());
-  status = t->Create("a/z", 12, true, 0, kv_id); 
+  status = t->Create("a/z", 12, true, 0, kv_id);
   EXPECT_TRUE(status.IsOK());
   status = t->Create("a/z/a", 13, true, 0, kv_id);
   EXPECT_TRUE(status.IsOK());
@@ -67,7 +68,7 @@ TEST(PrefixTreeTest, PrefixTree) {
 
   list = (t->GetRoot())->GetList();
   EXPECT_EQ(list.size(), 1);
-  for(auto ele : list) {
+  for (auto ele : list) {
     travelTree(ele, -1);
   }
   t->Adjust(40);
@@ -84,7 +85,7 @@ TEST(PrefixTreeTest, PrefixTree) {
   auto tmp_list = a_z_b_node->GetList();
   auto node2 = *tmp_list.begin();
   auto pos = tmp_list.begin();
-  pos ++;
+  pos++;
   auto node3 = *pos;
   auto node4 = *tmp_list.rbegin();
   EXPECT_EQ(node1->GetDomainId(), -1);
@@ -134,10 +135,10 @@ TEST(PrefixTreeTest, PrefixTree) {
 void travelTree(std::shared_ptr<PrefixTreeNode> node, int expect_value) {
   auto list = node->GetList();
   EXPECT_EQ(node->GetDomainId(), expect_value);
-  for(auto ele : list) {
+  for (auto ele : list) {
     travelTree(ele, expect_value);
   }
 }
 
-} // prefix_tree
-} // ctgfs
+}  // prefix_tree
+}  // ctgfs

@@ -13,10 +13,11 @@ namespace client {
 
 class GTC {
  protected:
-  rpcc *cl_;
+  rpcc* cl_;
+
  public:
   GTC(std::string dst);
-  virtual ~GTC() {};
+  virtual ~GTC(){};
   virtual int get_ts(int& ts);
 };
 

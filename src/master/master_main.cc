@@ -3,18 +3,16 @@
 **/
 
 #include "master/master.h"
+#include <unistd.h>
 #include "master/master_protocol.h"
 #include "rpc/rpc.h"
-#include <unistd.h>
 
 using namespace ctgfs::master;
 
-int
-main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
   int count = 0;
 
-  if(argc != 2){
+  if (argc != 2) {
     fprintf(stderr, "Usage: %s port\n", argv[0]);
     exit(1);
   }
@@ -22,7 +20,7 @@ main(int argc, char *argv[])
   setvbuf(stdout, NULL, _IONBF, 0);
 
   char *count_env = getenv("RPC_COUNT");
-  if(count_env != NULL){
+  if (count_env != NULL) {
     count = atoi(count_env);
   }
 
@@ -35,7 +33,5 @@ main(int argc, char *argv[])
   server.reg(master_protocol::ask_for_ino, &ms, &Master::AskForIno);
   server.reg(master_protocol::ask_for_kv, &ms, &Master::AskForKV);
 
-  while(1)
-    sleep(1000);
+  while (1) sleep(1000);
 }
-

@@ -7,12 +7,12 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
-#include "master/master.h"
-/* these should be fixed. */
-#include "../master/lock_server.h"
-#include "../master/lock_server_cache.h"
+#include <master/master.h>
+#include <master/lock_server.h>
+#include <master/lock_server_cache.h>
 
 using namespace ::ctgfs::server;
+using namespace ::ctgfs::lock_server;
 
 TEST(MOVETest, MoveInside) {
 

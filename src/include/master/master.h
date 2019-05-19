@@ -5,12 +5,12 @@
 #include <master/prefix_tree.h>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <queue>
 #include <string>
-#include <vector>
 #include <thread>
+#include <vector>
 #include "fs/info_collector.h"
-#include <mutex>
 
 // as a server
 // several part :
@@ -31,16 +31,19 @@ class Master {
   typedef std::pair<int, int> kv_info_t;
   Master();
   ~Master();
-  int AskForIno(std::string path, bool is_dir, unsigned long long node_sz, std::pair<unsigned long long, std::string>& r);
+  int AskForIno(std::string path, bool is_dir, unsigned long long node_sz,
+                std::pair<unsigned long long, std::string>& r);
   int AskForKV(unsigned long long ino, std::string&);
 
   /* move is used to achieve load balancing. */
   /* @inum the vector of some inum, files to be moved. */
   /* @src the ip:port of source extent_server. */
   /* @dst the ip:port of target extent_server. */
-  int Move(std::string lock_server_addr, std::vector<unsigned long long> inum, std::string src, std::string dst);
+  int Move(std::string lock_server_addr, std::vector<unsigned long long> inum,
+           std::string src, std::string dst);
   int UpdateKVInfo(InfoCollector::ServerInfo i, int&);
   int Regist(std::string, unsigned long long, int&);
+
  private:
   // ino count mutex
   std::mutex ino_count_mutex_;
@@ -106,7 +109,8 @@ class Master {
   // do unregist
   void doUnregister(const int& regist_id);
   // generate inum
-  unsigned long long genInum(const std::string& path, bool is_dir, unsigned long long node_sz);
+  unsigned long long genInum(const std::string& path, bool is_dir,
+                             unsigned long long node_sz);
   // get kv info by inum
   std::string getInfoByInum(unsigned long long inum);
   // calculate the score of current situation

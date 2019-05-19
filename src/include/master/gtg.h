@@ -2,10 +2,10 @@
  * author: Chen Qian(qcdsr970209@gmail.com)
  **/
 #pragma once
-#include <string>
 #include <rpc/rpc.h>
-#include <mutex>
 #include <memory>
+#include <mutex>
+#include <string>
 
 namespace ctgfs {
 namespace master {
@@ -15,8 +15,10 @@ class GTG {
   GTG(int port);
   ~GTG();
   int get_ts(int, int& r);
+
  public:
-  static const int GET_TS = 6543; 
+  static const int GET_TS = 6543;
+
  private:
   int logical_;
   std::mutex mu_;
