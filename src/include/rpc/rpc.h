@@ -15,6 +15,9 @@
 #include "dmalloc.h"
 #endif
 
+namespace ctgfs{
+namespace rpc {
+
 class rpc_const {
 	public:
 		static const unsigned int bind = 1;   // handler number reserved for bind
@@ -624,5 +627,8 @@ void make_sockaddr(const char *host, const char *port,
 int cmp_timespec(const struct timespec &a, const struct timespec &b);
 void add_timespec(const struct timespec &a, int b, struct timespec *result);
 int diff_timespec(const struct timespec &a, const struct timespec &b);
+
+}} // namespace rpc, ctgfs
+
 
 #endif

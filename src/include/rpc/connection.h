@@ -1,15 +1,20 @@
 #ifndef connection_h
 #define connection_h 1
 
+#include <memory.h>
+#include <cstring>
+#include <string>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <cstddef>
-
 #include <map>
 
 #include "rpc/pollmgr.h"
+
+namespace ctgfs {
+namespace rpc {
 
 class connection;
 
@@ -98,4 +103,7 @@ struct bundle {
 
 void start_accept_thread(chanmgr *mgr, int port, pthread_t *th, int *fd = NULL, int lossy=0);
 connection *connect_to_dst(const sockaddr_in &dst, chanmgr *mgr, int lossy=0);
+
+}} // namespace rpc, ctgfs
+
 #endif

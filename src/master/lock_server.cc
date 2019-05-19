@@ -6,6 +6,8 @@
 #include <unistd.h>
 #include <sstream>
 
+using namespace ::ctgfs::rpc;
+
 namespace ctgfs {
 namespace lock_server {
 

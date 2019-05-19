@@ -9,6 +9,8 @@
 #include <sstream>
 #include "rpc/verify.h"
 
+using namespace ::ctgfs::rpc;
+
 namespace ctgfs {
 namespace lock_server {
 

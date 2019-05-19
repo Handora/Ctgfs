@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <util/util.h>
 
+using namespace ::ctgfs::rpc;
+
 namespace ctgfs {
 namespace lock_server {
 

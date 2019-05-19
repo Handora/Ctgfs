@@ -7,6 +7,8 @@
 #include <iostream>
 #include <sstream>
 
+using namespace ::ctgfs::rpc;
+
 namespace ctgfs {
 namespace client {
 

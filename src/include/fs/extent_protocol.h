@@ -5,6 +5,8 @@
 
 #include "rpc/rpc.h"
 
+using namespace ::ctgfs::rpc;
+
 namespace ctgfs {
 namespace server {
 

@@ -9,6 +9,8 @@
 #include <iostream>
 #include <string>
 
+using namespace ::ctgfs::rpc;
+
 namespace ctgfs {
 namespace client {
 

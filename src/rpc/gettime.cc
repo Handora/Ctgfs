@@ -64,6 +64,9 @@
 
 #pragma weak clock_gettime
 
+namespace ctgfs {
+namespace rpc {
+
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <mach/mach.h>
@@ -135,5 +138,5 @@ int clock_gettime(clockid_t clk_id, struct timespec *tp) {
 	}
 	return retval;
 }
-
+}} // namespace rpc, ctgfs
 #endif // __APPLE__

@@ -4,6 +4,9 @@
 // method_thread(): start a thread that runs an object method.
 // returns a pthread_t on success, and zero on error.
 
+namespace ctgfs {
+namespace rpc {
+
 #include <pthread.h>
 #include <stdio.h>
 #include <string.h>
@@ -161,4 +164,6 @@ method_thread(C *o, bool detach, void (C::*m)(A1 , A2, A3 ), A1 a1, A2 a2, A3 a3
 	return method_thread_parent(&XXX::yyy, (void *) x, detach);
 }
 
+
+}} // namespace rpc, ctgfs
 #endif

@@ -10,6 +10,9 @@
 
 #define MAX_POLL_FDS 128
 
+namespace ctgfs {
+namespace rpc {
+
 typedef enum {
 	CB_NONE = 0x0,
 	CB_RDONLY = 0x1,
@@ -101,6 +104,8 @@ class EPollAIO : public aio_mgr {
 		int fdstatus_[MAX_POLL_FDS];
 
 };
+
+}}  // namespace rpc, ctgfs
 #endif /* __linux */
 
 #endif /* pollmgr_h */

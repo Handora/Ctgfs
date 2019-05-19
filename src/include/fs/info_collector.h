@@ -4,6 +4,8 @@
 #include "rpc/rpc.h"
 #include <memory>
 
+using namespace ::ctgfs::rpc;
+
 namespace ctgfs {
 namespace info_collector {
 
