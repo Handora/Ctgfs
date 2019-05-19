@@ -2,13 +2,15 @@
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "lock_server_cache.h"
+#include <master/lock_server_cache.h>
 #include <unistd.h>
-#include "lock_server.h"
+#include <master/lock_server.h>
 
 #include "rpc/jsl_log.h"
 
 // Main loop of lock_server
+
+using namespace ctgfs::lock_server;
 
 int
 main(int argc, char *argv[])

@@ -4,6 +4,8 @@
 #define lock_protocol_h
 
 #include "rpc/rpc.h"
+namespace ctgfs {
+namespace lock_server {
 
 class lock_protocol {
  public:
@@ -58,4 +60,7 @@ struct lock_serv_state {
   lock_serv_state()
     :holder(""), holded(false) {}
 };
+
+} // namespace lock_server
+} // namespace ctgfs
 #endif 

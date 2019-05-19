@@ -4,9 +4,12 @@
 #include <string>
 
 #include <map>
-#include "lock_protocol.h"
-#include "rpc/rpc.h"
-#include "lock_server.h"
+#include <master/lock_protocol.h>
+#include <rpc/rpc.h>
+#include <master/lock_server.h>
+
+namespace ctgfs {
+namespace lock_server {
 
 class lock_server_cache {
  private:
@@ -19,5 +22,8 @@ class lock_server_cache {
   int acquire(lock_protocol::lockid_t, std::string id, int &);
   int release(lock_protocol::lockid_t, std::string id, int &);
 };
+
+} // namespace lock
+} // namespace ctgfs
 
 #endif

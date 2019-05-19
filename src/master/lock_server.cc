@@ -1,10 +1,13 @@
 // the lock server implementation
 
-#include "lock_server.h"
 #include <sstream>
 #include <stdio.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <master/lock_server.h>
+
+namespace ctgfs {
+namespace lock_server {
 
 lock_server::lock_server():
   nacquire (0)
@@ -67,3 +70,6 @@ lock_server::release(int clt, lock_protocol::lockid_t lid, int& r)
   }
   return ret;
 }
+
+} // lock_server
+} // ctgfs

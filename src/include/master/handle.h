@@ -27,6 +27,9 @@
 #include <vector>
 #include "rpc/rpc.h"
 
+namespace ctgfs {
+namespace lock_server {
+
 struct hinfo {
   rpcc *cl;
   int refcnt;
@@ -73,6 +76,9 @@ class handle_mgr {
   void delete_handle(std::string m);
   void delete_handle_wo(std::string m);
 };
+
+} // namespace lock_server
+} // namespace ctgfs
 
 extern class handle_mgr mgr;
 

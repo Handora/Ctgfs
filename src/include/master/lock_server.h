@@ -6,8 +6,11 @@
 
 #include <string>
 #include <map>
-#include "lock_protocol.h"
+#include <master/lock_protocol.h>
 #include "rpc/rpc.h"
+
+namespace ctgfs {
+namespace lock_server {
 
 class lock_server {
 
@@ -25,6 +28,9 @@ class lock_server {
   pthread_mutex_t lock_m_;
   std::map<lock_protocol::lockid_t, std::pair<bool, pthread_cond_t*> > lock_map_;
 };
+
+} // namespace lock_server
+} // namespace ctgfs
 
 #endif 
 

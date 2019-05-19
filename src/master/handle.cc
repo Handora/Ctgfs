@@ -1,6 +1,10 @@
-#include "handle.h"
+#include <master/handle.h>
 #include <stdio.h>
-#include "tprintf.h"
+#include <util/util.h>
+
+
+namespace ctgfs {
+namespace lock_server {
 
 handle_mgr mgr;
 
@@ -27,7 +31,7 @@ handle::safebind()
   // students' lab with RPC_LOSSY=5 from lab 1 to lab 5
   ret = cl->bind();
   if (ret < 0) {
-    tprintf("handle_mgr::get_handle bind failure! %s %d\n", h->m.c_str(), ret);
+    CTG_WARN("handle_mgr::get_handle bind failure! %s %d\n", h->m.c_str(), ret);
     delete cl;
     h->del = true;
   } else {
@@ -87,7 +91,7 @@ void
 handle_mgr::delete_handle_wo(std::string m)
 {
   if (hmap.find(m) == hmap.end()) {
-    tprintf("handle_mgr::delete_handle_wo: cl %s isn't in cl list\n", m.c_str());
+    CTG_WARN("handle_mgr::delete_handle_wo: cl %s isn't in cl list\n", m.c_str());
   } else {
     struct hinfo *h = hmap[m];
     if (h->refcnt == 0) {
@@ -103,3 +107,6 @@ handle_mgr::delete_handle_wo(std::string m)
     }
   }
 }
+
+} // lock_server 
+} // ctgfs
