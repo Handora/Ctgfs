@@ -11,7 +11,11 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-using namespace ctgfs::client;
+
+struct stat;
+namespace ctgfs {
+namespace client {
+
 
 void
 yfs_client::print_hex(const std::string& content) {
@@ -834,3 +838,5 @@ void yfs_client::initExtentClient(const std::string& addr) {
   }
 }
 
+} // namespace client
+} // namespace ctgfs

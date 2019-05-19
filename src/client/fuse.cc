@@ -17,6 +17,12 @@
 #include <arpa/inet.h>
 #include "client/yfs_client.h"
 
+struct stat;
+using namespace ctgfs::client;
+
+namespace ctgfs {
+namespace client {
+
 int myid;
 yfs_client *yfs;
 
@@ -89,7 +95,7 @@ getattr(yfs_client::inum inum, struct stat &st)
 //
 void
 fuseserver_getattr(fuse_req_t req, fuse_ino_t ino,
-                   struct fuse_file_info *fi)
+                   fuse_file_info *fi)
 {
     struct stat st;
     yfs_client::inum inum = ino; // req->in.h.nodeid;
@@ -118,7 +124,7 @@ fuseserver_getattr(fuse_req_t req, fuse_ino_t ino,
 //
 void
 fuseserver_setattr(fuse_req_t req, fuse_ino_t ino, struct stat *attr,
-                   int to_set, struct fuse_file_info *fi)
+                   int to_set, fuse_file_info *fi)
 {
   printf("fuseserver_setattr mark 0x%x\n", to_set);
   if (FUSE_SET_ATTR_SIZE & to_set) {
@@ -152,7 +158,7 @@ fuseserver_setattr(fuse_req_t req, fuse_ino_t ino, struct stat *attr,
 //
 void
 fuseserver_read(fuse_req_t req, fuse_ino_t ino, size_t size,
-                off_t off, struct fuse_file_info *fi)
+                off_t off, fuse_file_info *fi)
 {
   if (off < 0) {
     fuse_reply_err(req, ENOSYS);
@@ -194,7 +200,7 @@ fuseserver_read(fuse_req_t req, fuse_ino_t ino, size_t size,
 void
 fuseserver_write(fuse_req_t req, fuse_ino_t ino,
                  const char *buf, size_t size, off_t off,
-                 struct fuse_file_info *fi)
+                 fuse_file_info *fi)
 {
   if (off < 0) {
     fuse_reply_err(req, ENOSYS);
@@ -234,7 +240,7 @@ fuseserver_write(fuse_req_t req, fuse_ino_t ino,
 //
 yfs_client::status
 fuseserver_createhelper(fuse_ino_t parent, const char *name,
-                        mode_t, struct fuse_entry_param *e)
+                        mode_t, fuse_entry_param *e)
 {
   // In yfs, timeouts are always set to 0.0, and generations are always set to 0
   e->attr_timeout = 0.0;
@@ -263,9 +269,9 @@ fuseserver_createhelper(fuse_ino_t parent, const char *name,
 
 void
 fuseserver_create(fuse_req_t req, fuse_ino_t parent, const char *name,
-                  mode_t mode, struct fuse_file_info *fi)
+                  mode_t mode, fuse_file_info *fi)
 {
-  struct fuse_entry_param e;
+  fuse_entry_param e;
   yfs_client::status ret;
   if( (ret = fuseserver_createhelper( parent, name, mode, &e )) == yfs_client::OK ) {
     fuse_reply_create(req, &e, fi);
@@ -280,7 +286,7 @@ fuseserver_create(fuse_req_t req, fuse_ino_t parent, const char *name,
 
 void fuseserver_mknod( fuse_req_t req, fuse_ino_t parent, 
     const char *name, mode_t mode, dev_t rdev ) {
-  struct fuse_entry_param e;
+  fuse_entry_param e;
   yfs_client::status ret;
   if( (ret = fuseserver_createhelper( parent, name, mode, &e )) == yfs_client::OK ) {
     fuse_reply_entry(req, &e);
@@ -301,7 +307,7 @@ void fuseserver_mknod( fuse_req_t req, fuse_ino_t parent,
 void
 fuseserver_lookup(fuse_req_t req, fuse_ino_t parent, const char *name)
 {
-  struct fuse_entry_param e;
+  fuse_entry_param e;
   // In yfs, timeouts are always set to 0.0, and generations are always set to 0
   e.attr_timeout = 0.0;
   e.entry_timeout = 0.0;
@@ -346,7 +352,7 @@ struct dirbuf {
     size_t size;
 };
 
-void dirbuf_add(struct dirbuf *b, const char *name, fuse_ino_t ino)
+void dirbuf_add(dirbuf *b, const char *name, fuse_ino_t ino)
 {
     struct stat stbuf;
     size_t oldsize = b->size;
@@ -379,10 +385,10 @@ int reply_buf_limited(fuse_req_t req, const char *buf, size_t bufsize,
 //
 void
 fuseserver_readdir(fuse_req_t req, fuse_ino_t ino, size_t size,
-                   off_t off, struct fuse_file_info *fi)
+                   off_t off, fuse_file_info *fi)
 {
   yfs_client::inum inum = ino; // req->in.h.nodeid;
-  struct dirbuf b;
+  dirbuf b;
   memset(&b, 0, sizeof(b));
 
   printf("fuseserver_readdir from ino[%016llx]\n", inum);
@@ -411,7 +417,7 @@ fuseserver_readdir(fuse_req_t req, fuse_ino_t ino, size_t size,
 
 void
 fuseserver_open(fuse_req_t req, fuse_ino_t ino,
-     struct fuse_file_info *fi)
+     fuse_file_info *fi)
 {
   fuse_reply_open(req, fi);
 }
@@ -430,7 +436,7 @@ void
 fuseserver_mkdir(fuse_req_t req, fuse_ino_t parent, const char *name,
      mode_t)
 {
-  struct fuse_entry_param e;
+  fuse_entry_param e;
   // In yfs, timeouts are always set to 0.0, and generations are always set to 0
   e.attr_timeout = 0.0;
   e.entry_timeout = 0.0;
@@ -506,8 +512,10 @@ fuseserver_statfs(fuse_req_t req)
   fuse_reply_statfs(req, &buf);
 }
 
-struct fuse_lowlevel_ops fuseserver_oper;
+fuse_lowlevel_ops fuseserver_oper;
 
+} // fuse
+} // ctgfs
 int
 main(int argc, char *argv[])
 {
@@ -577,7 +585,7 @@ main(int argc, char *argv[])
     exit(1);
   }
 
-  struct fuse_session *se;
+  fuse_session *se;
 
   se = fuse_lowlevel_new(&args, &fuseserver_oper, sizeof(fuseserver_oper),
        NULL);
@@ -586,7 +594,7 @@ main(int argc, char *argv[])
     exit(1);
   }
 
-  struct fuse_chan *ch = fuse_kern_chan_new(fd);
+  fuse_chan *ch = fuse_kern_chan_new(fd);
   if (ch == NULL) {
     fprintf(stderr, "fuse_kern_chan_new failed\n");
     exit(1);
@@ -602,4 +610,5 @@ main(int argc, char *argv[])
 
   return err ? 1 : 0;
 }
+
 

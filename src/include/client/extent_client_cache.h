@@ -13,6 +13,8 @@
 using namespace ::ctgfs::client;
 using namespace ::ctgfs::server;
 
+namespace ctgfs {
+namespace client {
 class extent_client_cache : public extent_client {
 
  public:
@@ -51,5 +53,8 @@ class extent_client_cache : public extent_client {
   extent_protocol::status callPut(extent_protocol::extentid_t id, std::string&, int& r);
   extent_protocol::status callSetAttr(extent_protocol::extentid_t id, extent_protocol::attr& attr, int& r);
 };
+
+} // namespace client
+} // namespace ctgfs  
 
 #endif 

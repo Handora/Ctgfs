@@ -7,6 +7,9 @@
 #include <unistd.h>
 #include <time.h>
 
+namespace ctgfs {
+namespace client {
+
 // The calls assume that the caller holds a lock on the extent
 
 extent_client::extent_client(const std::string& dst) {
@@ -94,4 +97,7 @@ extent_client::setattr(extent_protocol::extentid_t eid, extent_protocol::attr& a
   ret = cl->call(extent_protocol::setattr, eid, attr, r);
   return ret;
 }
+
+} // client
+} // ctgfs
 
