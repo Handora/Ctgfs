@@ -7,6 +7,8 @@
 #include <mutex>
 #include <string>
 
+using namespace ::ctgfs::rpc;
+
 namespace ctgfs {
 namespace master {
 // Global Timestamp Generator

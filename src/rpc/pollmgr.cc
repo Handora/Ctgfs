@@ -9,6 +9,9 @@
 #include "rpc/verify.h"
 #include "rpc/pollmgr.h"
 
+namespace ctgfs {
+namespace rpc {
+
 PollMgr *PollMgr::instance = NULL;
 static pthread_once_t pollmgr_is_initialized = PTHREAD_ONCE_INIT;
 
@@ -356,5 +359,7 @@ EPollAIO::wait_ready(std::vector<int> *readable, std::vector<int> *writable)
 		}
 	}
 }
+
+}} // namespace rpc, ctgfs
 
 #endif

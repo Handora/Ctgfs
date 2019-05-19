@@ -13,6 +13,9 @@
 #include "rpc/gettime.h"
 #include "rpc/verify.h"
 
+namespace ctgfs {
+namespace rpc {
+
 const rpcc::TO rpcc::to_max = { 120000 };
 const rpcc::TO rpcc::to_min = { 1000 };
 
@@ -1047,3 +1050,6 @@ diff_timespec(const struct timespec &end, const struct timespec &start)
 	}
 	return diff;
 }
+
+}}
+

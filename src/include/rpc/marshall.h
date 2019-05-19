@@ -1,6 +1,7 @@
 #ifndef marshall_h
 #define marshall_h
 
+
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -12,6 +13,9 @@
 #include <inttypes.h>
 #include "rpc/verify.h"
 #include "rpc/algorithm.h"
+
+namespace ctgfs {
+namespace rpc {
 
 struct req_header {
 	req_header(int x=0, int p=0, int c = 0, int s = 0, int xi = 0):
@@ -269,5 +273,7 @@ operator<<(marshall& m, const std::pair<A ,B>& d) {
   m << d.first << d.second;
   return m;
 }
+
+}} // namespace rpc, ctgfs
 
 #endif

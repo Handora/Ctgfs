@@ -3,6 +3,8 @@
 **/
 #include <master/gtg.h>
 
+using namespace ::ctgfs::rpc;
+
 namespace ctgfs {
 namespace master {
 

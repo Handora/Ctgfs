@@ -4,6 +4,9 @@
 #include <errno.h>
 #include "rpc/verify.h"
 
+namespace ctgfs {
+namespace rpc {
+
 static void *
 do_worker(void *arg)
 {
@@ -67,3 +70,4 @@ ThrPool::takeJob(job_t *j)
 	return (j->f!=NULL);
 }
 
+}} // namespace rpc, ctgfs

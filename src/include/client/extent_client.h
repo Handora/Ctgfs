@@ -9,6 +9,7 @@
 #include "rpc/rpc.h"
 
 using namespace ::ctgfs::server;
+using namespace ::ctgfs::rpc;
 
 namespace ctgfs {
 namespace client {

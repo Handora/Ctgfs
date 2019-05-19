@@ -12,6 +12,9 @@
 #include "rpc/slock.h"
 #include "rpc/verify.h"
 
+namespace ctgfs {
+namespace rpc {
+
 template<class T>
 class fifo {
 	public:
@@ -91,4 +94,6 @@ fifo<T>::deq(T *e)
 	return;
 }
 
+
+}} // namespace rpc, ctgfs
 #endif
