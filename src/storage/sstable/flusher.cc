@@ -1,7 +1,7 @@
 // Authors: Chen Qian(qcdsr970209@gmail.com)
 
 #include <storage/sstable/flusher.h>
-
+#include <util/util.h>
 
 namespace ctgfs {
 namespace sstable {
@@ -26,18 +26,18 @@ Status SSTFlusher::Flush(const std::string &dir, const std::string &filename,
                Iterator &mem_iter, const Log &last_log, SStable &sst) {
   Status ret = Status::OK();
   if (!(ret = sst.Init(dir, filename, last_log)).IsOK()) {
-    printf("init sst error\n");
+    CTG_WARN("init sst error");
   } else {
     Log log;
     while (ret.IsOK() && mem_iter.HasNext()) {
       if (!(ret = mem_iter.Next(log)).IsOK()) {
-        printf("get mem_iter next error\n");
+        CTG_WARN("get mem_iter next error");
       }
       sst.Append(log);
     }
     
     if (ret.IsOK() && !(ret = sst.Flush()).IsOK()) {
-      printf("flush sst error\n");
+      CTG_WARN("flush sst error");
     }
   }
 

@@ -1,6 +1,7 @@
 // Authors: Chen Qian(qcdsr970209@gmail.com)
 
 #include <storage/multi_iter.h>
+#include <util/util.h>
 
 namespace ctgfs {
 namespace storage {
@@ -20,7 +21,7 @@ MultiIter::MultiIter(std::vector<Iterator*> &iters) {
     iters_[i] = iters[i];
     if (iters_[i]->HasNext()) {
       if (!(ret = iters_[i]->Next(logs_[i])).IsOK()) {
-        printf("next iterator error\n");
+        CTG_WARN("next iterator error");
       } 
     } else {
       logs_[i].Reset();
@@ -69,7 +70,7 @@ Status MultiIter::Next(Log &log) {
         while (logs_[i].IsValid() && logs_[i].key == choosen.key) {
           if (iters_[i]->HasNext()) {
             if (!(ret = iters_[i]->Next(logs_[i])).IsOK()) {
-              printf("next iter error\n");
+              CTG_WARN("next iter error");
             }
           } else {
             logs_[i].Reset();
