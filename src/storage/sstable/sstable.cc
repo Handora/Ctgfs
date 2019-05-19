@@ -6,6 +6,7 @@
 #include <stdio.h> 
 #include <fcntl.h> 
 #include <util/status.h> 
+#include <util/util.h> 
 
 namespace ctgfs {
 namespace sstable {
@@ -34,10 +35,10 @@ Status SStable::Recover(const std::string &dir, const std::string &filename) {
   int fd = 0;
   if ((fd = open((dir + "/" + filename).c_str(), O_RDONLY)) < 0) {
     ret = Status::Corruption("fail open file when recover");
-    printf("fail open file when recover\n");
+    CTG_WARN("fail open file when recover");
   } else if (!(ret = meta_.Read(fd)).IsOK()) {
     close(fd);
-    printf("fail read file when recover\n");
+    CTG_WARN("fail read file when recover");
   } else {
     close(fd);
     init_ = true;
@@ -58,7 +59,7 @@ Status SStable::Append(const Log& log) {
 
   std::string tmp;
   if (!(ret = log.Encode(tmp)).IsOK()) {
-    printf("encode log error\n");
+    CTG_WARN("encode log error");
   } else {
     uint64_t num = tmp.size() + sizeof(uint64_t);
     buf_ += std::string((char *)(&num), sizeof(uint64_t));
@@ -73,14 +74,7 @@ Status SStable::Encode(std::string &buffer) {
   Status ret = Status::OK();
 
   buffer.clear();
-  // if (!(ret = meta.Encode(tmp)).IsOK()) {
-  //   printf("encode meta error\n");
-  // } else {
-  // encode meta
-  // buffer += tmp;
-  // encode buf
   buffer += buf_;
-  // }
 
   return ret;
 }
@@ -90,16 +84,13 @@ Status SStable::Flush() {
   int fd = 0;
   if ((fd = open((dir_ + "/" + filename_).c_str(),  O_CREAT | O_WRONLY, 0666)) < 0) {
     ret = Status::Corruption("fail open file when flush");
-    printf("fail open file when flush\n");
+    CTG_WARN("fail open file when flush");
   } else if (!(ret = meta_.Write(fd)).IsOK()) {
     close(fd);
-    printf("fail write file when flush\n");
-  // } else if (!(ret = Encode(buffer)).IsOK()) {
-  //   close(fd);
-  //   printf("fail encode when flush\n");
+    CTG_WARN("fail write file when flush");
   } else if (write(fd, buf_.c_str(), buf_.size()) < 0) {
     close(fd);
-    printf("fail write file when flush\n");
+    CTG_WARN("fail write file when flush");
   } else {
     close(fd);
   }
@@ -111,7 +102,7 @@ Status SStable::CreateIterator(SSTIterator &iter) {
   Status ret = Status::OK();
 
   if (!(ret = iter.Init(dir_, filename_, meta_.data_offset_)).IsOK()) {
-    printf("error init iterator for sstable\n");
+    CTG_WARN("error init iterator for sstable");
   }
 
   return ret;
@@ -125,7 +116,7 @@ Status SSTIterator::Init(const std::string &dir, const std::string &filename, ui
   lseek(fd_, offset, SEEK_SET);
   if (fd_ < 0) {
     ret = Status::Corruption("can't open file");
-    printf("can't open file\n");
+    CTG_WARN("can't open file");
   } else {
     stat((dir + "/" + filename).c_str(), &st);
     size_ = st.st_size;
@@ -165,7 +156,7 @@ Status SSTIterator::Next(Log &log) {
   } else {
     uint64_t readed = 0;
     if (!(ret = log.Read(fd_, readed)).IsOK()) {
-      printf("error next the iterator");
+      CTG_WARN("error next the iterator");
     } else {
       pos_ += readed;
     }

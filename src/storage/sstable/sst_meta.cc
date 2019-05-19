@@ -1,7 +1,7 @@
 // Authors: Chen Qian(qcdsr970209@gmail.com)
 
 #include <storage/sstable/sst_meta.h>
-#include <stdio.h>
+#include <util/util.h>
 
 namespace ctgfs {
 namespace sstable {
@@ -23,7 +23,7 @@ Status SSTMeta::Encode(std::string& meta) {
 
   std::string data;
   if (!(ret = last_log_.Encode(data)).IsOK()) {
-    printf("can't log last_log_\n");
+    CTG_WARN("can't log last_log_");
   } else {
     meta += data;
     meta += uint64_to_str(data_offset_);
@@ -41,7 +41,7 @@ Status SSTMeta::Decode(const std::string &meta) {
   Status ret = Status::OK();
 
   if (!(ret = last_log_.Decode(meta)).IsOK()) {
-    printf("last_log_ deccode error\n");
+    CTG_WARN("last_log_ deccode error");
   } else {
     uint64_t size = last_log_.Size();
     data_offset_ = str_to_uint64(meta.c_str() + size);
@@ -55,15 +55,15 @@ Status SSTMeta::Write(int fd) {
   uint64_t tmp_size = Size() + sizeof(uint64_t);
 
   if (write(fd, &tmp_size, sizeof(uint64_t)) < 0) {
-    printf("write fail when write meta");
+    CTG_WARN("write fail when write meta");
     ret = Status::Corruption("write fail when write meta");
   } else {
     std::string tmp_str;
 
     if (!(ret = Encode(tmp_str)).IsOK()) {
-      printf("Encode fail when write meta");
+      CTG_WARN("Encode fail when write meta");
     } else if (write(fd, tmp_str.c_str(), Size()) < 0) {
-      printf("write fail when write meta");
+      CTG_WARN("write fail when write meta");
       ret = Status::Corruption("write fail when write meta");
     }
   }
@@ -76,15 +76,15 @@ Status SSTMeta::Write(int fd, uint64_t &writed) {
   writed = Size() + sizeof(uint64_t);
 
   if (write(fd, &writed, sizeof(uint64_t)) < 0) {
-    printf("write fail when write meta");
+    CTG_WARN("write fail when write meta");
     ret = Status::Corruption("write fail when write meta");
   } else {
     std::string tmp_str;
 
     if (!(ret = Encode(tmp_str)).IsOK()) {
-      printf("Encode fail when write meta");
+      CTG_WARN("Encode fail when write meta");
     } else if (write(fd, tmp_str.c_str(), Size()) < 0) {
-      printf("write fail when write meta");
+      CTG_WARN("write fail when write meta");
       ret = Status::Corruption("write fail when write meta");
     }
   }
@@ -97,15 +97,15 @@ Status SSTMeta::Read(int fd) {
   uint64_t readed = 0;
 
   if (read(fd, &readed, sizeof(uint64_t)) < 0) {
-    printf("read fail when read meta");
+    CTG_WARN("read fail when read meta");
     ret = Status::Corruption("read fail when read meta");
   } else {
     char *buf = new char[readed - sizeof(uint64_t)];
     if (read(fd, buf, readed - sizeof(uint64_t)) < 0) {
-      printf("read fail when read meta");
+      CTG_WARN("read fail when read meta");
       ret = Status::Corruption("read fail when read meta");
     } else if (!(ret = Decode(std::string(buf, readed - sizeof(uint64_t)))).IsOK()) {
-      printf("decode fail when read meta");
+      CTG_WARN("decode fail when read meta");
     } else {
       assert(Size() == readed - sizeof(uint64_t));
     }
@@ -118,15 +118,15 @@ Status SSTMeta::Read(int fd, uint64_t &readed) {
   Status ret = Status::OK();
 
   if (read(fd, &readed, sizeof(uint64_t)) < 0) {
-    printf("read fail when read meta");
+    CTG_WARN("read fail when read meta");
     ret = Status::Corruption("read fail when read meta");
   } else {
     char *buf = new char[readed - sizeof(uint64_t)];
     if (read(fd, buf, readed - sizeof(uint64_t)) < 0) {
-      printf("read fail when read log");
+      CTG_WARN("read fail when read log");
       ret = Status::Corruption("read fail when read meta");
     } else if (!(ret = Decode(std::string(buf, readed - sizeof(uint64_t)))).IsOK()) {
-      printf("decode fail when read meta");
+      CTG_WARN("decode fail when read meta");
     } else {
       assert(Size() == readed - sizeof(uint64_t));
     }
