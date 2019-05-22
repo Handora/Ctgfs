@@ -8,6 +8,8 @@
 #include "lock_protocol.h"
 #include "rpc/rpc.h"
 
+using namespace ::ctgfs::rpc;
+
 namespace ctgfs {
 namespace client {
 

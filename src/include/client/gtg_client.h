@@ -7,6 +7,8 @@
 #include <vector>
 #include "rpc/rpc.h"
 
+using namespace ::ctgfs::rpc;
+
 // Client interface to the gtg
 namespace ctgfs {
 namespace client {

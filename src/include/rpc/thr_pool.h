@@ -6,6 +6,9 @@
 
 #include "rpc/fifo.h"
 
+namespace ctgfs {
+namespace rpc {
+
 class ThrPool {
 
 
@@ -61,6 +64,7 @@ ThrPool::addObjJob(C *o, void (C::*m)(A), A a)
 	return addJob(&objfunc_wrapper::func, (void *)x);
 }
 
+}} // namespace rpc, ctgfs
 
 #endif
 

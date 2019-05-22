@@ -2,6 +2,9 @@
 #define gettime_h
 
 #ifdef __APPLE__
+namespace ctgfs {
+namespace rpc {
+
 typedef enum {
 	CLOCK_REALTIME,
 	CLOCK_MONOTONIC,
@@ -10,6 +13,8 @@ typedef enum {
 } clockid_t;
 
 int clock_gettime(clockid_t clk_id, struct timespec *tp);
+
+}}// namespace rpc, ctgfs
 #endif
 
 #endif

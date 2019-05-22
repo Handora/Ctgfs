@@ -9,17 +9,11 @@ std::string uint64_to_str(uint64_t i) {
   return std::string((char*)(&i), sizeof(i));
 }
 
-int str_to_int(const char *s) {
-  return *(int*)(s);
-}
+int str_to_int(const char* s) { return *(int*)(s); }
 
-uint64_t str_to_uint64(const char *s) {
-  return *(uint64_t*)(s);
-}
+uint64_t str_to_uint64(const char* s) { return *(uint64_t*)(s); }
 
-std::string int_to_str(int i) {
-  return std::string((char*)(&i), sizeof(i));
-}
+std::string int_to_str(int i) { return std::string((char*)(&i), sizeof(i)); }
 
 bool operator<(const Log& left, const Log& right) {
   bool ret = true;
@@ -36,4 +30,3 @@ bool operator<(const Log& left, const Log& right) {
 
 }  // namespace storage
 }  // namespace ctgfs
-

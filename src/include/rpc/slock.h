@@ -3,6 +3,11 @@
 
 #include <pthread.h>
 #include "rpc/verify.h"
+
+
+namespace ctgfs {
+namespace rpc {
+
 struct ScopedLock {
 	private:
 		pthread_mutex_t *m_;
@@ -14,4 +19,6 @@ struct ScopedLock {
 			VERIFY(pthread_mutex_unlock(m_)==0);
 		}
 };
+
+}} // namespace rpc, ctgfs
 #endif  /*__SCOPED_LOCK__*/

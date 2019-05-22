@@ -1,6 +1,9 @@
 #ifndef __JSL_LOG_H__
 #define __JSL_LOG_H__ 1
 
+namespace ctgfs {
+namespace rpc {
+
 enum dbcode {
 	JSL_DBG_OFF = 0,
 	JSL_DBG_1 = 1, // Critical
@@ -21,5 +24,7 @@ extern int JSL_DEBUG_LEVEL;
 	} while(0)
 
 void jsl_set_debug(int level);
+
+}} // namespace rpc, ctgfs
 
 #endif // __JSL_LOG_H__

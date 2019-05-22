@@ -10,6 +10,8 @@
 #include <string>
 #include <util/util.h>
 
+using namespace ::ctgfs::rpc;
+
 namespace ctgfs {
 namespace client {
 

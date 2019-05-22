@@ -2,6 +2,7 @@
 
 #include <storage/memtable/memtable.h>
 #include <storage/sstable/flusher.h>
+#include <util/util.h>
 
 namespace ctgfs {
 namespace memtable {
@@ -11,11 +12,15 @@ using namespace util;
 using namespace sstable;
 
 Memtable::Memtable(uint64_t max_size, std::string dir)
-  : init_(false), is_flushing_(false),
-    data_size_(0), max_size_(max_size),
-    mem_map_(nullptr), i_mem_map_(nullptr),
-    sst_mgr_(dir), dir_(dir) {}
-    
+    : init_(false),
+      is_flushing_(false),
+      data_size_(0),
+      max_size_(max_size),
+      mem_map_(nullptr),
+      i_mem_map_(nullptr),
+      sst_mgr_(dir),
+      dir_(dir) {}
+
 Memtable::~Memtable() {}
 
 Status Memtable::Init() {
@@ -33,14 +38,14 @@ Status Memtable::Stop() {
   return ret;
 }
 
-Status Memtable::Add(const Log& log) {
+Status Memtable::Add(const Log &log) {
   Status ret = Status::OK();
   std::lock_guard<std::mutex> guard(mu_);
 
   if (data_size_ > max_size_) {
     ret = MinorFreeze();
   } else if (ret.IsOK()) {
-    mem_map_->insert(log);  
+    mem_map_->insert(log);
     data_size_ += log.Size();
     if (data_size_ > max_size_) {
       ret = MinorFreeze();
@@ -58,9 +63,9 @@ Status Memtable::MinorFreeze() {
   Log log = *(i_mem_map_->rbegin());
   MemIterator mem_iter;
   if (!(ret = mem_iter.Init(i_mem_map_)).IsOK()) {
-    printf("init memiter error\n");
+    CTG_WARN("init memiter error");
   } else if (!(ret = sst_mgr_.Flush(mem_iter, log)).IsOK()) {
-    printf("flush sst_mgr error\n");
+    CTG_WARN("flush sst_mgr error");
   } else {
     i_mem_map_ = nullptr;
   }
@@ -72,7 +77,7 @@ Status Memtable::CreateIterator(MemIterator &iter) {
   std::lock_guard<std::mutex> guard(mu_);
 
   if (!(ret = iter.Init(mem_map_)).IsOK()) {
-    printf("error init iterator for memtable\n");
+    CTG_WARN("error init iterator for memtable");
   }
 
   return ret;
@@ -81,7 +86,7 @@ Status Memtable::CreateIterator(MemIterator &iter) {
 Status MemIterator::Init(const std::shared_ptr<std::set<Log>> &mt) {
   Status ret = Status::OK();
   mt_ = mt;
-  iter_ = mt_->begin(); 
+  iter_ = mt_->begin();
   return ret;
 };
 
@@ -100,7 +105,7 @@ Status MemIterator::Next(Log &log) {
 
   if (iter_ == mt_->end()) {
     ret = Status::Corruption("no next");
-    printf("next for non next\n");
+    CTG_WARN("next for non next");
   } else {
     log = *iter_;
     iter_++;
@@ -109,5 +114,5 @@ Status MemIterator::Next(Log &log) {
   return ret;
 }
 
-} // namespace memtable
-} // namespace ctgfs
+}  // namespace memtable
+}  // namespace ctgfs

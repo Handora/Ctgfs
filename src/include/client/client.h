@@ -14,6 +14,8 @@
 #include <thread>
 #include <vector>
 
+using namespace ::ctgfs::rpc;
+
 namespace ctgfs {
 namespace client {
 

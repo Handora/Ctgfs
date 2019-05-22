@@ -11,6 +11,7 @@
 // Main loop of lock_server
 
 using namespace ctgfs::lock_server;
+using namespace ctgfs::rpc;
 
 int main(int argc, char *argv[]) {
   int count = 0;

@@ -6,8 +6,8 @@
 #include <signal.h>
 #include <unistd.h>
 
-#include "rpc/method_thread.h"
 #include "rpc/connection.h"
+#include "rpc/method_thread.h"
 #include "rpc/slock.h"
 #include "rpc/pollmgr.h"
 #include "rpc/jsl_log.h"
@@ -16,6 +16,8 @@
 
 #define MAX_PDU (10<<20) //maximum PDF is 10M
 
+namespace ctgfs {
+namespace rpc {
 
 connection::connection(chanmgr *m1, int f1, int l1) 
 : mgr_(m1), fd_(f1), dead_(false),waiters_(0), refno_(1),lossy_(l1)
@@ -444,5 +446,9 @@ connect_to_dst(const sockaddr_in &dst, chanmgr *mgr, int lossy)
 			s, inet_ntoa(dst.sin_addr), (int)ntohs(dst.sin_port));
 	return new connection(mgr, s, lossy);
 }
+
+
+}} // namespace rpc, ctgfs
+
 
 
