@@ -74,6 +74,7 @@ class PrefixTree {
   // file_node, PrefixTreeNodePtr dir_node);
   // friend void SplitFileNode(PrefixTree*, PrefixTreeNodePtr,
   // PrefixTreeNodePtr, const std::string& prefix);
+  void DebugTreeStruct(PrefixTreeNodePtr, std::string prefix = "-");
  private:
   // current adjust has caculated context
   bool has_get_context_ = false;
@@ -110,6 +111,9 @@ class PrefixTree {
                    std::vector<std::pair<unsigned long long, move_t> >& vec);
   void doMove(PrefixTreeNodePtr node, move_t addr,
               std::vector<std::pair<unsigned long long, move_t> >& vec);
+  void setDomainId(PrefixTreeNodePtr ptr, std::pair<int, PrefixTreeNodePtr>&);
+  void getNearByDomainID(PrefixTreeNodePtr ptr, std::pair<int, PrefixTreeNodePtr>&);
+  bool doGetNearByDomainID(PrefixTreeNodePtr , PrefixTreeNodePtr, bool is_reverse, std::pair<int, PrefixTreeNodePtr>&);
 };
 
 }  // prefix_tree

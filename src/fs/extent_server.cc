@@ -14,6 +14,7 @@
 #include <thread>
 #include <memory>
 #include <unordered_set>
+#include <util/util.h>
 
 namespace ctgfs {
 namespace server {
@@ -38,6 +39,7 @@ int extent_server::put(extent_protocol::extentid_t id, std::string buf, int &)
   std::map<extent_protocol::extentid_t, extent*>::iterator it = extent_map_.find(id);
   unsigned int now = (unsigned int)time(NULL);
   InfoCollector* collector = InfoCollector::GetInstance();
+  CTG_INFO("extent_server_put id: %llu, buf: %s", id, buf.c_str());
   if (it != extent_map_.end()) {
     /* update the extent_server info for the file update. */
     collector->AddDirtyData(id, buf.size(), 2);
@@ -62,6 +64,7 @@ int extent_server::get(extent_protocol::extentid_t id, std::string &buf)
 {
   ScopedLock lm(&server_mu_);
   std::map<extent_protocol::extentid_t, extent*>::iterator it = extent_map_.find(id);
+  CTG_INFO("extent_server_get id: %llu, buf: %s", id, buf.c_str());
   unsigned int now = time(NULL);
   if (it != extent_map_.end()) {
     it->second->atime = now;

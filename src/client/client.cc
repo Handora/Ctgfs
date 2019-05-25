@@ -71,7 +71,7 @@ std::string Client::getKVAddrByInumViaMaster(inum ino) {
 }
 
 std::pair<Client::inum, std::string> Client::GetInumByName(
-    const std::string& name, bool is_dir, unsigned long long sz) {
+    inum parent, const std::string& name, bool is_dir, unsigned long long sz) {
   sockaddr_in ms_sin;
   make_sockaddr(master_addr_.c_str(), &ms_sin);
   auto cl = getRpc(master_addr_);
@@ -80,7 +80,7 @@ std::pair<Client::inum, std::string> Client::GetInumByName(
   if (!cl) {
     return r;
   }
-  cl->call(master_protocol::ask_for_ino, name, is_dir, sz, r);
+  cl->call(master_protocol::ask_for_ino, parent, name, is_dir, sz, r);
   return r;
 }
 

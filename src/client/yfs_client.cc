@@ -223,6 +223,7 @@ int yfs_client::getdir(inum inum, dirinfo& din) {
   printf("getdir %016llx\n", inum);
   extent_protocol::attr a;
   if (ec->getattr(inum, a) != extent_protocol::OK) {
+    printf("getdir %016llx error\n", inum);
     r = IOERR;
     goto release;
   }
@@ -277,7 +278,7 @@ int yfs_client::create(inum parent, std::string name, inum& inum,
   }
 
   // inum = gen_inum(false);
-  auto res = client->GetInumByName(name, false, info.size);
+  auto res = client->GetInumByName(parent, name, false, info.size);
   inum = res.first;
   std::string addr = res.second;
   initExtentClient(addr);
@@ -627,7 +628,7 @@ int yfs_client::mkdir(inum parent, std::string name, inum& inum,
   }
 
   // inum = gen_inum(true);
-  auto res = client->GetInumByName(name, true, 0);
+  auto res = client->GetInumByName(parent, name, true, 0);
   inum = res.first;
   initExtentClient(res.second);
   s = lc->acquire(inum);

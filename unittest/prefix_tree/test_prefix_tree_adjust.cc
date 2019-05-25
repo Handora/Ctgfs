@@ -68,6 +68,7 @@ TEST(PrefixTreeTest, PrefixTree) {
 
   list = (t->GetRoot())->GetList();
   EXPECT_EQ(list.size(), 1);
+  // debugTree(t->GetRoot());
   for (auto ele : list) {
     travelTree(ele, -1);
   }
@@ -130,6 +131,7 @@ TEST(PrefixTreeTest, PrefixTree) {
   EXPECT_EQ(node_2->GetDomainId(), 3);
   EXPECT_EQ(node_3->GetDomainId(), 2);
   EXPECT_EQ(node_4->GetDomainId(), 2);
+  // debugTree(t->GetRoot());
 }
 
 void travelTree(std::shared_ptr<PrefixTreeNode> node, int expect_value) {

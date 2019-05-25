@@ -2,6 +2,7 @@
 
 #include "client/extent_client_cache.h"
 #include <fcntl.h>
+#include <util/util.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -251,17 +252,21 @@ extent_protocol::status extent_client_cache::flush(
 void extent_client_cache::retry(extent_protocol::extentid_t id) {
   client_->FailCache(id);
   const auto& addr = client_->GetKVAddrByInum(id);
+  CTG_INFO("id: %016llx, addr: %s", id, addr.c_str());
   ConnectTo(addr);
 }
 
 extent_protocol::status extent_client_cache::callGet(
     extent_protocol::extentid_t id, std::string& buf) {
   auto ret = cl->call(extent_protocol::get, id, buf);
+  CTG_INFO("call get status %d", ret);
   if (ret != extent_protocol::OK) {
+    CTG_INFO("retry %016llx", id);
     retry(id);
     // ? need clear?
     buf.clear();
     ret = cl->call(extent_protocol::get, id, buf);
+    CTG_INFO("retry call get status %d\n", ret);
   }
   return ret;
 }
@@ -269,9 +274,12 @@ extent_protocol::status extent_client_cache::callGet(
 extent_protocol::status extent_client_cache::callGetAttr(
     extent_protocol::extentid_t id, extent_protocol::attr& attr) {
   auto ret = cl->call(extent_protocol::getattr, id, attr);
+  CTG_INFO("call get attr %d", ret);
   if (ret != extent_protocol::OK) {
+    CTG_INFO("retry %016llx", id);
     retry(id);
     ret = cl->call(extent_protocol::getattr, id, attr);
+    CTG_INFO("retry call get status %d\n", ret);
   }
   return ret;
 }
