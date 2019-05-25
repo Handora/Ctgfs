@@ -291,7 +291,7 @@ int Master::Move(std::string lock_server_addr,
                  std::vector<unsigned long long> inum, std::string src,
                  std::string dst) {
   for (auto id : inum) {
-    printf("do move %016x from src %s to dst %s\n", id, src.c_str(),
+    printf("do move %016llx from src %s to dst %s\n", id, src.c_str(),
            dst.c_str());
   }
   /* OK is always the first state. */
