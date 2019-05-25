@@ -24,96 +24,97 @@ void PrefixTree::DebugTreeStruct(PrefixTreeNodePtr node, std::string prefix) {
   }
 }
 
-// origin     cur
-//  A         A\B
-//  |
-//  B
-// void MergeFileNodeToDirNode(PrefixTree* t, PrefixTreeNodePtr file_node,
-// PrefixTreeNodePtr dir_node) {
-//   // if(file_node->IsDir() || !dir_node->IsDir())
-//   //   return false;
-//   auto fa = dir_node->GetParent();
-//   fa->EraseNode(dir_node);
-//   auto dir_path = dir_node->GetPath();
-//   file_node->SetPath(std::move(dir_path + "/" + file_node->GetPath()));
-//   file_node->SetParent(fa);
-//   fa->InsertNode(file_node);
-//   auto domain_id = dir_node->GetDomainId();
-//   if(domain_id != -1) {
-//     file_node->SetDomainId(domain_id);
-//     std::list<PrefixTreeNodePtr>* list_ptr = nullptr;
-//     for(auto& kv_info : t->kv_list_) {
-//       if(kv_info.id == domain_id) {
-//         list_ptr = &(kv_info.domain_node_list);
-//         break;
-//       }
-//     }
-//     if(list_ptr) {
-//       for(auto it = (*list_ptr).begin(); it != (*list_ptr).end(); it ++) {
-//         if((*it).get() == dir_node.get()) {
-//           (*it).reset(file_node.get());
-//           break;
-//         }
-//       }
-//     }
-//   }
-// }
+/*
+origin     cur
+ A         A\B
+ |
+ B
+void MergeFileNodeToDirNode(PrefixTree* t, PrefixTreeNodePtr file_node,
+PrefixTreeNodePtr dir_node) {
+  // if(file_node->IsDir() || !dir_node->IsDir())
+  //   return false;
+  auto fa = dir_node->GetParent();
+  fa->EraseNode(dir_node);
+  auto dir_path = dir_node->GetPath();
+  file_node->SetPath(std::move(dir_path + "/" + file_node->GetPath()));
+  file_node->SetParent(fa);
+  fa->InsertNode(file_node);
+  auto domain_id = dir_node->GetDomainId();
+  if(domain_id != -1) {
+    file_node->SetDomainId(domain_id);
+    std::list<PrefixTreeNodePtr>* list_ptr = nullptr;
+    for(auto& kv_info : t->kv_list_) {
+      if(kv_info.id == domain_id) {
+        list_ptr = &(kv_info.domain_node_list);
+        break;
+      }
+    }
+    if(list_ptr) {
+      for(auto it = (*list_ptr).begin(); it != (*list_ptr).end(); it ++) {
+        if((*it).get() == dir_node.get()) {
+          (*it).reset(file_node.get());
+          break;
+        }
+      }
+    }
+  }
+}
 
-// insert A\D
-// origin  cur
-//   A      A
-//  / \    / \
-// B\C X  B   X
-//       / \
-//      C   D
-// void SplitFileNode(PrefixTree* t, PrefixTreeNodePtr origin_file_node,
-// PrefixTreeNodePtr cur_file_node, const std::string& common_prefix) {
-//   auto origin_file_path = origin_file_node->GetPath();
-//   auto cur_file_path = cur_file_node->GetPath();
-//   // split B\C
-//   auto fa = origin_file_node->GetParent();
-//   fa->EraseNode(origin_file_node);
-//   PrefixTreeNodePtr dir_ptr =
-//   std::make_shared<PrefixTreeDirNode>(common_prefix, -1,
-//   origin_file_node->GetParent());
-//   fa->InsertNode(dir_ptr);
-//   // generate new C D
-//   auto changed_origin_file_path = std::string(origin_file_path.begin() +
-//   common_prefix.size() + 1,origin_file_path.end());
-//   origin_file_node->SetPath(changed_origin_file_path);
-//   auto changed_cur_file_path = std::string(cur_file_path.begin() +
-//   common_prefix.size() + 1, cur_file_path.end());
-//   cur_file_node->SetPath(changed_cur_file_path);
-//   // C D link to B
-//   origin_file_node->SetParent(dir_ptr);
-//   cur_file_node->SetParent(dir_ptr);
-//   // B point to C D
-//   dir_ptr->InsertNode(origin_file_node);
-//   dir_ptr->InsertNode(cur_file_node);
-//   dir_ptr->SetSZ(origin_file_node->GetSZ() + cur_file_node->GetSZ());
-//   // update domain
-//   auto domain_id = origin_file_node->GetDomainId();
-//   if(domain_id != -1) {
-//     origin_file_node->SetDomainId(-1);
-//     dir_ptr->SetDomainId(domain_id);
-//     std::list<PrefixTreeNodePtr>* list_ptr = nullptr;
-//     for(auto& kv_info : t->kv_list_) {
-//       if(kv_info.id == domain_id) {
-//         list_ptr = &(kv_info.domain_node_list);
-//         break;
-//       }
-//     }
-//     if(list_ptr) {
-//       for(auto it = (*list_ptr).begin(); it != (*list_ptr).end(); it ++) {
-//         if((*it).get() == origin_file_node.get()) {
-//           (*it).reset(dir_ptr.get());
-//           break;
-//         }
-//       }
-//     }
-//   }
-// }
-//
+insert A\D
+origin  cur
+  A      A
+ / \    / \
+B\C X  B   X
+      / \
+     C   D
+void SplitFileNode(PrefixTree* t, PrefixTreeNodePtr origin_file_node,
+PrefixTreeNodePtr cur_file_node, const std::string& common_prefix) {
+  auto origin_file_path = origin_file_node->GetPath();
+  auto cur_file_path = cur_file_node->GetPath();
+  // split B\C
+  auto fa = origin_file_node->GetParent();
+  fa->EraseNode(origin_file_node);
+  PrefixTreeNodePtr dir_ptr =
+  std::make_shared<PrefixTreeDirNode>(common_prefix, -1,
+  origin_file_node->GetParent());
+  fa->InsertNode(dir_ptr);
+  // generate new C D
+  auto changed_origin_file_path = std::string(origin_file_path.begin() +
+  common_prefix.size() + 1,origin_file_path.end());
+  origin_file_node->SetPath(changed_origin_file_path);
+  auto changed_cur_file_path = std::string(cur_file_path.begin() +
+  common_prefix.size() + 1, cur_file_path.end());
+  cur_file_node->SetPath(changed_cur_file_path);
+  // C D link to B
+  origin_file_node->SetParent(dir_ptr);
+  cur_file_node->SetParent(dir_ptr);
+  // B point to C D
+  dir_ptr->InsertNode(origin_file_node);
+  dir_ptr->InsertNode(cur_file_node);
+  dir_ptr->SetSZ(origin_file_node->GetSZ() + cur_file_node->GetSZ());
+  // update domain
+  auto domain_id = origin_file_node->GetDomainId();
+  if(domain_id != -1) {
+    origin_file_node->SetDomainId(-1);
+    dir_ptr->SetDomainId(domain_id);
+    std::list<PrefixTreeNodePtr>* list_ptr = nullptr;
+    for(auto& kv_info : t->kv_list_) {
+      if(kv_info.id == domain_id) {
+        list_ptr = &(kv_info.domain_node_list);
+        break;
+      }
+    }
+    if(list_ptr) {
+      for(auto it = (*list_ptr).begin(); it != (*list_ptr).end(); it ++) {
+        if((*it).get() == origin_file_node.get()) {
+          (*it).reset(dir_ptr.get());
+          break;
+        }
+      }
+    }
+  }
+}
+*/
 
 PrefixTree::PrefixTree() {
   int kv = -1;

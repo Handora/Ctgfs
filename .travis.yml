@@ -11,3 +11,4 @@ install:
   - "./build.sh"
 script:
   - "./run_unittest.sh"
+  - "./run_test.sh"
