@@ -2,6 +2,7 @@
 * author: OneDay_(ltang970618@gmail.com)
 **/
 #include <master/master.h>
+#include <util/util.h>
 #include <algorithm>
 #include <iostream>
 #include "client/extent_client.h"
@@ -11,6 +12,7 @@
 #include "fs/extent_protocol.h"
 #include "master/master_protocol.h"
 #include "rpc/rpc.h"
+#include <assert.h>
 
 namespace ctgfs {
 namespace master {
@@ -35,6 +37,7 @@ Master::Master() {
       }
       std::vector<unsigned long long> pip_line;
       pip_line.push_back(move_op[0].first);
+      inum_to_register_id_[move_op[0].first] = move_op[0].second.second;
       std::pair<int, int> op_addr = move_op[0].second;
       for (auto i = 1; i < (int)move_op.size(); i++) {
         inum_to_register_id_[move_op[i].first] = move_op[i].second.second;
@@ -46,6 +49,7 @@ Master::Master() {
                register_id_to_addr_[op_addr.second]);
           pip_line.clear();
           pip_line.push_back(move_op[i].first);
+          inum_to_register_id_[move_op[i].first] = move_op[i].second.second;
           op_addr = move_op[i].second;
         }
       }
@@ -65,9 +69,10 @@ Master::~Master() {
 }
 
 master_protocol::status Master::AskForIno(
+    unsigned long long parent,
     std::string path, bool is_dir, unsigned long long node_sz,
     std::pair<unsigned long long, std::string>& r) {
-  auto ino = genInum(path, is_dir, node_sz);
+  auto ino = genInum(parent, path, is_dir, node_sz);
   r.first = ino;
   r.second = getInfoByInum(ino);
   // TODO: need add more options
@@ -79,7 +84,7 @@ master_protocol::status Master::AskForKV(unsigned long long ino,
   // unsigned long long ino = request->ino();
   // response->set_addr(getInfoByInum(ino));
   r = getInfoByInum(ino);
-  printf("ask for kv: %016llu, resp %s\n", ino, r.c_str());
+  CTG_INFO("ask for kv: %016llx, resp %s\n", ino, r.c_str());
   return master_protocol::OK;
 }
 
@@ -89,6 +94,7 @@ master_protocol::status Master::Regist(std::string addr,
   doRegister(addr, id);
   t_->RegistNewKV(id, sum_memory);
   r = id;
+  CTG_INFO("new kv regist kv_id: %d, path: %s", id, addr.c_str());
   return master_protocol::OK;
 }
 
@@ -129,23 +135,23 @@ master_protocol::status Master::UpdateKVInfo(InfoCollector::ServerInfo i,
   /* when this function is called by rpc, the latest info of extent_server will
    * be passed. */
 
-  std::cout << "inum:";
-  for (auto x : i.inum) {
-    std::cout << " " << x;
-  }
-  std::cout << "\n";
+  // std::cout << "inum:";
+  // for (auto x : i.inum) {
+  //   std::cout << " " << x;
+  // }
+  // std::cout << "\n";
 
-  std::cout << "size:";
-  for (auto x : i.sz) {
-    std::cout << " " << x;
-  }
-  std::cout << "\n";
+  // std::cout << "size:";
+  // for (auto x : i.sz) {
+  //   std::cout << " " << x;
+  // }
+  // std::cout << "\n";
 
-  std::cout << "type:";
-  for (auto x : i.type) {
-    std::cout << " " << x;
-  }
-  std::cout << "\n";
+  // std::cout << "type:";
+  // for (auto x : i.type) {
+  //   std::cout << " " << x;
+  // }
+  // std::cout << "\n";
 
   return master_protocol::OK;
 }
@@ -256,17 +262,23 @@ void Master::debugRegisterKV(bool is_error, const char* str) {
   debugRegisterKV(is_error, std::string(str));
 }
 
-unsigned long long Master::genInum(const std::string& path, bool is_dir,
+unsigned long long Master::genInum(unsigned long long parent, const std::string& path, bool is_dir,
                                    unsigned long long node_sz) {
   std::lock_guard<std::mutex> locker(ino_count_mutex_);
   unsigned long long id = ino_count_++;
   // id += random() % (2147483648);
   if (!is_dir) id |= 0x80000000;
   int kv_id;
-  t_->Create(path, id, is_dir, node_sz, kv_id);
+  auto full_path = inum_to_path_[parent];
+  if(!full_path.empty())
+    full_path += "/";
+  full_path += path;
+  auto flag = t_->Create(full_path, id, is_dir, node_sz, kv_id);
+  t_->DebugTreeStruct(t_->GetRoot());
+  assert(flag.IsOK());
   inum_to_path_[id] = path;
   inum_to_register_id_[id] = kv_id;
-  printf("gen new inum: %016x, path: %s, kv_id: %d, sz: %llu\n", id,
+  CTG_INFO("gen new inum: %016llx, path: %s, kv_id: %d, sz: %llu\n", id,
          path.c_str(), kv_id, node_sz);
   return id;
 }
@@ -325,7 +337,7 @@ int Master::Move(std::string lock_server_addr,
 
   /* ERROR occurred when lock files to be moved. */
   if (!go_on) {
-    printf("error: lock file error in master!\n");
+    CTG_INFO("error: lock file error in master!\n");
     return status;
   }
 
@@ -334,7 +346,7 @@ int Master::Move(std::string lock_server_addr,
   ret = ptr_rpc_cl->call(extent_protocol::move, std::move(inum), std::move(dst),
                          r);
   if (ret != extent_protocol::OK) {
-    printf("error: move operation called by master!\n");
+    CTG_INFO("error: move operation called by master!\n");
   }
 
   /* release all the lock. */

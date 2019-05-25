@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <iostream>
 #include <string>
+#include <util/util.h>
 
 using namespace ::ctgfs::rpc;
 
@@ -23,6 +24,7 @@ Client::Client(const std::string& ip, const int& port) {
 Client::Client(const std::string& addr) : master_addr_(addr) {}
 
 std::string Client::GetKVAddrByInum(Client::inum ino) {
+  CTG_INFO("id: %016llx", ino);
   auto ele = getKVAddrByInumViaCache(ino);
   if (ele == "") {
     ele = getKVAddrByInumViaMaster(ino);
@@ -38,6 +40,7 @@ void Client::FailCache(inum ino) {
   auto id = kv_addr_index_list_[ino];
   auto& ele = kv_addr_list_[id];
   if (ele.second == 0) return;
+  CTG_INFO("fail client cache");
   ele.second--;
   if (ele.second == 0) {
     ele.first = "";
@@ -47,8 +50,9 @@ void Client::FailCache(inum ino) {
 }
 
 std::string Client::getKVAddrByInumViaCache(Client::inum ino) {
+  CTG_INFO("via cache");
   if (kv_addr_connect_status_.find(ino) != kv_addr_connect_status_.end() &&
-      kv_addr_connect_status_[ino]) {
+      kv_addr_connect_status_[ino] == 0) {
     return kv_addr_list_[kv_addr_index_list_[ino]].first;
   } else {
     return "";
@@ -57,6 +61,7 @@ std::string Client::getKVAddrByInumViaCache(Client::inum ino) {
 
 std::string Client::getKVAddrByInumViaMaster(inum ino) {
   std::string r = "";
+  CTG_INFO("via master");
   auto cl = getRpc(master_addr_);
   if (!cl) {
     return r;
@@ -66,7 +71,7 @@ std::string Client::getKVAddrByInumViaMaster(inum ino) {
 }
 
 std::pair<Client::inum, std::string> Client::GetInumByName(
-    const std::string& name, bool is_dir, unsigned long long sz) {
+    inum parent, const std::string& name, bool is_dir, unsigned long long sz) {
   sockaddr_in ms_sin;
   make_sockaddr(master_addr_.c_str(), &ms_sin);
   auto cl = getRpc(master_addr_);
@@ -75,7 +80,7 @@ std::pair<Client::inum, std::string> Client::GetInumByName(
   if (!cl) {
     return r;
   }
-  cl->call(master_protocol::ask_for_ino, name, is_dir, sz, r);
+  cl->call(master_protocol::ask_for_ino, parent, name, is_dir, sz, r);
   return r;
 }
 

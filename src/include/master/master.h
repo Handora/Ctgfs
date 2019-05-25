@@ -31,7 +31,7 @@ class Master {
   typedef std::pair<int, int> kv_info_t;
   Master();
   ~Master();
-  int AskForIno(std::string path, bool is_dir, unsigned long long node_sz,
+  int AskForIno(unsigned long long parent, std::string path, bool is_dir, unsigned long long node_sz,
                 std::pair<unsigned long long, std::string>& r);
   int AskForKV(unsigned long long ino, std::string&);
 
@@ -48,13 +48,13 @@ class Master {
   // ino count mutex
   std::mutex ino_count_mutex_;
   // file ino count
-  unsigned long long ino_count_ = 0;
+  unsigned long long ino_count_ = 2;
   // char set need hash
   std::string VALID_CHAR_SET;
   // lock of regist id
   std::mutex regist_lock_;
   // master is stop
-  bool stop_ = false;
+  bool stop_ = true;
   // adjust thread
   std::thread adjust_thread_;
   // record the kv's id on master and kv's addr
@@ -109,7 +109,7 @@ class Master {
   // do unregist
   void doUnregister(const int& regist_id);
   // generate inum
-  unsigned long long genInum(const std::string& path, bool is_dir,
+  unsigned long long genInum(unsigned long long parent, const std::string& path, bool is_dir,
                              unsigned long long node_sz);
   // get kv info by inum
   std::string getInfoByInum(unsigned long long inum);

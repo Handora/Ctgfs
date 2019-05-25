@@ -5,6 +5,7 @@
 #include <master/prefix_tree.h>
 #include <algorithm>
 #include <string>
+#include <util/util.h>
 
 using namespace ctgfs::util;
 
@@ -12,6 +13,16 @@ namespace ctgfs {
 namespace prefix_tree {
 
 using PrefixTreeNodePtr = std::shared_ptr<PrefixTreeNode>;
+
+void PrefixTree::DebugTreeStruct(PrefixTreeNodePtr node, std::string prefix) {
+  CTG_INFO("%s %s, domain_id: %d", prefix.c_str(), (node->GetPath()).c_str(), node->GetDomainId());
+  if(!node->IsDir())
+    return;
+  auto list = node->GetList();
+  for(auto ele : list) {
+    DebugTreeStruct(ele, prefix + "-");
+  }
+}
 
 // origin     cur
 //  A         A\B
@@ -133,6 +144,7 @@ bool PrefixTree::splitPath(std::string& full_path, std::string& split_path) {
 
 Status PrefixTree::Create(std::string path, unsigned long long ino, bool is_dir,
                           unsigned long long node_sz, int& kv_id) {
+  CTG_INFO("prefix tree create new node: %s", path.c_str());
   kv_id = -1;
   return doInsert(root_, ino, path, is_dir, node_sz, kv_id);
 }
@@ -146,6 +158,7 @@ Status PrefixTree::doInsert(PrefixTreeNodePtr cur_node, unsigned long long ino,
   if (!cur_node->IsDir()) {
     return Status::PrefixTreeError();
   }
+  CTG_INFO("======>do insert %s, params_domainid: %d, cur_domainid: %d",path.c_str(), domain_id, cur_node->GetDomainId());
   if (domain_id == -1) {
     domain_id = cur_node->GetDomainId();
   }
@@ -215,27 +228,16 @@ PrefixTreeNodePtr PrefixTree::createNode(const std::string& path,
   new_node->SetSZ(sz);
   PrefixTreeNodePtr ptr;
   if (parent != nullptr) {
+    parent->InsertNode(new_node);
     if (parent->IsDir()) {
       if (domain_id == -1) {
-        const auto& list = parent->GetList();
-        auto pos = list.end();
-        for (auto it = list.begin(); it != list.end(); it++) {
-          if ((*it)->GetPath() >= path) {
-            break;
-          }
-          pos = it;
-        }
-        // auto pos = list.lower_bound(new_node);
-        std::pair<int, PrefixTreeNode*> domain_info;
-        if (pos == list.end()) {
-          // domain_id = (*(list.rbegin()))->GetDomainId();
-          domain_info = (*(list.begin()))->FindNearestDomainId(true);
-        } else {
-          // domain_id = (*pos)->GetDomainId();
-          domain_info = (*(list.rbegin()))->FindNearestDomainId(false);
-        }
+        // domain_id = getNearByDomainID(new_node);
+        std::pair<int, PrefixTreeNodePtr> domain_info;
+        domain_info.first = -1;
+        setDomainId(new_node,domain_info);
         domain_id = domain_info.first;
         auto domain_ptr = domain_info.second;
+        CTG_INFO("find domain id nearby: %d",domain_id);
         new_node->SetDomainId(domain_id);
         for (auto& ele : kv_list_) {
           if (ele.id == domain_id) {
@@ -243,7 +245,7 @@ PrefixTreeNodePtr PrefixTree::createNode(const std::string& path,
             auto pos = node_list.end();
             for (auto it = node_list.begin(); it != node_list.end(); it++) {
               // if((*it)->GetPath() > path) {
-              if ((*it).get() == domain_ptr) {
+              if ((*it).get() == domain_ptr.get()) {
                 break;
               }
               pos = it;
@@ -257,19 +259,8 @@ PrefixTreeNodePtr PrefixTree::createNode(const std::string& path,
           }
         }
       }
-      parent->InsertNode(new_node);
-      if (domain_id == -1) {
-        const auto& list = parent->GetList();
-        auto pos = list.lower_bound(new_node);
-        if (pos == list.end()) {
-          domain_id = (*(list.rbegin()))->GetDomainId();
-        } else {
-          domain_id = (*pos)->GetDomainId();
-        }
-      }
     }
   }
-  new_node->SetSZ(sz);
   return new_node;
 }
 
@@ -510,6 +501,85 @@ void PrefixTree::RegistNewKV(int id, unsigned long long sum_memory) {
   } else {
     kv_list_.push_back(info);
   }
+}
+
+void PrefixTree::setDomainId(PrefixTreeNodePtr ptr, std::pair<int, PrefixTreeNodePtr>& kv_info) {
+  getNearByDomainID(ptr, kv_info);
+}
+
+void PrefixTree::getNearByDomainID(PrefixTreeNodePtr ptr, std::pair<int, PrefixTreeNodePtr>& kv_info) {
+  auto r = GetRoot();
+  if(!doGetNearByDomainID(root_, ptr, true, kv_info) && kv_info.first != -1) {
+    ptr->SetDomainId(kv_info.first);
+    for(auto& ele : kv_list_) {
+      if(ele.id == kv_info.first) {
+        auto& list = ele.domain_node_list;
+        for(auto it = list.begin(); it != list.end(); it ++) {
+          if((*it).get() == ptr.get()) {
+            list.insert(it, ptr);
+            return;
+          }
+        }
+      }
+    }
+    return;
+  }
+  else {
+    doGetNearByDomainID(root_, ptr, false, kv_info);
+    ptr->SetDomainId(kv_info.first);
+    for(auto& ele : kv_list_) {
+      if(ele.id == kv_info.first) {
+        auto& list = ele.domain_node_list;
+        auto pre_it = list.end();
+        for(auto it = list.begin(); it != list.end(); it ++) {
+          if((*it).get() == ptr.get()) {
+            if(pre_it == list.end()) {
+              list.push_front(ptr);
+            }
+            else {
+              list.insert(pre_it, ptr);
+            }
+            if(pre_it == list.end()) {
+              pre_it = list.begin();
+            }
+            else {
+              pre_it ++;
+            }
+            return;
+          }
+        }
+      }
+    }
+  }
+  return;
+}
+
+bool PrefixTree::doGetNearByDomainID(PrefixTreeNodePtr cur_ptr, PrefixTreeNodePtr target_ptr, bool is_reverse, std::pair<int, PrefixTreeNodePtr>& kv_info) {
+  if(cur_ptr.get() == target_ptr.get()) {
+    CTG_INFO("find self");
+    return false;
+  }
+  if(cur_ptr->GetDomainId() != -1) {
+    kv_info = std::make_pair(cur_ptr->GetDomainId(), cur_ptr);
+    CTG_INFO("========> get nearby: reverse: %d, path: %s, domain_id: %d", is_reverse, (cur_ptr->GetPath()).c_str(), cur_ptr->GetDomainId());
+    return true;
+  }
+  auto list = cur_ptr->GetList();
+  if(is_reverse) {
+    for(auto it = list.rbegin(); it != list.rend(); it ++) {
+      if(!doGetNearByDomainID(*it, target_ptr, is_reverse, kv_info)) { 
+        return false;
+      }
+    }
+  }
+  else {
+    for(auto it = list.begin(); it != list.end(); it ++) {
+      if(!doGetNearByDomainID(*it, target_ptr, is_reverse, kv_info)) {
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 }  // namespace prefix_tree
